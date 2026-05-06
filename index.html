@@ -143,7 +143,7 @@ const MAT_CATS=['가공물','하네스','전장'];
 const STEP_COLORS=['#00d2ff','#00e676','#ffab00','#ff4757','#bd93f9','#ff6b35','#ff79c6','#8be9fd','#f1fa8c','#50fa7b'];
 let sb=null;
 let modalSteps=[];
-const S={page:'dashboard',tab:'list',orders:[],templates:[],materials:{},fStatus:'all',fCustomer:'all',calMonth:new Date(),scanTab:'usb',scanResult:null,wlogs:{},loading:false};
+const S={page:'dashboard',tab:'list',orders:[],templates:[],materials:{},allMats:[],fStatus:'all',fCustomer:'all',calMonth:new Date(),scanTab:'usb',scanResult:null,wlogs:{},loading:false,workers:JSON.parse(localStorage.getItem('pm_workers')||'[]')};
 
 function initSB(u,k){sb=window.supabase.createClient(u,k);}
 async function qOrders(){if(!sb)return[];const{data}=await sb.from('orders').select('*,process_templates(name,steps)').order('delivery_date',{ascending:true,nullsFirst:false});return data||[];}
@@ -216,8 +216,8 @@ function pageDash(){
   const custs=[...new Set(all.map(o=>o.customer).filter(Boolean))].sort();
   const orders=filteredOrders();
   return`<div class="stat-row"><div class="stat c-p ${S.fStatus==='all'?'on':''}" onclick="setFS('all')"><div class="v">${stats.total}</div><div class="l">전체</div></div><div class="stat c-w ${S.fStatus==='진행중'?'on':''}" onclick="setFS('진행중')"><div class="v">${stats.prog}</div><div class="l">진행중</div></div><div class="stat c-s ${S.fStatus==='완료'?'on':''}" onclick="setFS('완료')"><div class="v">${stats.done}</div><div class="l">완료</div></div><div class="stat c-d ${S.fStatus==='지연'?'on':''}" onclick="setFS('지연')"><div class="v">${stats.late}</div><div class="l">지연</div></div></div>
-  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div><select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()"><div class="mla" style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button><button class="btn btn-s btn-sm" onclick="loadData()">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
-  ${S.tab==='list'?vList(orders):S.tab==='customer'?vCust(orders):vCal()}`;}
+  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더'],['materials','자재현황']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div>${S.tab!=='materials'?`<select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()">`:''}<div class="mla" style="display:flex;gap:6px">${S.tab!=='materials'?`<button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button>`:'<button class="btn btn-s btn-sm" onclick="loadAllMats()">↻ 새로고침</button>'}<button class="btn btn-s btn-sm" onclick="loadData()">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
+  ${S.tab==='list'?vList(orders):S.tab==='customer'?vCust(orders):S.tab==='calendar'?vCal():vMaterials()}`;}
 
 function filteredOrders(){let list=[...S.orders];if(S.fStatus!=='all')list=list.filter(o=>S.fStatus==='지연'?isLate(o):o.status===S.fStatus);if(S.fCustomer!=='all')list=list.filter(o=>o.customer===S.fCustomer);const q=document.getElementById('srch')?.value?.toLowerCase();if(q)list=list.filter(o=>o.part_no?.toLowerCase().includes(q)||o.part_name?.toLowerCase().includes(q)||o.customer?.toLowerCase().includes(q)||o.order_no?.toLowerCase().includes(q)||(o.lot_no||'').toLowerCase().includes(q));return list;}
 
@@ -226,6 +226,55 @@ function vList(orders){if(!orders.length)return`<div class="empty"><div class="i
 function vCust(orders){const groups={};orders.forEach(o=>{if(!groups[o.customer])groups[o.customer]=[];groups[o.customer].push(o);});if(!Object.keys(groups).length)return`<div class="empty"><div class="ic">🏢</div><h3>데이터 없음</h3></div>`;return Object.entries(groups).map(([c,ords])=>`<div style="margin-bottom:16px"><div class="cg-head"><span style="font-weight:700">${c}</span><span class="badge bp">${ords.length}건</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">완료 ${ords.filter(o=>o.status==='완료').length} / 지연 ${ords.filter(o=>isLate(o)).length}</span></div><div class="tw" style="border-radius:0 0 var(--rl) var(--rl)"><table><thead><tr><th>품번/품명</th><th>호기</th><th>수량</th><th>납기일</th><th>공정</th><th>상태</th></tr></thead><tbody>${ords.map(o=>`<tr onclick="mDetail('${o.id}')"><td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div></td><td><span class="badge by">${o.lot_no||'—'}</span></td><td class="mono">${o.quantity}</td><td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td><td>${getDots(o)}</td><td>${getBadge(o)}</td></tr>`).join('')}</tbody></table></div></div>`).join('');}
 
 function vCal(){const yr=S.calMonth.getFullYear(),mo=S.calMonth.getMonth();const today=new Date();const first=new Date(yr,mo,1).getDay(),days=new Date(yr,mo+1,0).getDate(),prev=new Date(yr,mo,0).getDate();const byDate={};S.orders.forEach(o=>{if(o.delivery_date){const k=o.delivery_date.slice(0,10);if(!byDate[k])byDate[k]=[];byDate[k].push(o);}});let cells='';for(let i=0;i<first;i++)cells+=`<div class="cal-day om"><div class="cd">${prev-first+i+1}</div></div>`;for(let d=1;d<=days;d++){const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isT=today.getFullYear()===yr&&today.getMonth()===mo&&today.getDate()===d;const dos=byDate[ds]||[];cells+=`<div class="cal-day ${isT?'tod':''}"><div class="cd">${d}</div>${dos.slice(0,3).map(o=>`<div class="ce ce-${o.status==='완료'?'done':isLate(o)?'late':'prog'}" onclick="event.stopPropagation();mDetail('${o.id}')">${o.part_no}${o.lot_no?' '+o.lot_no:''}</div>`).join('')}${dos.length>3?`<div style="font-size:9px;color:var(--dim)">+${dos.length-3}</div>`:''}</div>`;}const rem=(7-(first+days)%7)%7;for(let i=1;i<=rem;i++)cells+=`<div class="cal-day om"><div class="cd">${i}</div></div>`;return`<div class="cal-wrap"><div class="cal-hd"><button class="cal-nav" onclick="calNav(-1)">‹</button><div style="font-weight:700;font-size:14px">${yr}년 ${mo+1}월</div><button class="cal-nav" onclick="calNav(1)">›</button></div><div class="cal-grid">${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dn">${d}</div>`).join('')}${cells}</div></div>`;}
+
+async function loadAllMats(){
+  if(!sb)return;
+  const{data}=await sb.from('order_materials').select('*');
+  S.allMats=(data||[]).map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));
+  render();
+}
+function vMaterials(){
+  if(!S.allMats.length)return`<div class="empty"><div class="ic">📦</div><h3>자재 현황을 불러오려면 새로고침을 눌러주세요</h3><button class="btn btn-p" style="margin-top:10px" onclick="loadAllMats()">자재현황 불러오기</button></div>`;
+  const matByOrder={};
+  S.allMats.forEach(m=>{if(!matByOrder[m.order_id])matByOrder[m.order_id]=[];matByOrder[m.order_id].push(m);});
+  const rows=S.orders.map(o=>{
+    const mats=matByOrder[o.id]||[];
+    const gak=mats.find(m=>m.category==='가공물');
+    const har=mats.find(m=>m.category==='하네스');
+    const jun=mats.find(m=>m.category==='전장');
+    const totalMI=mats.reduce((s,m)=>{const items=Array.isArray(m.missing_items)?m.missing_items:[];return s+items.length;},0);
+    const missBadge=totalMI>0?`<span class="missing-badge">${totalMI}</span>`:'';
+    return`<tr onclick="mDetail('${o.id}')">
+      <td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div></td>
+      <td><span class="badge by">${o.lot_no||'—'}</span></td>
+      <td style="font-weight:600">${o.customer}</td>
+      <td>
+        <div style="font-size:11px">${gak?.ordered?'✅발주':'⬜발주'}</div>
+        <div style="font-size:10px;color:var(--dim)">${gak?.incoming_date?'입고예정: '+fmtDateS(gak.incoming_date):'입고예정 미설정'}</div>
+      </td>
+      <td>
+        <div style="font-size:11px">${har?.issued?'✅불출':'⬜불출'} ${!har?.issued?'<span class="missing-badge">미불출</span>':''}</div>
+        <div style="font-size:10px;color:var(--dim)">${har?.work_request_date?'작업요청: '+fmtDateS(har.work_request_date):'작업요청 미설정'}</div>
+        <div style="font-size:10px;color:var(--dim)">${har?.completion_date?'완료요청: '+fmtDateS(har.completion_date):''}</div>
+        <div style="font-size:10px;color:var(--dim)">${har?.issue_date?'자재불출: '+fmtDateS(har.issue_date):''}</div>
+      </td>
+      <td>
+        <div style="font-size:11px">${jun?.issued?'✅불출':'⬜불출'} ${!jun?.issued?'<span class="missing-badge">미불출</span>':''}</div>
+        <div style="font-size:10px;color:var(--dim)">${jun?.completion_date?'완료요청: '+fmtDateS(jun.completion_date):''}</div>
+      </td>
+      <td>${missBadge||'—'}</td>
+      <td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td>
+      <td>${getBadge(o)}</td>
+    </tr>`;}).join('');
+  return`<div class="tw"><table>
+    <thead><tr>
+      <th>품번/품명</th><th>호기</th><th>고객사</th>
+      <th>🔧 가공물</th><th>🔌 하네스</th><th>⚡ 전장</th>
+      <th>미불출품목</th><th>납기일</th><th>상태</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
 
 function pageScan(){const w=localStorage.getItem('pm_worker')||'';return`<div class="scan-wrap"><div style="font-size:17px;font-weight:700;margin-bottom:10px">바코드 스캔</div><div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--dim);white-space:nowrap;font-weight:600">👤 작업자</span><input class="fi" id="worker-name" placeholder="이름 입력" value="${w}" oninput="localStorage.setItem('pm_worker',this.value)" style="padding:5px 8px;font-size:13px"></div><div class="stabs"><button class="stab ${S.scanTab==='usb'?'on':''}" onclick="setScanTab('usb')">🔌 USB 스캐너</button><button class="stab ${S.scanTab==='camera'?'on':''}" onclick="setScanTab('camera')">📷 카메라</button></div>${S.scanTab==='usb'?`<div class="usb-box"><div style="font-size:32px;margin-bottom:8px">🔍</div><div style="font-weight:600">USB 스캐너를 연결하거나 직접 입력하세요</div><div style="color:var(--dim);font-size:12px;margin-top:4px">스캔 시 자동 처리 · Enter 키로 수동 입력</div><input type="text" id="usb-in" placeholder="바코드 스캔 / 입력..." onkeydown="if(event.key==='Enter'){doScan(this.value.trim());this.value='';}" autocomplete="off" autocorrect="off" spellcheck="false"></div>`:`<div id="cam-reader" style="margin-bottom:10px;border-radius:var(--rl);overflow:hidden;min-height:180px;background:var(--s2);display:flex;align-items:center;justify-content:center"><div style="color:var(--dim)">카메라 시작 버튼을 눌러주세요</div></div><button class="btn btn-s" style="width:100%;padding:9px" id="cam-btn" onclick="toggleCam()">📷 카메라 시작</button>`}${S.scanResult?scanResult():''}</div>`;}
 
@@ -249,7 +298,21 @@ async function loadStepStats(){
   const el=document.getElementById('step-stats-area');
   if(el)el.innerHTML=rows?`<div class="tw"><table><thead><tr><th>공정명</th><th>평균</th><th>최소</th><th>최대</th><th>건수</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty"><div class="ic">📊</div><h3>완료된 공정 이력이 없습니다</h3></div>`;}
 
-function pageSettings(){const cfg=getConf()||{};return`<div style="max-width:620px"><div class="ss"><div class="stitle">🔗 Supabase 연결 설정</div><div class="fg" style="margin-bottom:10px"><label class="fl">Project URL</label><input class="fi" id="cfg-url" value="${cfg.url||''}"></div><div class="fg" style="margin-bottom:12px"><label class="fl">Anon Key</label><input class="fi" id="cfg-key" value="${cfg.key||''}"></div><button class="btn btn-p" onclick="doSaveConf()">저장 및 재연결</button></div><div class="ss"><div class="stitle" style="display:flex;align-items:center;justify-content:space-between">⚙ 공정 템플릿 관리<button class="btn btn-s btn-sm" onclick="mAddTpl()">+ 추가</button></div>${S.templates.map(t=>`<div class="tpl-item"><div style="min-width:110px"><div style="font-weight:600;font-size:12px">${t.name}</div>${t.is_default?'<div style="font-size:10px;color:var(--dim)">기본</div>':''}</div><div style="display:flex;flex-wrap:wrap;gap:3px;flex:1;align-items:center">${t.steps.map((s,i)=>{const c=(t.colors||[])[i]||'var(--primary)';return`<span class="chip" style="border-color:${c};color:${c};background:${c}18">${s}</span>${i<t.steps.length-1?'<span class="chip arr">→</span>':''}`}).join('')}</div><div style="display:flex;gap:4px;flex-shrink:0"><button class="btn btn-s btn-sm" onclick="mEditTpl('${t.id}')">수정</button><button class="btn btn-d btn-sm" onclick="doDelTpl('${t.id}')">삭제</button></div></div>`).join('')}</div><div class="ss"><div class="stitle">📋 DB 초기화 SQL</div><textarea class="fta" style="font-family:var(--mono);font-size:10px;min-height:160px" readonly>${SQL_INIT}</textarea></div></div>`;}
+function pageSettings(){const cfg=getConf()||{};return`<div style="max-width:620px">
+<div class="ss"><div class="stitle">🔗 Supabase 연결 설정</div><div class="fg" style="margin-bottom:10px"><label class="fl">Project URL</label><input class="fi" id="cfg-url" value="${cfg.url||''}"></div><div class="fg" style="margin-bottom:12px"><label class="fl">Anon Key</label><input class="fi" id="cfg-key" value="${cfg.key||''}"></div><button class="btn btn-p" onclick="doSaveConf()">저장 및 재연결</button></div>
+<div class="ss">
+  <div class="stitle" style="display:flex;align-items:center;justify-content:space-between">👤 작업자 바코드 관리<button class="btn btn-s btn-sm" onclick="addWorker()">+ 추가</button></div>
+  <div style="font-size:12px;color:var(--dim);margin-bottom:10px">제품 스캔 후 작업자 바코드 스캔 → 자동으로 시작/완료 처리됩니다</div>
+  ${S.workers.map((w,i)=>`<div style="display:flex;gap:7px;margin-bottom:7px;align-items:center">
+    <input class="fi" value="${w.name}" placeholder="이름" oninput="S.workers[${i}].name=this.value;saveWorkers()" style="flex:1;font-weight:600">
+    <input class="fi" value="${w.barcode}" placeholder="바코드 값" oninput="S.workers[${i}].barcode=this.value;saveWorkers()" style="flex:1;font-family:var(--mono);font-size:12px">
+    <button class="btn btn-d btn-sm" onclick="removeWorker(${i})">삭제</button>
+  </div>`).join('')}
+  ${!S.workers.length?`<div style="color:var(--dim);font-size:12px;padding:10px 0">등록된 작업자가 없습니다</div>`:''}
+</div>
+<div class="ss"><div class="stitle" style="display:flex;align-items:center;justify-content:space-between">⚙ 공정 템플릿 관리<button class="btn btn-s btn-sm" onclick="mAddTpl()">+ 추가</button></div>${S.templates.map(t=>`<div class="tpl-item"><div style="min-width:110px"><div style="font-weight:600;font-size:12px">${t.name}</div>${t.is_default?'<div style="font-size:10px;color:var(--dim)">기본</div>':''}</div><div style="display:flex;flex-wrap:wrap;gap:3px;flex:1;align-items:center">${t.steps.map((s,i)=>{const c=(t.colors||[])[i]||'var(--primary)';return`<span class="chip" style="border-color:${c};color:${c};background:${c}18">${s}</span>${i<t.steps.length-1?'<span class="chip arr">→</span>':''}`}).join('')}</div><div style="display:flex;gap:4px;flex-shrink:0"><button class="btn btn-s btn-sm" onclick="mEditTpl('${t.id}')">수정</button><button class="btn btn-d btn-sm" onclick="doDelTpl('${t.id}')">삭제</button></div></div>`).join('')}</div>
+<div class="ss"><div class="stitle">📋 DB 초기화 SQL</div><textarea class="fta" style="font-family:var(--mono);font-size:10px;min-height:160px" readonly>${SQL_INIT}</textarea></div>
+</div>`;}
 
 function mOrder(oid=null){
   const o=oid?S.orders.find(x=>x.id===oid):null;
@@ -392,7 +455,38 @@ async function doEnd(oid,idx,total){await qEndStep(oid,idx,total);await loadData
 async function doAddTpl(){const nm=document.getElementById('tpl-nm').value.trim();if(!nm){toast('이름을 입력하세요','err');return;}const steps=modalSteps.map(s=>s.name.trim()).filter(Boolean);const colors=modalSteps.map(s=>s.color);if(steps.length<2){toast('공정을 2개 이상 입력하세요','err');return;}try{await qSaveTpl(nm,steps,colors);S.templates=await qTemplates();closeM();render();toast('템플릿 추가됨');}catch(e){toast('저장 실패: '+e.message,'err');console.error(e);}}
 async function doEditTpl(id){const nm=document.getElementById('tpl-nm').value.trim();if(!nm){toast('이름을 입력하세요','err');return;}const steps=modalSteps.map(s=>s.name.trim()).filter(Boolean);const colors=modalSteps.map(s=>s.color);try{await qSaveTpl(nm,steps,colors,id);S.templates=await qTemplates();closeM();render();toast('수정됨');}catch(e){toast('저장 실패: '+e.message,'err');console.error(e);}}
 async function doDelTpl(id){if(!confirm('삭제하시겠습니까?'))return;await qDelTpl(id);S.templates=await qTemplates();render();toast('삭제됨');}
-async function doScan(bc){if(!bc)return;const o=S.orders.find(x=>x.barcode===bc||x.order_no===bc);if(!o){toast(`바코드 없음: ${bc}`,'err');return;}const logs=await qWlogs(o.id);S.wlogs[o.id]=logs;S.scanResult=o;render();toast(`📦 ${o.part_no} 조회됨`);}
+async function doScan(bc){
+  if(!bc)return;
+  // 작업자 바코드 체크
+  const worker=S.workers.find(w=>w.barcode&&w.barcode===bc);
+  if(worker){
+    if(!S.scanResult){toast(`👤 ${worker.name} 확인 — 제품 바코드를 먼저 스캔하세요`,'err');return;}
+    const o=S.scanResult;
+    const steps=getSteps(o);
+    if(o.status==='완료'){toast('이미 완료된 제품입니다','err');return;}
+    const logs=S.wlogs[o.id]||[];
+    const curLog=logs.find(l=>l.step_index===o.current_step);
+    const curStep=steps[o.current_step]||'';
+    if(!curLog?.started_at){
+      await qStartStep(o.id,o.current_step,curStep,worker.name);
+      const newLogs=await qWlogs(o.id);S.wlogs[o.id]=newLogs;
+      const updO=S.orders.find(x=>x.id===o.id);if(updO)updO.status='진행중';
+      S.scanResult=S.orders.find(x=>x.id===o.id);render();
+      toast(`▶ 👤 ${worker.name} · ${curStep} 시작`);
+    }else if(!curLog?.ended_at){
+      await qEndStep(o.id,o.current_step,steps.length);
+      await loadData();
+      const newLogs=await qWlogs(o.id);S.wlogs[o.id]=newLogs;
+      S.scanResult=S.orders.find(x=>x.id===o.id);render();
+      toast(`✓ 👤 ${worker.name} · ${curStep} 완료`);
+    }else{toast(`${curStep} 이미 완료됨`,'err');}
+    return;
+  }
+  // 제품 바코드
+  const o=S.orders.find(x=>x.barcode===bc||x.order_no===bc);
+  if(!o){toast(`바코드 없음: ${bc}`,'err');return;}
+  const logs=await qWlogs(o.id);S.wlogs[o.id]=logs;S.scanResult=o;render();toast(`📦 ${o.part_no} 조회됨`);
+}
 async function saveMat(id,field,value){await qSaveMat(id,field,value);}
 function doPrint(oid){const o=S.orders.find(x=>x.id===oid);if(!o)return;const steps=getSteps(o);document.getElementById('parea').innerHTML=`<div class="ph"><div><div class="pco">㈜진선테크 JinsunTech Co.,Ltd.</div><div class="ptitle">작업지시서</div></div><div style="text-align:right;font-size:11px"><div>발행일: ${fmtDate(new Date().toISOString())}</div><div>바코드: ${o.barcode}</div></div></div><div class="pig"><div class="pf"><span class="pfl">고객사</span>${o.customer}</div><div class="pf"><span class="pfl">수주번호</span>${o.order_no||'—'}</div><div class="pf"><span class="pfl">품번</span>${o.part_no}</div><div class="pf"><span class="pfl">호기</span>${o.lot_no||'—'}</div><div class="pf"><span class="pfl">REV</span>${o.rev||'—'}</div><div class="pf"><span class="pfl">품명</span>${o.part_name}</div><div class="pf"><span class="pfl">수량</span>${o.quantity}</div><div class="pf"><span class="pfl">납기일</span>${fmtDate(o.delivery_date)}</div><div class="pf"><span class="pfl">생산완료</span>${fmtDate(o.production_deadline)}</div></div><div class="pbc"><svg id="pbc-svg"></svg></div><table class="ptbl"><thead><tr><th>#</th><th>공정</th><th>작업자</th><th>시작시간</th><th>완료시간</th><th>소요(h)</th><th>확인</th></tr></thead><tbody>${steps.map((s,i)=>`<tr><td>${i+1}</td><td>${s}</td><td style="min-width:60px"></td><td style="min-width:90px"></td><td style="min-width:90px"></td><td style="min-width:50px"></td><td style="min-width:30px"></td></tr>`).join('')}</tbody></table>${o.notes?`<div style="margin-top:12px;font-size:11px"><strong>메모:</strong> ${o.notes}</div>`:''}`; setTimeout(()=>{try{JsBarcode('#pbc-svg',o.barcode,{format:'CODE128',width:2,height:60,displayValue:true,fontSize:13});}catch(e){}window.print();},200);}
 
@@ -400,14 +494,25 @@ let qrScanner=null;
 async function toggleCam(){const btn=document.getElementById('cam-btn');if(qrScanner){try{if(qrScanner.isScanning)await qrScanner.stop();}catch(e){}qrScanner=null;if(btn)btn.textContent='📷 카메라 시작';return;}if(!window.Html5Qrcode){toast('라이브러리 로딩 중','err');return;}try{qrScanner=new Html5Qrcode('cam-reader');const fmts=window.Html5QrcodeSupportedFormats?[Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_39]:undefined;await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:120},...(fmts?{formatsToSupport:fmts}:{})},async text=>await doScan(text),()=>{});if(btn)btn.textContent='⏹ 카메라 중지';}catch(e){toast('카메라 오류: '+e.message,'err');}}
 
 function nav(page){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});qrScanner=null;}S.page=page;S.scanResult=null;render();if(page==='scan')setTimeout(()=>document.getElementById('usb-in')?.focus(),120);}
-function setFS(s){S.fStatus=s;render();}function setTab(t){S.tab=t;render();}
+function saveWorkers(){localStorage.setItem('pm_workers',JSON.stringify(S.workers));}
+function addWorker(){S.workers.push({name:'',barcode:''});saveWorkers();render();}
+function removeWorker(i){S.workers.splice(i,1);saveWorkers();render();}
+function setFS(s){S.fStatus=s;render();}
+function setTab(t){S.tab=t;if(t==='materials'&&!S.allMats.length)loadAllMats();else render();}
 function calNav(d){const m=new Date(S.calMonth);m.setMonth(m.getMonth()+d);S.calMonth=m;render();}
 function setScanTab(t){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});qrScanner=null;}S.scanTab=t;render();if(t==='usb')setTimeout(()=>document.getElementById('usb-in')?.focus(),120);}
 
 function render(){const app=document.getElementById('app');if(!getConf()||!sb){app.innerHTML=pageSetup();return;}app.innerHTML=`<nav id="navbar">${pageNav()}</nav><div id="page">${S.loading?'<div class="loading"><div class="spin"></div> 로딩 중...</div>':S.page==='dashboard'?pageDash():S.page==='scan'?pageScan():S.page==='stats'?pageStats():S.page==='settings'?pageSettings():pageDash()}</div>`;}
 
 async function loadData(){S.loading=true;render();[S.templates,S.orders]=await Promise.all([qTemplates(),qOrders()]);S.loading=false;}
-async function init(){const cfg=getConf();if(cfg){initSB(cfg.url,cfg.key);await loadData();}render();}
+async function init(){
+  const SB_URL='https://zlmdxxginskguqqitsbp.supabase.co';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbWR4eGdpbnNrZ3VxcWl0c2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjQyMTcsImV4cCI6MjA5MzYwMDIxN30.1b1bGTNfq7a1ZTBeHVnzTRsjWgwZP4rY9ei3XqljNi0';
+  saveConf(SB_URL,SB_KEY);
+  initSB(SB_URL,SB_KEY);
+  await loadData();
+  render();
+}
 init();
 </script>
 </body>
