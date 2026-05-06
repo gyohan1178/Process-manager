@@ -169,9 +169,50 @@ async function qSaveTpl(name,steps,colors,id=null){
 async function qDelTpl(id){if(sb)await sb.from('process_templates').delete().eq('id',id);}
 async function qMaterials(oid){if(!sb)return[];const{data}=await sb.from('order_materials').select('*').eq('order_id',oid).order('category');if(!data||data.length===0){await sb.from('order_materials').insert(MAT_CATS.map(cat=>({order_id:oid,category:cat})));const{data:d2}=await sb.from('order_materials').select('*').eq('order_id',oid).order('category');return(d2||[]).map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));}return data.map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));}
 async function qSaveMat(id,field,value){if(sb)await sb.from('order_materials').update({[field]:field==='missing_items'?JSON.stringify(value):value}).eq('id',id);}
-function getMatsForId(matId){return Object.values(S.materials).flat().find(m=>m.id===matId);}
-function getOidForMat(matId){return Object.keys(S.materials).find(k=>S.materials[k].some(m=>m.id===matId));}
-function addMissingItem(matId){const mat=getMatsForId(matId);if(!mat)return;if(!Array.isArray(mat.missing_items))mat.missing_items=[];mat.missing_items.push({part_no:'',part_name:'',qty:1,incoming_date:''});qSaveMat(matId,'missing_items',mat.missing_items);renderMI(matId);}
+function getMatsForId(matId){const fromAll=S.allMats.find(m=>m.id===matId);if(fromAll)return fromAll;return Object.values(S.materials).flat().find(m=>m.id===matId);}
+function getOrderMats(oid){const m={};S.allMats.filter(x=>x.order_id===oid).forEach(x=>{m[x.category]=x;});return m;}
+function getMatOffset(){return parseInt(localStorage.getItem('pm_mat_offset')||'3');}
+async function inlineSaveMat(matId,field,value,oid){const mat=S.allMats.find(m=>m.id===matId);if(mat)mat[field]=value;await qSaveMat(matId,field,value);}
+function mMissingItems(orderId){
+  const o=S.orders.find(x=>x.id===orderId);if(!o)return;
+  const mats=S.allMats.filter(m=>m.order_id===orderId);
+  if(!mats.length){toast('자재 데이터 로딩 중...','err');loadData().then(render);return;}
+  // sync to S.materials so buildMatCard helpers work
+  S.materials[orderId]=mats;
+  const renderCat=(m)=>{
+    const items=Array.isArray(m.missing_items)?m.missing_items:[];
+    const catColor=m.category==='가공물'?'var(--warning)':m.category==='하네스'?'#00b4cc':'var(--purple)';
+    return`<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">
+        <span style="font-weight:700;font-size:13px;color:${catColor}">${m.category}</span>
+        <span class="badge ${items.length>0?'bd':'bs'}">${items.length}건</span>
+      </div>
+      <div id="mi-dash-${m.id}">
+        ${buildMIDashHtml(m.id,items)}
+      </div>
+      <button class="btn btn-s btn-sm" onclick="addMIDash('${m.id}')" style="width:100%;margin-top:6px">+ 품목 추가</button>
+    </div>`;
+  };
+  openM(`📦 미불출품목 — ${o.part_no} ${o.lot_no?'('+o.lot_no+')':''}`,
+    mats.map(renderCat).join(''),
+    [{l:'닫기',c:'btn-p',a:'closeM();loadData().then(render)'}]);
+}
+function buildMIDashHtml(matId,items){
+  if(!items.length)return`<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">미불출 품목 없음</div>`;
+  return`<table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead><tr>${['품번','품명','수량','입고예정일',''].map(h=>`<th style="background:var(--s3);padding:5px 7px;text-align:left;color:var(--dim);border-bottom:1px solid var(--border)">${h}</th>`).join('')}</tr></thead>
+    <tbody>${items.map((it,i)=>`<tr>
+      <td style="padding:4px 5px"><input class="mat-date" value="${it.part_no||''}" placeholder="품번" style="width:90px" oninput="updateMIDash('${matId}',${i},'part_no',this.value)"></td>
+      <td style="padding:4px 5px"><input class="mat-date" value="${it.part_name||''}" placeholder="품명" style="width:100px" oninput="updateMIDash('${matId}',${i},'part_name',this.value)"></td>
+      <td style="padding:4px 5px"><input class="mat-date" type="number" value="${it.qty||1}" style="width:45px" oninput="updateMIDash('${matId}',${i},'qty',this.value)"></td>
+      <td style="padding:4px 5px"><input class="mat-date" type="date" value="${it.incoming_date||''}" oninput="updateMIDash('${matId}',${i},'incoming_date',this.value)"></td>
+      <td style="padding:4px 5px"><button onclick="removeMIDash('${matId}',${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px">×</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+function addMIDash(matId){const mat=getMatsForId(matId);if(!mat)return;if(!Array.isArray(mat.missing_items))mat.missing_items=[];mat.missing_items.push({part_no:'',part_name:'',qty:1,incoming_date:''});qSaveMat(matId,'missing_items',mat.missing_items);const el=document.getElementById('mi-dash-'+matId);if(el)el.innerHTML=buildMIDashHtml(matId,mat.missing_items);}
+function removeMIDash(matId,idx){const mat=getMatsForId(matId);if(!mat)return;mat.missing_items.splice(idx,1);qSaveMat(matId,'missing_items',mat.missing_items);const el=document.getElementById('mi-dash-'+matId);if(el)el.innerHTML=buildMIDashHtml(matId,mat.missing_items);}
+function updateMIDash(matId,idx,field,value){const mat=getMatsForId(matId);if(!mat||!mat.missing_items[idx])return;mat.missing_items[idx][field]=field==='qty'?parseInt(value)||1:value;qSaveMat(matId,'missing_items',mat.missing_items);}
 function removeMissingItem(matId,idx){const mat=getMatsForId(matId);if(!mat)return;mat.missing_items.splice(idx,1);qSaveMat(matId,'missing_items',mat.missing_items);renderMI(matId);}
 function updateMI(matId,idx,field,value){const mat=getMatsForId(matId);if(!mat||!mat.missing_items[idx])return;mat.missing_items[idx][field]=field==='qty'?parseInt(value)||1:value;qSaveMat(matId,'missing_items',mat.missing_items);}
 function renderMI(matId){const el=document.getElementById('mi-'+matId);if(el)el.innerHTML=buildMIHtml(matId);}
@@ -216,12 +257,100 @@ function pageDash(){
   const custs=[...new Set(all.map(o=>o.customer).filter(Boolean))].sort();
   const orders=filteredOrders();
   return`<div class="stat-row"><div class="stat c-p ${S.fStatus==='all'?'on':''}" onclick="setFS('all')"><div class="v">${stats.total}</div><div class="l">전체</div></div><div class="stat c-w ${S.fStatus==='진행중'?'on':''}" onclick="setFS('진행중')"><div class="v">${stats.prog}</div><div class="l">진행중</div></div><div class="stat c-s ${S.fStatus==='완료'?'on':''}" onclick="setFS('완료')"><div class="v">${stats.done}</div><div class="l">완료</div></div><div class="stat c-d ${S.fStatus==='지연'?'on':''}" onclick="setFS('지연')"><div class="v">${stats.late}</div><div class="l">지연</div></div></div>
-  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더'],['materials','자재현황']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div>${S.tab!=='materials'?`<select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()">`:''}<div class="mla" style="display:flex;gap:6px">${S.tab!=='materials'?`<button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button>`:'<button class="btn btn-s btn-sm" onclick="loadAllMats()">↻ 새로고침</button>'}<button class="btn btn-s btn-sm" onclick="loadData()">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
+  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더'],['materials','자재현황']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div>${S.tab!=='materials'?`<select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()"><div style="display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:3px 8px"><span style="font-size:10px;color:var(--dim);white-space:nowrap">완료요청 납기-</span><input type="number" value="${getMatOffset()}" style="width:32px;background:none;border:none;color:var(--primary);font-size:12px;font-family:var(--mono);outline:none;text-align:center" oninput="localStorage.setItem('pm_mat_offset',this.value);render()"><span style="font-size:10px;color:var(--dim)">일</span></div>`:''}<div class="mla" style="display:flex;gap:6px">${S.tab!=='materials'?`<button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button>`:'<button class="btn btn-s btn-sm" onclick="loadAllMats()">↻ 새로고침</button>'}<button class="btn btn-s btn-sm" onclick="loadData().then(render)">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
   ${S.tab==='list'?vList(orders):S.tab==='customer'?vCust(orders):S.tab==='calendar'?vCal():vMaterials()}`;}
 
 function filteredOrders(){let list=[...S.orders];if(S.fStatus!=='all')list=list.filter(o=>S.fStatus==='지연'?isLate(o):o.status===S.fStatus);if(S.fCustomer!=='all')list=list.filter(o=>o.customer===S.fCustomer);const q=document.getElementById('srch')?.value?.toLowerCase();if(q)list=list.filter(o=>o.part_no?.toLowerCase().includes(q)||o.part_name?.toLowerCase().includes(q)||o.customer?.toLowerCase().includes(q)||o.order_no?.toLowerCase().includes(q)||(o.lot_no||'').toLowerCase().includes(q));return list;}
 
-function vList(orders){if(!orders.length)return`<div class="empty"><div class="ic">📋</div><h3>표시할 발주가 없습니다</h3></div>`;return`<div class="tw"><table><thead><tr><th>품번 / 품명</th><th>호기</th><th>고객사</th><th>수량</th><th>납기일</th><th>공정 진행</th><th>상태</th><th>액션</th></tr></thead><tbody>${orders.map(o=>{const steps=getSteps(o);const cur=o.status==='완료'?'✅완료':(steps[o.current_step]||'—');return`<tr onclick="mDetail('${o.id}')"><td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div>${o.order_no?`<div class="mono" style="color:var(--muted)">${o.order_no}</div>`:''}</td><td><span class="badge by">${o.lot_no||'—'}</span></td><td style="font-weight:600">${o.customer}</td><td class="mono">${o.quantity}</td><td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td><td>${getDots(o)}<div style="font-size:10px;color:var(--dim);margin-top:2px">${cur}</div></td><td>${getBadge(o)}</td><td onclick="event.stopPropagation()"><div style="display:flex;gap:3px"><button class="btn btn-s btn-sm" onclick="doPrint('${o.id}')">출력</button><button class="btn btn-s btn-sm" onclick="mOrder('${o.id}')">수정</button><button class="btn btn-d btn-sm" onclick="doDelete('${o.id}')">삭제</button></div></td></tr>`;}).join('')}</tbody></table></div>`;}
+function vList(orders){
+  if(!orders.length)return`<div class="empty"><div class="ic">📋</div><h3>표시할 발주가 없습니다</h3></div>`;
+  const offset=getMatOffset();
+  return`<div class="tw"><table>
+  <thead>
+    <tr>
+      <th rowspan="2" style="vertical-align:middle">품번 / 품명</th>
+      <th rowspan="2" style="vertical-align:middle">호기</th>
+      <th rowspan="2" style="vertical-align:middle">고객사</th>
+      <th rowspan="2" style="vertical-align:middle">납기일</th>
+      <th colspan="2" style="text-align:center;background:#1a2535;border-left:2px solid var(--warning)">🔧 가공물</th>
+      <th colspan="3" style="text-align:center;background:#1a2535;border-left:2px solid #00b4cc">🔌 하네스</th>
+      <th colspan="2" style="text-align:center;background:#1a2535;border-left:2px solid var(--purple)">⚡ 전장</th>
+      <th rowspan="2" style="vertical-align:middle;text-align:center">미불출<br>품목</th>
+      <th rowspan="2" style="vertical-align:middle">상태</th>
+      <th rowspan="2" style="vertical-align:middle">액션</th>
+    </tr>
+    <tr>
+      <th style="border-left:2px solid var(--warning);font-size:10px">발주</th>
+      <th style="font-size:10px">입고예정</th>
+      <th style="border-left:2px solid #00b4cc;font-size:10px">불출</th>
+      <th style="font-size:10px">작업요청</th>
+      <th style="font-size:10px">완료요청</th>
+      <th style="border-left:2px solid var(--purple);font-size:10px">불출</th>
+      <th style="font-size:10px">완료요청</th>
+    </tr>
+  </thead>
+  <tbody>${orders.map(o=>{
+    const steps=getSteps(o);
+    const cur=o.status==='완료'?'✅완료':(steps[o.current_step]||'—');
+    const m=getOrderMats(o.id);
+    const gak=m['가공물']||{};
+    const har=m['하네스']||{};
+    const jun=m['전장']||{};
+    const autoDate=o.delivery_date?addDays(o.delivery_date,-offset):'';
+    const harComp=har.completion_date||(autoDate?autoDate:'');
+    const junComp=jun.completion_date||(autoDate?autoDate:'');
+    const allMI=[...(gak.missing_items||[]),...(har.missing_items||[]),...(jun.missing_items||[])];
+    const miCount=allMI.length;
+    const dateStyle=(d)=>{
+      if(!d)return'color:var(--muted)';
+      const today=new Date();today.setHours(0,0,0,0);
+      const diff=(new Date(d+'T00:00:00')-today)/86400000;
+      return diff<0?'color:var(--danger);font-weight:700':diff<=3?'color:var(--warning);font-weight:600':'color:var(--dim)';
+    };
+    return`<tr onclick="mDetail('${o.id}')">
+      <td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim);font-size:10px">${o.part_name}</div></td>
+      <td><span class="badge by">${o.lot_no||'—'}</span></td>
+      <td style="font-weight:600;font-size:12px">${o.customer}</td>
+      <td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td>
+      <td style="border-left:2px solid var(--warning);text-align:center" onclick="event.stopPropagation()">
+        <input type="checkbox" class="mat-check" ${gak.ordered?'checked':''} onchange="inlineSaveMat('${gak.id}','ordered',this.checked,'${o.id}')">
+      </td>
+      <td onclick="event.stopPropagation()">
+        <input type="date" class="mat-date" value="${gak.incoming_date||''}" onchange="inlineSaveMat('${gak.id}','incoming_date',this.value,'${o.id}')" style="width:86px">
+      </td>
+      <td style="border-left:2px solid #00b4cc;text-align:center" onclick="event.stopPropagation()">
+        <input type="checkbox" class="mat-check" ${har.issued?'checked':''} onchange="inlineSaveMat('${har.id}','issued',this.checked,'${o.id}')">
+      </td>
+      <td onclick="event.stopPropagation()">
+        <input type="date" class="mat-date" value="${har.work_request_date||''}" onchange="inlineSaveMat('${har.id}','work_request_date',this.value,'${o.id}')" style="width:86px">
+      </td>
+      <td onclick="event.stopPropagation()">
+        <span style="${dateStyle(harComp)};font-family:var(--mono);font-size:11px">${harComp?fmtDateS(harComp):'—'}</span>
+        <input type="date" class="mat-date" value="${har.completion_date||''}" onchange="inlineSaveMat('${har.id}','completion_date',this.value,'${o.id}')" style="width:0;opacity:0;position:absolute">
+        <span onclick="this.previousElementSibling.showPicker&&this.previousElementSibling.showPicker()" style="cursor:pointer;color:var(--muted);font-size:10px;margin-left:2px">✎</span>
+      </td>
+      <td style="border-left:2px solid var(--purple);text-align:center" onclick="event.stopPropagation()">
+        <input type="checkbox" class="mat-check" ${jun.issued?'checked':''} onchange="inlineSaveMat('${jun.id}','issued',this.checked,'${o.id}')">
+      </td>
+      <td onclick="event.stopPropagation()">
+        <span style="${dateStyle(junComp)};font-family:var(--mono);font-size:11px">${junComp?fmtDateS(junComp):'—'}</span>
+        <input type="date" class="mat-date" value="${jun.completion_date||''}" onchange="inlineSaveMat('${jun.id}','completion_date',this.value,'${o.id}')" style="width:0;opacity:0;position:absolute">
+        <span onclick="this.previousElementSibling.showPicker&&this.previousElementSibling.showPicker()" style="cursor:pointer;color:var(--muted);font-size:10px;margin-left:2px">✎</span>
+      </td>
+      <td onclick="event.stopPropagation();mMissingItems('${o.id}')" style="text-align:center;cursor:pointer">
+        ${miCount>0?`<span class="missing-badge" style="cursor:pointer">${miCount} ▾</span>`:'<span style="color:var(--muted);font-size:11px">—</span>'}
+      </td>
+      <td>${getBadge(o)}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-s btn-sm" onclick="doPrint('${o.id}')">출력</button>
+          <button class="btn btn-s btn-sm" onclick="mOrder('${o.id}')">수정</button>
+          <button class="btn btn-d btn-sm" onclick="doDelete('${o.id}')">삭제</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
 
 function vCust(orders){const groups={};orders.forEach(o=>{if(!groups[o.customer])groups[o.customer]=[];groups[o.customer].push(o);});if(!Object.keys(groups).length)return`<div class="empty"><div class="ic">🏢</div><h3>데이터 없음</h3></div>`;return Object.entries(groups).map(([c,ords])=>`<div style="margin-bottom:16px"><div class="cg-head"><span style="font-weight:700">${c}</span><span class="badge bp">${ords.length}건</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">완료 ${ords.filter(o=>o.status==='완료').length} / 지연 ${ords.filter(o=>isLate(o)).length}</span></div><div class="tw" style="border-radius:0 0 var(--rl) var(--rl)"><table><thead><tr><th>품번/품명</th><th>호기</th><th>수량</th><th>납기일</th><th>공정</th><th>상태</th></tr></thead><tbody>${ords.map(o=>`<tr onclick="mDetail('${o.id}')"><td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div></td><td><span class="badge by">${o.lot_no||'—'}</span></td><td class="mono">${o.quantity}</td><td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td><td>${getDots(o)}</td><td>${getBadge(o)}</td></tr>`).join('')}</tbody></table></div></div>`).join('');}
 
@@ -504,7 +633,12 @@ function setScanTab(t){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});
 
 function render(){const app=document.getElementById('app');if(!getConf()||!sb){app.innerHTML=pageSetup();return;}app.innerHTML=`<nav id="navbar">${pageNav()}</nav><div id="page">${S.loading?'<div class="loading"><div class="spin"></div> 로딩 중...</div>':S.page==='dashboard'?pageDash():S.page==='scan'?pageScan():S.page==='stats'?pageStats():S.page==='settings'?pageSettings():pageDash()}</div>`;}
 
-async function loadData(){S.loading=true;render();[S.templates,S.orders]=await Promise.all([qTemplates(),qOrders()]);S.loading=false;}
+async function loadData(){
+  S.loading=true;render();
+  [S.templates,S.orders]=await Promise.all([qTemplates(),qOrders()]);
+  if(sb){const{data}=await sb.from('order_materials').select('*');S.allMats=(data||[]).map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));}
+  S.loading=false;
+}
 async function init(){
   const SB_URL='https://zlmdxxginskguqqitsbp.supabase.co';
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbWR4eGdpbnNrZ3VxcWl0c2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjQyMTcsImV4cCI6MjA5MzYwMDIxN30.1b1bGTNfq7a1ZTBeHVnzTRsjWgwZP4rY9ei3XqljNi0';
