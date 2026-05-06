@@ -139,6 +139,18 @@ ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
 ALTER TABLE work_logs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE order_materials DISABLE ROW LEVEL SECURITY;`;
 
+const APP_VERSION='v1.8.0';
+const VERSION_LOG=[
+  {v:'v1.8.0',date:'2026-05-07',log:'버전관리 추가, 로딩속도 개선, 캘린더 고객사/품명/수량 표시, 공정 수동진행(건너뛰기), 작업자 이력'},
+  {v:'v1.7.0',date:'2026-05-07',log:'메인화면 PD BOX 스타일 자재현황 컬럼, 미불출품목 인라인 편집, 완료요청 납기-N일 설정'},
+  {v:'v1.6.0',date:'2026-05-07',log:'자재현황 탭, 작업자 바코드 자동인식 스캔, 하네스 작업/완료/불출일 추가'},
+  {v:'v1.5.0',date:'2026-05-07',log:'엑셀 완료요청일 일괄설정, 미불출품목(품번/품명/수량/입고예정) 관리'},
+  {v:'v1.4.0',date:'2026-05-07',log:'공정별 색상지정, 단계 추가/삭제, RLS 오류 수정'},
+  {v:'v1.3.0',date:'2026-05-06',log:'Supabase 키 내장, GitHub Pages 배포, 작업자 기록'},
+  {v:'v1.2.0',date:'2026-05-06',log:'호기 탭, 납기-3일 자동, 엑셀 발주등록, 공정템플릿 관리, 집계 페이지'},
+  {v:'v1.1.0',date:'2026-05-06',log:'바코드 스캔(USB/카메라), 공정 시작/완료, 작업지시서 출력'},
+  {v:'v1.0.0',date:'2026-05-06',log:'최초 공정관리 시스템 구축'},
+];
 const MAT_CATS=['가공물','하네스','전장'];
 const STEP_COLORS=['#00d2ff','#00e676','#ffab00','#ff4757','#bd93f9','#ff6b35','#ff79c6','#8be9fd','#f1fa8c','#50fa7b'];
 let sb=null;
@@ -249,7 +261,7 @@ function getTpl(name){if(!name)return null;const n=name.trim().toUpperCase();ret
 
 function pageSetup(){return`<div class="setup-wrap"><div style="text-align:center;margin-bottom:26px"><div style="font-family:var(--mono);font-size:24px;color:var(--primary);font-weight:700">⚙ JS 공정관리</div><div style="color:var(--dim);margin-top:6px">Supabase 연결 설정이 필요합니다</div></div><div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:22px"><div class="fg" style="margin-bottom:10px"><label class="fl">Supabase Project URL</label><input class="fi" id="sb-url" placeholder="https://xxxxxx.supabase.co"></div><div class="fg" style="margin-bottom:16px"><label class="fl">Supabase Anon Key</label><input class="fi" id="sb-key" placeholder="eyJhbGci..."></div><button class="btn btn-p" style="width:100%;padding:10px;font-size:14px" onclick="doSetup()">연결하기</button><details style="margin-top:14px"><summary style="cursor:pointer;color:var(--dim);font-size:12px;margin-bottom:8px">▶ DB 초기화 SQL (최초 1회 실행)</summary><textarea class="fta" style="font-family:var(--mono);font-size:10px;min-height:200px" readonly>${SQL_INIT}</textarea></details></div></div>`;}
 
-function pageNav(){const tabs=[['dashboard','📋 발주현황'],['scan','📷 스캔'],['stats','📊 집계'],['settings','⚙ 설정']];return`<div class="nav-brand">JS공정</div><div class="nav-tabs">${tabs.map(([p,l])=>`<button class="ntab ${S.page===p?'on':''}" onclick="nav('${p}')">${l}</button>`).join('')}</div><button class="scan-btn" onclick="nav('scan')">📷 스캔</button>`;}
+function pageNav(){const tabs=[['dashboard','📋 발주현황'],['scan','📷 스캔'],['stats','📊 집계'],['settings','⚙ 설정']];return`<div class="nav-brand">JS공정</div><div class="nav-tabs">${tabs.map(([p,l])=>`<button class="ntab ${S.page===p?'on':''}" onclick="nav('${p}')">${l}</button>`).join('')}</div><button class="scan-btn" onclick="nav('scan')">📷 스캔</button><button onclick="mVersionLog()" style="background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--dim);padding:3px 8px;font-size:10px;font-family:var(--mono);cursor:pointer;white-space:nowrap;flex-shrink:0" title="버전 이력 보기">${APP_VERSION}</button>`;}
 
 function pageDash(){
   const all=S.orders;
@@ -728,7 +740,21 @@ let qrScanner=null;
 async function toggleCam(){const btn=document.getElementById('cam-btn');if(qrScanner){try{if(qrScanner.isScanning)await qrScanner.stop();}catch(e){}qrScanner=null;if(btn)btn.textContent='📷 카메라 시작';return;}if(!window.Html5Qrcode){toast('라이브러리 로딩 중','err');return;}try{qrScanner=new Html5Qrcode('cam-reader');const fmts=window.Html5QrcodeSupportedFormats?[Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_39]:undefined;await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:120},...(fmts?{formatsToSupport:fmts}:{})},async text=>await doScan(text),()=>{});if(btn)btn.textContent='⏹ 카메라 중지';}catch(e){toast('카메라 오류: '+e.message,'err');}}
 
 function nav(page){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});qrScanner=null;}S.page=page;S.scanResult=null;render();if(page==='scan')setTimeout(()=>document.getElementById('usb-in')?.focus(),120);}
-function saveWorkers(){localStorage.setItem('pm_workers',JSON.stringify(S.workers));}
+function mVersionLog(){openM(`📋 버전 이력 — JS공정관리 시스템`,`
+  <div style="margin-bottom:12px;padding:10px 12px;background:var(--pg);border:1px solid var(--primary);border-radius:var(--r);display:flex;align-items:center;gap:10px">
+    <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--primary)">${APP_VERSION}</span>
+    <span style="font-size:12px;color:var(--dim)">현재 버전</span>
+  </div>
+  <div>${VERSION_LOG.map((v,i)=>`
+    <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);${i===0?'':''}">
+      <div style="flex-shrink:0;text-align:right">
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${i===0?'var(--primary)':'var(--dim)'}">${v.v}</div>
+        <div style="font-size:10px;color:var(--muted)">${v.date}</div>
+      </div>
+      <div style="font-size:12px;color:${i===0?'var(--text)':'var(--dim)'};line-height:1.6">${v.log}</div>
+    </div>`).join('')}
+  </div>`,
+  [{l:'닫기',c:'btn-p',a:'closeM()'}]);}
 function addWorker(){S.workers.push({name:'',barcode:''});saveWorkers();render();}
 function removeWorker(i){S.workers.splice(i,1);saveWorkers();render();}
 function setFS(s){S.fStatus=s;render();}
