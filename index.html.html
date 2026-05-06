@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>JS 공정관리 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#080c12;--s1:#0f1520;--s2:#18202e;--s3:#222d40;--border:#2a3550;--border2:#364060;--primary:#00d2ff;--pg:rgba(0,210,255,.12);--success:#00e676;--warning:#ffab00;--danger:#ff4757;--purple:#bd93f9;--text:#dce8f5;--dim:#7a90b0;--muted:#3a4a60;--font:'Noto Sans KR',sans-serif;--mono:'Space Mono',monospace;--r:6px;--rl:10px;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;line-height:1.5}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--s1)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+#app{display:flex;flex-direction:column;height:100vh}
+#navbar{background:var(--s1);border-bottom:1px solid var(--border);padding:0 14px;height:52px;display:flex;align-items:center;gap:5px;flex-shrink:0;z-index:100}
+#page{flex:1;overflow-y:auto;padding:14px}
+.nav-brand{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--primary);margin-right:4px;white-space:nowrap}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto}
+.ntab{padding:5px 9px;border-radius:var(--r);color:var(--dim);cursor:pointer;font-size:12px;font-weight:500;border:none;background:none;transition:all .15s;white-space:nowrap}
+.ntab:hover{color:var(--text);background:var(--s2)}.ntab.on{color:var(--primary);background:var(--pg)}
+.scan-btn{background:var(--primary);color:var(--bg);border:none;padding:6px 12px;border-radius:var(--r);font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;font-family:var(--font);flex-shrink:0}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.stat:hover,.stat.on{border-color:var(--primary)}.stat .v{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;margin-bottom:3px}.stat .l{color:var(--dim);font-size:11px}
+.c-p .v{color:var(--primary)}.c-w .v{color:var(--warning)}.c-s .v{color:var(--success)}.c-d .v{color:var(--danger)}
+.toolbar{display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap}
+.ttabs{display:flex;background:var(--s2);border-radius:var(--r);padding:2px;gap:2px}
+.ttab{padding:4px 11px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;color:var(--dim);border:none;background:none;transition:all .15s}
+.ttab.on{background:var(--s3);color:var(--text)}
+select.flt,input.flt{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:5px 8px;font-size:12px;font-family:var(--font);outline:none}
+select.flt:focus,input.flt:focus{border-color:var(--primary)}
+.btn{padding:5px 12px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:4px;font-family:var(--font)}
+.btn-p{background:var(--primary);color:var(--bg)}.btn-p:hover{opacity:.85}
+.btn-s{background:var(--s2);color:var(--text);border:1px solid var(--border)}.btn-s:hover{border-color:var(--primary);color:var(--primary)}
+.btn-d{background:rgba(255,71,87,.12);color:var(--danger);border:1px solid rgba(255,71,87,.3)}
+.btn-g{background:rgba(0,230,118,.12);color:var(--success);border:1px solid rgba(0,230,118,.3)}
+.btn-sm{padding:3px 8px;font-size:11px}.mla{margin-left:auto}
+.tw{overflow-x:auto;border-radius:var(--rl);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--s2);padding:8px 10px;text-align:left;font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}tbody tr:hover{background:var(--s2)}
+td{padding:8px 10px;vertical-align:middle}.mono{font-family:var(--mono);font-size:11px}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.bw{background:rgba(122,144,176,.12);color:var(--dim)}.bp{background:rgba(0,210,255,.12);color:var(--primary)}
+.bs{background:rgba(0,230,118,.12);color:var(--success)}.bd{background:rgba(255,71,87,.12);color:var(--danger)}.by{background:rgba(255,171,0,.12);color:var(--warning)}
+.dots{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.dot{width:18px;height:18px;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.dot-s{background:var(--success);color:var(--bg)}.dot-a{background:var(--primary);color:var(--bg);animation:pulse 1.5s infinite}.dot-w{background:var(--s3);color:var(--muted);border:1px solid var(--border)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.dn{color:var(--dim);font-family:var(--mono);font-size:11px}.dl{color:var(--danger);font-family:var(--mono);font-size:11px;font-weight:700}.dw{color:var(--warning);font-family:var(--mono);font-size:11px;font-weight:600}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:14px}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal-lg{max-width:820px}
+.mh{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--s1);z-index:2}
+.mt{font-size:14px;font-weight:700}.mx{background:none;border:none;color:var(--dim);cursor:pointer;font-size:22px;line-height:1;padding:2px 6px}.mx:hover{color:var(--text)}
+.mb{padding:18px}.mf{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--s1)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}.fg.full{grid-column:1/-1}
+.fl{font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.4px}
+.fi,.fs,.fta{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:7px 9px;font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s;width:100%}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--primary)}.fta{resize:vertical;min-height:55px}
+.tpl-preview{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:34px}
+.chip{background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--dim)}
+.chip.act{background:var(--pg);border-color:var(--primary);color:var(--primary)}.chip.arr{background:none;border:none;color:var(--border2);font-size:12px}
+.scan-wrap{max-width:480px;margin:0 auto}
+.stabs{display:flex;background:var(--s2);border-radius:var(--r);padding:3px;gap:3px;margin-bottom:14px}
+.stab{flex:1;padding:7px;text-align:center;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600;color:var(--dim);border:none;background:none;transition:all .15s}
+.stab.on{background:var(--s3);color:var(--primary)}
+.usb-box{background:var(--s1);border:2px dashed var(--border2);border-radius:var(--rl);padding:28px 20px;text-align:center}
+#usb-in{background:var(--s2);border:2px solid var(--primary);border-radius:var(--r);color:var(--text);padding:12px;font-size:18px;font-family:var(--mono);text-align:center;width:100%;outline:none;margin-top:12px;letter-spacing:2px}
+.scan-res{background:var(--s2);border:1px solid var(--primary);border-radius:var(--rl);padding:14px;margin-top:14px}
+.scan-step{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--s3);border-radius:var(--r);border:1px solid var(--border);margin-bottom:5px}
+.scan-step.done{opacity:.5}.scan-step.cur{border-color:var(--primary);background:rgba(0,210,255,.07)}
+.mat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.mat-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px}
+.mat-title{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.mat-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px}
+.mat-check{width:14px;height:14px;cursor:pointer;accent-color:var(--primary)}
+.mat-label{color:var(--dim);font-size:11px;width:48px;flex-shrink:0}
+.mat-date{background:var(--s3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:3px 6px;font-size:11px;font-family:var(--font);outline:none;width:100%}
+.mat-date:focus{border-color:var(--primary)}.missing-badge{background:rgba(255,71,87,.15);color:var(--danger);border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700}
+.cal-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl)}
+.cal-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.cal-nav{background:none;border:none;color:var(--dim);cursor:pointer;font-size:20px;padding:3px 7px;border-radius:var(--r)}.cal-nav:hover{color:var(--text);background:var(--s2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-dn{text-align:center;padding:7px 0;font-size:11px;font-weight:600;color:var(--dim);border-bottom:1px solid var(--border)}
+.cal-day{min-height:72px;padding:5px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.cal-day:hover{background:var(--s2)}.cal-day:nth-child(7n){border-right:none}
+.cal-day.om .cd{color:var(--muted)}.cal-day.tod .cd{color:var(--primary);font-weight:700}
+.cd{font-size:11px;margin-bottom:3px;font-family:var(--mono)}
+.ce{border-radius:3px;padding:1px 4px;font-size:9px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ce-prog{background:rgba(0,210,255,.12);color:var(--primary)}.ce-done{background:rgba(0,230,118,.12);color:var(--success)}.ce-late{background:rgba(255,71,87,.12);color:var(--danger)}
+.cg-head{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-radius:var(--r) var(--r) 0 0;border:1px solid var(--border);border-bottom:none}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stats-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:14px}
+.stats-card .sv{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--primary);margin-bottom:3px}.stats-card .sl{font-size:11px;color:var(--dim)}
+.bar-track{background:var(--s3);border-radius:4px;height:8px;overflow:hidden}.bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.stat-section{margin-bottom:20px}.stat-title2{font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.ss{margin-bottom:22px}.stitle{font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.tpl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--s2);border-radius:var(--r);margin-bottom:6px;border:1px solid var(--border)}
+.dstep{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border-radius:var(--r);border-left:3px solid var(--border);margin-bottom:5px}
+.dstep.done{border-left-color:var(--success)}.dstep.act{border-left-color:var(--primary)}
+.setup-wrap{max-width:420px;margin:36px auto}
+.import-table-wrap{max-height:260px;overflow-y:auto;border-radius:var(--r);border:1px solid var(--border)}
+.import-table{width:100%;border-collapse:collapse;font-size:11px}
+.import-table th{background:var(--s2);padding:6px 8px;text-align:left;color:var(--dim);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0}
+.import-table td{padding:5px 8px;border-bottom:1px solid var(--border)}
+.import-table tr:last-child td{border-bottom:none}.import-table tr:hover td{background:var(--s2)}
+.row-ok{color:var(--success)}.row-warn{color:var(--warning)}
+.empty{text-align:center;padding:50px 20px;color:var(--dim)}.empty .ic{font-size:38px;margin-bottom:10px}.empty h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px}
+.loading{display:flex;align-items:center;justify-content:center;padding:50px;color:var(--dim);gap:10px}
+.spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;font-size:13px;z-index:2000;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none}
+#toast.show{opacity:1;transform:translateY(0)}#toast.ok{border-color:var(--success);color:var(--success)}#toast.err{border-color:var(--danger);color:var(--danger)}
+#parea{display:none}
+@media print{body>*{display:none!important}#parea{display:block!important;padding:14mm}.ph{display:flex;justify-content:space-between;margin-bottom:16px;border-bottom:2px solid #000;padding-bottom:12px}.ptitle{font-size:20px;font-weight:700}.pco{font-size:16px;font-weight:700;margin-bottom:4px}.pig{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}.pf{display:flex;gap:8px;font-size:12px}.pfl{font-weight:600;color:#555;min-width:76px}.pbc{text-align:center;margin:14px 0;padding:10px;border:1px solid #ddd;border-radius:4px}.ptbl{width:100%;border-collapse:collapse}.ptbl th,.ptbl td{border:1px solid #ccc;padding:7px 10px;font-size:11px;text-align:left}.ptbl th{background:#f0f0f0;font-weight:700}*{color:#000!important;background:white!important}}
+@media(max-width:768px){#page{padding:10px}.stat-row{grid-template-columns:repeat(2,1fr)}.fg2{grid-template-columns:1fr}.mat-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}table thead th:nth-child(n+7){display:none}table tbody td:nth-child(n+7){display:none}#navbar{padding:0 8px;gap:3px}}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="modals"></div><div id="parea"></div><div id="toast"></div>
+<script>
+const SQL_INIT=`-- Supabase SQL Editor에 복사 후 실행 (최초 1회)
+CREATE TABLE IF NOT EXISTS process_templates(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),name TEXT NOT NULL,steps JSONB NOT NULL DEFAULT '[]',is_default BOOLEAN DEFAULT false,created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS orders(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),barcode TEXT UNIQUE NOT NULL,customer TEXT NOT NULL DEFAULT '',order_no TEXT DEFAULT '',part_no TEXT NOT NULL DEFAULT '',part_name TEXT NOT NULL DEFAULT '',rev TEXT DEFAULT '',lot_no TEXT DEFAULT '',quantity INTEGER NOT NULL DEFAULT 1,delivery_date DATE,production_deadline DATE,template_id UUID REFERENCES process_templates(id),current_step INTEGER DEFAULT 0,status TEXT DEFAULT '대기',notes TEXT DEFAULT '',created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS work_logs(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),order_id UUID REFERENCES orders(id) ON DELETE CASCADE,step_index INTEGER NOT NULL,step_name TEXT NOT NULL,worker TEXT DEFAULT '',started_at TIMESTAMPTZ,ended_at TIMESTAMPTZ,created_at TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS order_materials(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),order_id UUID REFERENCES orders(id) ON DELETE CASCADE,category TEXT NOT NULL,ordered BOOLEAN DEFAULT false,incoming_date DATE,issued BOOLEAN DEFAULT false,completion_date DATE,notes TEXT DEFAULT '',created_at TIMESTAMPTZ DEFAULT now());
+INSERT INTO process_templates(name,steps,is_default)VALUES('표준 공정 A','["입고","수검사","부착","배선","자검사","출검사","포장"]',true),('선작업 공정 B','["입고","수검사","선작업","부착","배선","자검사","출검사","포장"]',true)ON CONFLICT DO NOTHING;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS lot_no TEXT DEFAULT '';
+ALTER TABLE process_templates ADD COLUMN IF NOT EXISTS colors JSONB DEFAULT '[]';
+ALTER TABLE process_templates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE work_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE order_materials DISABLE ROW LEVEL SECURITY;`;
+
+const MAT_CATS=['가공물','하네스','전장'];
+const STEP_COLORS=['#00d2ff','#00e676','#ffab00','#ff4757','#bd93f9','#ff6b35','#ff79c6','#8be9fd','#f1fa8c','#50fa7b'];
+let sb=null;
+let modalSteps=[];
+const S={page:'dashboard',tab:'list',orders:[],templates:[],materials:{},fStatus:'all',fCustomer:'all',calMonth:new Date(),scanTab:'usb',scanResult:null,wlogs:{},loading:false};
+
+function initSB(u,k){sb=window.supabase.createClient(u,k);}
+async function qOrders(){if(!sb)return[];const{data}=await sb.from('orders').select('*,process_templates(name,steps)').order('delivery_date',{ascending:true,nullsFirst:false});return data||[];}
+async function qTemplates(){if(!sb)return[];const{data}=await sb.from('process_templates').select('*').order('created_at');return(data||[]).map(t=>({...t,steps:Array.isArray(t.steps)?t.steps:JSON.parse(t.steps||'[]'),colors:Array.isArray(t.colors)?t.colors:JSON.parse(t.colors||'[]')}));}
+async function qSaveOrder(d){
+  if(!sb)return;
+  const prd=d.production_deadline||(d.delivery_date?addDays(d.delivery_date,-3):'');
+  const p={customer:d.customer,order_no:d.order_no,part_no:d.part_no,part_name:d.part_name,rev:d.rev,lot_no:d.lot_no||'',quantity:d.quantity,delivery_date:d.delivery_date||null,production_deadline:prd||null,template_id:d.template_id,notes:d.notes||'',updated_at:new Date().toISOString()};
+  if(d.id){const{error}=await sb.from('orders').update(p).eq('id',d.id);if(error)throw error;}
+  else{const{data,error}=await sb.from('orders').insert({barcode:genBC(),status:'대기',current_step:0,...p}).select().single();if(error)throw error;await sb.from('order_materials').insert(MAT_CATS.map(cat=>({order_id:data.id,category:cat})));}
+}
+async function qDelOrder(id){if(!sb)return;await sb.from('order_materials').delete().eq('order_id',id);await sb.from('work_logs').delete().eq('order_id',id);await sb.from('orders').delete().eq('id',id);}
+async function qWlogs(oid){if(!sb)return[];const{data}=await sb.from('work_logs').select('*').eq('order_id',oid).order('step_index');return data||[];}
+async function qAllWlogs(){if(!sb)return[];const{data}=await sb.from('work_logs').select('*').not('ended_at','is',null);return data||[];}
+async function qStartStep(oid,idx,name,worker=''){if(!sb)return;const{data:ex}=await sb.from('work_logs').select('id').eq('order_id',oid).eq('step_index',idx);if(ex&&ex.length>0)return;await sb.from('work_logs').insert({order_id:oid,step_index:idx,step_name:name,worker:worker,started_at:new Date().toISOString()});await sb.from('orders').update({status:'진행중',updated_at:new Date().toISOString()}).eq('id',oid);}
+async function qEndStep(oid,idx,total){if(!sb)return;const{data:logs}=await sb.from('work_logs').select('*').eq('order_id',oid).eq('step_index',idx).is('ended_at',null);if(logs&&logs.length>0)await sb.from('work_logs').update({ended_at:new Date().toISOString()}).eq('id',logs[0].id);const next=idx+1,done=next>=total;await sb.from('orders').update({current_step:done?idx:next,status:done?'완료':'진행중',updated_at:new Date().toISOString()}).eq('id',oid);}
+async function qSaveTpl(name,steps,colors,id=null){
+  if(!sb)throw new Error('Supabase 미연결');
+  const payload={name,steps:JSON.stringify(steps),colors:JSON.stringify(colors)};
+  if(id){const{error}=await sb.from('process_templates').update(payload).eq('id',id);if(error)throw error;}
+  else{const{error}=await sb.from('process_templates').insert(payload);if(error)throw error;}
+}
+async function qDelTpl(id){if(sb)await sb.from('process_templates').delete().eq('id',id);}
+async function qMaterials(oid){if(!sb)return[];const{data}=await sb.from('order_materials').select('*').eq('order_id',oid).order('category');if(!data||data.length===0){await sb.from('order_materials').insert(MAT_CATS.map(cat=>({order_id:oid,category:cat})));const{data:d2}=await sb.from('order_materials').select('*').eq('order_id',oid).order('category');return(d2||[]).map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));}return data.map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));}
+async function qSaveMat(id,field,value){if(sb)await sb.from('order_materials').update({[field]:field==='missing_items'?JSON.stringify(value):value}).eq('id',id);}
+function getMatsForId(matId){return Object.values(S.materials).flat().find(m=>m.id===matId);}
+function getOidForMat(matId){return Object.keys(S.materials).find(k=>S.materials[k].some(m=>m.id===matId));}
+function addMissingItem(matId){const mat=getMatsForId(matId);if(!mat)return;if(!Array.isArray(mat.missing_items))mat.missing_items=[];mat.missing_items.push({part_no:'',part_name:'',qty:1,incoming_date:''});qSaveMat(matId,'missing_items',mat.missing_items);renderMI(matId);}
+function removeMissingItem(matId,idx){const mat=getMatsForId(matId);if(!mat)return;mat.missing_items.splice(idx,1);qSaveMat(matId,'missing_items',mat.missing_items);renderMI(matId);}
+function updateMI(matId,idx,field,value){const mat=getMatsForId(matId);if(!mat||!mat.missing_items[idx])return;mat.missing_items[idx][field]=field==='qty'?parseInt(value)||1:value;qSaveMat(matId,'missing_items',mat.missing_items);}
+function renderMI(matId){const el=document.getElementById('mi-'+matId);if(el)el.innerHTML=buildMIHtml(matId);}
+function buildMIHtml(matId){const mat=getMatsForId(matId);const items=mat?.missing_items||[];if(!items.length)return`<div style="font-size:10px;color:var(--muted);text-align:center;padding:6px">품목 없음</div>`;return`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr>${['품번','품명','수량','입고예정',''].map(h=>`<th style="background:var(--s3);padding:4px 5px;text-align:left;color:var(--dim);border-bottom:1px solid var(--border)">${h}</th>`).join('')}</tr></thead><tbody>${items.map((it,i)=>`<tr><td><input class="mat-date" value="${it.part_no||''}" style="width:80px" oninput="updateMI('${matId}',${i},'part_no',this.value)"></td><td><input class="mat-date" value="${it.part_name||''}" style="width:90px" oninput="updateMI('${matId}',${i},'part_name',this.value)"></td><td><input class="mat-date" type="number" value="${it.qty||1}" style="width:40px" oninput="updateMI('${matId}',${i},'qty',this.value)"></td><td><input class="mat-date" type="date" value="${it.incoming_date||''}" oninput="updateMI('${matId}',${i},'incoming_date',this.value)"></td><td><button onclick="removeMissingItem('${matId}',${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">×</button></td></tr>`).join('')}</tbody></table></div>`;}
+function buildMatCard(m){
+  let fields='';
+  if(m.category==='가공물'){
+    fields=`<div class="mat-row"><input type="checkbox" class="mat-check" ${m.ordered?'checked':''} onchange="saveMat('${m.id}','ordered',this.checked)"><span class="mat-label">발주</span></div><div class="mat-row"><span class="mat-label">입고예정</span><input type="date" class="mat-date" value="${m.incoming_date||''}" onchange="saveMat('${m.id}','incoming_date',this.value)"></div>`;
+  }else if(m.category==='하네스'){
+    fields=`<div class="mat-row"><input type="checkbox" class="mat-check" ${m.issued?'checked':''} onchange="saveMat('${m.id}','issued',this.checked)"><span class="mat-label">불출</span>${!m.issued?'<span class="missing-badge">미불출</span>':''}</div><div class="mat-row"><span class="mat-label">작업요청</span><input type="date" class="mat-date" value="${m.work_request_date||''}" onchange="saveMat('${m.id}','work_request_date',this.value)"></div><div class="mat-row"><span class="mat-label">완료요청</span><input type="date" class="mat-date" value="${m.completion_date||''}" onchange="saveMat('${m.id}','completion_date',this.value)"></div><div class="mat-row"><span class="mat-label">자재불출일</span><input type="date" class="mat-date" value="${m.issue_date||''}" onchange="saveMat('${m.id}','issue_date',this.value)"></div>`;
+  }else{
+    fields=`<div class="mat-row"><input type="checkbox" class="mat-check" ${m.issued?'checked':''} onchange="saveMat('${m.id}','issued',this.checked)"><span class="mat-label">불출</span>${!m.issued?'<span class="missing-badge">미불출</span>':''}</div><div class="mat-row"><span class="mat-label">완료요청</span><input type="date" class="mat-date" value="${m.completion_date||''}" onchange="saveMat('${m.id}','completion_date',this.value)"></div>`;
+  }
+  return`<div class="mat-card">${fields}<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:6px"><div style="font-size:10px;font-weight:700;color:var(--dim);margin-bottom:4px">미불출품목</div><div id="mi-${m.id}">${buildMIHtml(m.id)}</div><button class="btn btn-s btn-sm" onclick="addMissingItem('${m.id}')" style="width:100%;margin-top:5px;font-size:10px">+ 품목 추가</button></div></div>`;
+}
+
+function genBC(){const d=new Date();return`JS${String(d.getFullYear()).slice(2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}${String(Math.floor(Math.random()*9000)+1000)}`;}
+function getConf(){try{return JSON.parse(localStorage.getItem('pm_cfg')||'null');}catch{return null;}}
+function saveConf(u,k){localStorage.setItem('pm_cfg',JSON.stringify({url:u,key:k}));}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return`${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;}
+function fmtDateS(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return`${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
+function fmtDT(dt){if(!dt)return'—';const d=new Date(dt);return`${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function dcls(d,s){if(!d||s==='완료')return'dn';const t=new Date();t.setHours(0,0,0,0);const diff=(new Date(d+'T00:00:00')-t)/86400000;return diff<0?'dl':diff<=3?'dw':'dn';}
+function isLate(o){if(!o.delivery_date||o.status==='완료')return false;const t=new Date();t.setHours(0,0,0,0);return new Date(o.delivery_date+'T00:00:00')<t;}
+function getSteps(o){if(o.process_templates?.steps){const s=o.process_templates.steps;return Array.isArray(s)?s:JSON.parse(s||'[]');}const t=S.templates.find(t=>t.id===o.template_id);return t?t.steps:[];}
+function getBadge(o){let s=o.status||'대기';if(isLate(o)&&s!=='완료')s='지연';const m={'대기':'bw','진행중':'bp','완료':'bs','지연':'bd'};return`<span class="badge ${m[s]||'bw'}">${s}</span>`;}
+function toast(msg,type='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`show ${type}`;setTimeout(()=>el.className='',2600);}
+function getTplColors(o){const t=S.templates.find(x=>x.id===o.template_id);return t?.colors||[];}
+function getDots(o){const steps=getSteps(o);if(!steps.length)return'';const cols=getTplColors(o);return'<div class="dots">'+steps.map((s,i)=>{const done=o.status==='완료'||i<o.current_step;const act=i===o.current_step&&o.status==='진행중';const c=cols[i]||null;const bg=done?(c||'var(--success)'):act?(c||'var(--primary)'):'var(--s3)';const tc=(done||act)?'var(--bg)':'var(--muted)';const brd=(!done&&!act)?'1px solid var(--border)':'none';const anim=act?'animation:pulse 1.5s infinite':'';return`<div class="dot" style="background:${bg};color:${tc};border:${brd};${anim}" title="${s}">${i+1}</div>`;}).join('')+'</div>';}
+function calcWorkH(start,end){if(!start||!end)return null;const s=new Date(start),e=new Date(end);if(e<=s)return 0;let h=0,cur=new Date(s);while(cur<e){const dow=cur.getDay();if(dow!==0&&dow!==6){const ds=new Date(cur);ds.setHours(9,0,0,0);const de=new Date(cur);de.setHours(18,0,0,0);const from=Math.max(cur.getTime(),ds.getTime());const to=Math.min(e.getTime(),de.getTime());if(to>from)h+=(to-from)/3600000;}cur.setDate(cur.getDate()+1);cur.setHours(9,0,0,0);}return Math.round(h*10)/10;}
+function excelDate(n){if(!n||isNaN(n))return'';const d=new Date((n-25569)*86400000);const u=new Date(d.getTime()+d.getTimezoneOffset()*60000);return`${u.getFullYear()}-${String(u.getMonth()+1).padStart(2,'0')}-${String(u.getDate()).padStart(2,'0')}`;}
+function addDays(ds,days){if(!ds)return'';const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function getTpl(name){if(!name)return null;const n=name.trim().toUpperCase();return S.templates.find(t=>t.name.toUpperCase()===n||t.name.toUpperCase().includes(n)||n.includes(t.name.toUpperCase()));}
+
+function pageSetup(){return`<div class="setup-wrap"><div style="text-align:center;margin-bottom:26px"><div style="font-family:var(--mono);font-size:24px;color:var(--primary);font-weight:700">⚙ JS 공정관리</div><div style="color:var(--dim);margin-top:6px">Supabase 연결 설정이 필요합니다</div></div><div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:22px"><div class="fg" style="margin-bottom:10px"><label class="fl">Supabase Project URL</label><input class="fi" id="sb-url" placeholder="https://xxxxxx.supabase.co"></div><div class="fg" style="margin-bottom:16px"><label class="fl">Supabase Anon Key</label><input class="fi" id="sb-key" placeholder="eyJhbGci..."></div><button class="btn btn-p" style="width:100%;padding:10px;font-size:14px" onclick="doSetup()">연결하기</button><details style="margin-top:14px"><summary style="cursor:pointer;color:var(--dim);font-size:12px;margin-bottom:8px">▶ DB 초기화 SQL (최초 1회 실행)</summary><textarea class="fta" style="font-family:var(--mono);font-size:10px;min-height:200px" readonly>${SQL_INIT}</textarea></details></div></div>`;}
+
+function pageNav(){const tabs=[['dashboard','📋 발주현황'],['scan','📷 스캔'],['stats','📊 집계'],['settings','⚙ 설정']];return`<div class="nav-brand">JS공정</div><div class="nav-tabs">${tabs.map(([p,l])=>`<button class="ntab ${S.page===p?'on':''}" onclick="nav('${p}')">${l}</button>`).join('')}</div><button class="scan-btn" onclick="nav('scan')">📷 스캔</button>`;}
+
+function pageDash(){
+  const all=S.orders;
+  const stats={total:all.length,prog:all.filter(o=>o.status==='진행중').length,done:all.filter(o=>o.status==='완료').length,late:all.filter(o=>isLate(o)).length};
+  const custs=[...new Set(all.map(o=>o.customer).filter(Boolean))].sort();
+  const orders=filteredOrders();
+  return`<div class="stat-row"><div class="stat c-p ${S.fStatus==='all'?'on':''}" onclick="setFS('all')"><div class="v">${stats.total}</div><div class="l">전체</div></div><div class="stat c-w ${S.fStatus==='진행중'?'on':''}" onclick="setFS('진행중')"><div class="v">${stats.prog}</div><div class="l">진행중</div></div><div class="stat c-s ${S.fStatus==='완료'?'on':''}" onclick="setFS('완료')"><div class="v">${stats.done}</div><div class="l">완료</div></div><div class="stat c-d ${S.fStatus==='지연'?'on':''}" onclick="setFS('지연')"><div class="v">${stats.late}</div><div class="l">지연</div></div></div>
+  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div><select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()"><div class="mla" style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button><button class="btn btn-s btn-sm" onclick="loadData()">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
+  ${S.tab==='list'?vList(orders):S.tab==='customer'?vCust(orders):vCal()}`;}
+
+function filteredOrders(){let list=[...S.orders];if(S.fStatus!=='all')list=list.filter(o=>S.fStatus==='지연'?isLate(o):o.status===S.fStatus);if(S.fCustomer!=='all')list=list.filter(o=>o.customer===S.fCustomer);const q=document.getElementById('srch')?.value?.toLowerCase();if(q)list=list.filter(o=>o.part_no?.toLowerCase().includes(q)||o.part_name?.toLowerCase().includes(q)||o.customer?.toLowerCase().includes(q)||o.order_no?.toLowerCase().includes(q)||(o.lot_no||'').toLowerCase().includes(q));return list;}
+
+function vList(orders){if(!orders.length)return`<div class="empty"><div class="ic">📋</div><h3>표시할 발주가 없습니다</h3></div>`;return`<div class="tw"><table><thead><tr><th>품번 / 품명</th><th>호기</th><th>고객사</th><th>수량</th><th>납기일</th><th>공정 진행</th><th>상태</th><th>액션</th></tr></thead><tbody>${orders.map(o=>{const steps=getSteps(o);const cur=o.status==='완료'?'✅완료':(steps[o.current_step]||'—');return`<tr onclick="mDetail('${o.id}')"><td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div>${o.order_no?`<div class="mono" style="color:var(--muted)">${o.order_no}</div>`:''}</td><td><span class="badge by">${o.lot_no||'—'}</span></td><td style="font-weight:600">${o.customer}</td><td class="mono">${o.quantity}</td><td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td><td>${getDots(o)}<div style="font-size:10px;color:var(--dim);margin-top:2px">${cur}</div></td><td>${getBadge(o)}</td><td onclick="event.stopPropagation()"><div style="display:flex;gap:3px"><button class="btn btn-s btn-sm" onclick="doPrint('${o.id}')">출력</button><button class="btn btn-s btn-sm" onclick="mOrder('${o.id}')">수정</button><button class="btn btn-d btn-sm" onclick="doDelete('${o.id}')">삭제</button></div></td></tr>`;}).join('')}</tbody></table></div>`;}
+
+function vCust(orders){const groups={};orders.forEach(o=>{if(!groups[o.customer])groups[o.customer]=[];groups[o.customer].push(o);});if(!Object.keys(groups).length)return`<div class="empty"><div class="ic">🏢</div><h3>데이터 없음</h3></div>`;return Object.entries(groups).map(([c,ords])=>`<div style="margin-bottom:16px"><div class="cg-head"><span style="font-weight:700">${c}</span><span class="badge bp">${ords.length}건</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">완료 ${ords.filter(o=>o.status==='완료').length} / 지연 ${ords.filter(o=>isLate(o)).length}</span></div><div class="tw" style="border-radius:0 0 var(--rl) var(--rl)"><table><thead><tr><th>품번/품명</th><th>호기</th><th>수량</th><th>납기일</th><th>공정</th><th>상태</th></tr></thead><tbody>${ords.map(o=>`<tr onclick="mDetail('${o.id}')"><td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div></td><td><span class="badge by">${o.lot_no||'—'}</span></td><td class="mono">${o.quantity}</td><td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td><td>${getDots(o)}</td><td>${getBadge(o)}</td></tr>`).join('')}</tbody></table></div></div>`).join('');}
+
+function vCal(){const yr=S.calMonth.getFullYear(),mo=S.calMonth.getMonth();const today=new Date();const first=new Date(yr,mo,1).getDay(),days=new Date(yr,mo+1,0).getDate(),prev=new Date(yr,mo,0).getDate();const byDate={};S.orders.forEach(o=>{if(o.delivery_date){const k=o.delivery_date.slice(0,10);if(!byDate[k])byDate[k]=[];byDate[k].push(o);}});let cells='';for(let i=0;i<first;i++)cells+=`<div class="cal-day om"><div class="cd">${prev-first+i+1}</div></div>`;for(let d=1;d<=days;d++){const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isT=today.getFullYear()===yr&&today.getMonth()===mo&&today.getDate()===d;const dos=byDate[ds]||[];cells+=`<div class="cal-day ${isT?'tod':''}"><div class="cd">${d}</div>${dos.slice(0,3).map(o=>`<div class="ce ce-${o.status==='완료'?'done':isLate(o)?'late':'prog'}" onclick="event.stopPropagation();mDetail('${o.id}')">${o.part_no}${o.lot_no?' '+o.lot_no:''}</div>`).join('')}${dos.length>3?`<div style="font-size:9px;color:var(--dim)">+${dos.length-3}</div>`:''}</div>`;}const rem=(7-(first+days)%7)%7;for(let i=1;i<=rem;i++)cells+=`<div class="cal-day om"><div class="cd">${i}</div></div>`;return`<div class="cal-wrap"><div class="cal-hd"><button class="cal-nav" onclick="calNav(-1)">‹</button><div style="font-weight:700;font-size:14px">${yr}년 ${mo+1}월</div><button class="cal-nav" onclick="calNav(1)">›</button></div><div class="cal-grid">${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dn">${d}</div>`).join('')}${cells}</div></div>`;}
+
+function pageScan(){const w=localStorage.getItem('pm_worker')||'';return`<div class="scan-wrap"><div style="font-size:17px;font-weight:700;margin-bottom:10px">바코드 스캔</div><div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--dim);white-space:nowrap;font-weight:600">👤 작업자</span><input class="fi" id="worker-name" placeholder="이름 입력" value="${w}" oninput="localStorage.setItem('pm_worker',this.value)" style="padding:5px 8px;font-size:13px"></div><div class="stabs"><button class="stab ${S.scanTab==='usb'?'on':''}" onclick="setScanTab('usb')">🔌 USB 스캐너</button><button class="stab ${S.scanTab==='camera'?'on':''}" onclick="setScanTab('camera')">📷 카메라</button></div>${S.scanTab==='usb'?`<div class="usb-box"><div style="font-size:32px;margin-bottom:8px">🔍</div><div style="font-weight:600">USB 스캐너를 연결하거나 직접 입력하세요</div><div style="color:var(--dim);font-size:12px;margin-top:4px">스캔 시 자동 처리 · Enter 키로 수동 입력</div><input type="text" id="usb-in" placeholder="바코드 스캔 / 입력..." onkeydown="if(event.key==='Enter'){doScan(this.value.trim());this.value='';}" autocomplete="off" autocorrect="off" spellcheck="false"></div>`:`<div id="cam-reader" style="margin-bottom:10px;border-radius:var(--rl);overflow:hidden;min-height:180px;background:var(--s2);display:flex;align-items:center;justify-content:center"><div style="color:var(--dim)">카메라 시작 버튼을 눌러주세요</div></div><button class="btn btn-s" style="width:100%;padding:9px" id="cam-btn" onclick="toggleCam()">📷 카메라 시작</button>`}${S.scanResult?scanResult():''}</div>`;}
+
+function scanResult(){const o=S.scanResult;if(!o)return'';const steps=getSteps(o),logs=S.wlogs[o.id]||[];return`<div class="scan-res"><div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px"><div style="font-size:28px">📦</div><div style="flex:1"><div style="font-weight:700;font-size:14px">${o.part_no} ${o.lot_no?`<span class="badge by">${o.lot_no}</span>`:''} ${o.rev?`<span style="font-size:11px;color:var(--dim)">REV.${o.rev}</span>`:''}</div><div style="color:var(--dim);font-size:12px">${o.part_name} · ${o.customer} · ${o.quantity}ea</div><div style="color:var(--dim);font-size:12px">납기 ${fmtDate(o.delivery_date)}</div></div><div>${getBadge(o)}</div></div><div>${steps.map((step,i)=>{const log=logs.find(l=>l.step_index===i);const isDone=o.status==='완료'||i<o.current_step||log?.ended_at;const isCur=i===o.current_step&&o.status!=='완료';return`<div class="scan-step ${isDone?'done':''} ${isCur&&!isDone?'cur':''}"><div class="dot ${isDone?'dot-s':isCur&&!isDone?'dot-a':'dot-w'}" style="width:22px;height:22px;flex-shrink:0">${i+1}</div><div style="flex:1"><div>${step}</div>${log?.worker?`<div style="font-size:10px;color:var(--primary)">👤 ${log.worker}</div>`:''}</div><div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;line-height:1.6">${log?.started_at?`▶ ${fmtDT(log.started_at)}`:''}${log?.ended_at?`<br>✓ ${fmtDT(log.ended_at)}`:''}</div>${isCur&&!isDone?`<div style="display:flex;gap:5px">${!log?.started_at?`<button class="btn btn-p btn-sm" onclick="doStart('${o.id}',${i},'${step}')">▶ 시작</button>`:''}${log?.started_at&&!log?.ended_at?`<button class="btn btn-g btn-sm" onclick="doEnd('${o.id}',${i},${steps.length})">✓ 완료</button>`:''}</div>`:''}</div>`;}).join('')}</div><button class="btn btn-s" style="width:100%;margin-top:10px" onclick="S.scanResult=null;render()">닫기</button></div>`;}
+
+function pageStats(){
+  const orders=S.orders;
+  const custs=[...new Set(orders.map(o=>o.customer).filter(Boolean))].sort();
+  const totalRate=orders.length?Math.round(orders.filter(o=>o.status==='완료').length/orders.length*100):0;
+  const custData=custs.map(c=>{const ords=orders.filter(o=>o.customer===c);const done=ords.filter(o=>o.status==='완료').length;return{c,total:ords.length,done,prog:ords.filter(o=>o.status==='진행중').length,late:ords.filter(o=>isLate(o)).length,rate:ords.length?Math.round(done/ords.length*100):0};});
+  return`<div style="max-width:900px"><div class="stats-grid"><div class="stats-card"><div class="sv">${orders.length}</div><div class="sl">전체 발주 건수</div></div><div class="stats-card"><div class="sv" style="color:var(--success)">${totalRate}%</div><div class="sl">전체 완료율</div></div><div class="stats-card"><div class="sv" style="color:var(--danger)">${orders.filter(o=>isLate(o)).length}</div><div class="sl">지연 건수</div></div></div>
+  <div class="stat-section"><div class="stat-title2">🏢 고객사별 현황</div><div class="tw"><table><thead><tr><th>고객사</th><th>전체</th><th>완료</th><th>진행중</th><th>지연</th><th>완료율</th><th>그래프</th></tr></thead><tbody>${custData.map(d=>`<tr><td style="font-weight:600">${d.c}</td><td class="mono">${d.total}</td><td class="mono" style="color:var(--success)">${d.done}</td><td class="mono" style="color:var(--primary)">${d.prog}</td><td class="mono" style="color:${d.late>0?'var(--danger)':'var(--dim)'}">${d.late}</td><td class="mono">${d.rate}%</td><td style="min-width:120px"><div class="bar-track"><div class="bar-fill" style="width:${d.rate}%;background:${d.rate>=80?'var(--success)':d.rate>=50?'var(--warning)':'var(--danger)'}"></div></div></td></tr>`).join('')}</tbody></table></div></div>
+  <div class="stat-section"><div class="stat-title2">⏱ 공정별 소요시간 분석 (운영시간 09:00~18:00 기준)</div><div id="step-stats-area" style="background:var(--s1);border:1px solid var(--border);border-radius:var(--rl);padding:16px;text-align:center;color:var(--dim)"><div style="margin-bottom:10px">전체 작업 이력 로딩이 필요합니다</div><button class="btn btn-s" onclick="loadStepStats()">📊 공정시간 분석 불러오기</button></div></div></div>`;}
+
+async function loadStepStats(){
+  document.getElementById('step-stats-area').innerHTML='<div class="loading"><div class="spin"></div> 분석 중...</div>';
+  const logs=await qAllWlogs();
+  const stepMap={};
+  logs.forEach(log=>{if(!log.started_at||!log.ended_at)return;const h=calcWorkH(log.started_at,log.ended_at);if(!stepMap[log.step_name])stepMap[log.step_name]=[];if(h!==null&&h>0)stepMap[log.step_name].push(h);});
+  const rows=Object.entries(stepMap).map(([name,hrs])=>{const avg=hrs.length?(hrs.reduce((a,b)=>a+b,0)/hrs.length).toFixed(1):'—';const mn=hrs.length?Math.min(...hrs).toFixed(1):'—';const mx=hrs.length?Math.max(...hrs).toFixed(1):'—';return`<tr><td style="font-weight:600">${name}</td><td class="mono">${avg}h</td><td class="mono">${mn}h</td><td class="mono">${mx}h</td><td class="mono">${hrs.length}건</td></tr>`;}).join('');
+  const el=document.getElementById('step-stats-area');
+  if(el)el.innerHTML=rows?`<div class="tw"><table><thead><tr><th>공정명</th><th>평균</th><th>최소</th><th>최대</th><th>건수</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty"><div class="ic">📊</div><h3>완료된 공정 이력이 없습니다</h3></div>`;}
+
+function pageSettings(){const cfg=getConf()||{};return`<div style="max-width:620px"><div class="ss"><div class="stitle">🔗 Supabase 연결 설정</div><div class="fg" style="margin-bottom:10px"><label class="fl">Project URL</label><input class="fi" id="cfg-url" value="${cfg.url||''}"></div><div class="fg" style="margin-bottom:12px"><label class="fl">Anon Key</label><input class="fi" id="cfg-key" value="${cfg.key||''}"></div><button class="btn btn-p" onclick="doSaveConf()">저장 및 재연결</button></div><div class="ss"><div class="stitle" style="display:flex;align-items:center;justify-content:space-between">⚙ 공정 템플릿 관리<button class="btn btn-s btn-sm" onclick="mAddTpl()">+ 추가</button></div>${S.templates.map(t=>`<div class="tpl-item"><div style="min-width:110px"><div style="font-weight:600;font-size:12px">${t.name}</div>${t.is_default?'<div style="font-size:10px;color:var(--dim)">기본</div>':''}</div><div style="display:flex;flex-wrap:wrap;gap:3px;flex:1;align-items:center">${t.steps.map((s,i)=>{const c=(t.colors||[])[i]||'var(--primary)';return`<span class="chip" style="border-color:${c};color:${c};background:${c}18">${s}</span>${i<t.steps.length-1?'<span class="chip arr">→</span>':''}`}).join('')}</div><div style="display:flex;gap:4px;flex-shrink:0"><button class="btn btn-s btn-sm" onclick="mEditTpl('${t.id}')">수정</button><button class="btn btn-d btn-sm" onclick="doDelTpl('${t.id}')">삭제</button></div></div>`).join('')}</div><div class="ss"><div class="stitle">📋 DB 초기화 SQL</div><textarea class="fta" style="font-family:var(--mono);font-size:10px;min-height:160px" readonly>${SQL_INIT}</textarea></div></div>`;}
+
+function mOrder(oid=null){
+  const o=oid?S.orders.find(x=>x.id===oid):null;
+  const custs=[...new Set(S.orders.map(x=>x.customer).filter(Boolean))];
+  const curTpl=o?S.templates.find(t=>t.id===o.template_id):null;
+  const stepsHtml=curTpl?curTpl.steps.map((s,i)=>`<span class="chip act">${s}</span>${i<curTpl.steps.length-1?'<span class="chip arr">→</span>':''}`).join(''):'<span style="color:var(--dim);font-size:12px">템플릿 선택 시 공정 단계가 표시됩니다</span>';
+  openM(o?'발주 수정':'발주 등록',`<div class="fg2"><div class="fg"><label class="fl">고객사 *</label><input class="fi" id="f-cust" value="${o?.customer||''}" list="clist"><datalist id="clist">${custs.map(c=>`<option value="${c}">`).join('')}</datalist></div><div class="fg"><label class="fl">수주번호</label><input class="fi" id="f-ono" value="${o?.order_no||''}"></div><div class="fg"><label class="fl">품번 *</label><input class="fi" id="f-pno" value="${o?.part_no||''}"></div><div class="fg"><label class="fl">REV</label><input class="fi" id="f-rev" value="${o?.rev||''}"></div><div class="fg full"><label class="fl">품명 *</label><input class="fi" id="f-pnm" value="${o?.part_name||''}"></div><div class="fg"><label class="fl">호기</label><input class="fi" id="f-lot" value="${o?.lot_no||''}" placeholder="#1, #FA 등"></div><div class="fg"><label class="fl">수량 *</label><input class="fi" type="number" id="f-qty" value="${o?.quantity||1}" min="1"></div><div class="fg"><label class="fl">납기일</label><input class="fi" type="date" id="f-del" value="${o?.delivery_date||''}" oninput="autoDeadline()"></div><div class="fg"><label class="fl">생산완료 요청일 <span style="color:var(--dim);font-size:10px">(납기-3일 자동)</span></label><input class="fi" type="date" id="f-prd" value="${o?.production_deadline||''}"></div><div class="fg full"><label class="fl">공정 템플릿 *</label><select class="fs" id="f-tpl" onchange="onTplChange()">${S.templates.map(t=>`<option value="${t.id}" ${o?.template_id===t.id?'selected':''}>${t.name}</option>`).join('')}</select><div class="tpl-preview" id="tpl-prev">${stepsHtml}</div></div><div class="fg full"><label class="fl">메모</label><textarea class="fta" id="f-note">${o?.notes||''}</textarea></div></div>`,
+  [{l:'취소',c:'btn-s',a:'closeM()'},{l:o?'수정':'등록',c:'btn-p',a:`doOrderSave('${o?.id||''}')`}]);}
+
+function onTplChange(){const id=document.getElementById('f-tpl')?.value;const t=S.templates.find(x=>x.id===id);const p=document.getElementById('tpl-prev');if(!p)return;p.innerHTML=t?t.steps.map((s,i)=>`<span class="chip act">${s}</span>${i<t.steps.length-1?'<span class="chip arr">→</span>':''}`).join(''):'<span style="color:var(--dim);font-size:12px">템플릿을 선택하세요</span>';}
+function autoDeadline(){const del=document.getElementById('f-del')?.value;const prd=document.getElementById('f-prd');if(del&&prd)prd.value=addDays(del,-3);}
+
+async function mDetail(oid){
+  const o=S.orders.find(x=>x.id===oid);if(!o)return;
+  const steps=getSteps(o);
+  const logs=await qWlogs(oid);S.wlogs[oid]=logs;
+  const mats=await qMaterials(oid);S.materials[oid]=mats;
+  const miss=mats.filter(m=>['하네스','전장'].includes(m.category)&&!m.issued).length;
+  openM(`${o.part_no} ${o.lot_no?'('+o.lot_no+')':''} · ${o.customer}`,`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:10px;background:var(--s2);border-radius:var(--r)">
+    <div><span style="color:var(--dim);font-size:11px">품명</span><br><strong>${o.part_name}</strong></div>
+    <div><span style="color:var(--dim);font-size:11px">수량</span><br><strong class="mono">${o.quantity}</strong></div>
+    <div><span style="color:var(--dim);font-size:11px">납기일</span><br><span class="${dcls(o.delivery_date,o.status)}">${fmtDate(o.delivery_date)}</span></div>
+    <div><span style="color:var(--dim);font-size:11px">생산완료요청</span><br><span class="mono" style="font-size:11px">${fmtDate(o.production_deadline)}</span></div>
+    <div><span style="color:var(--dim);font-size:11px">바코드</span><br><span class="mono" style="font-size:12px">${o.barcode}</span></div>
+    <div><span style="color:var(--dim);font-size:11px">상태</span><br>${getBadge(o)} ${miss>0?`<span class="missing-badge">미불출 ${miss}</span>`:''}</div>
+  </div>
+  <div style="font-weight:700;font-size:11px;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">공정 진행 현황</div>
+  <div style="margin-bottom:16px">${steps.map((step,i)=>{const log=logs.find(l=>l.step_index===i);const isDone=o.status==='완료'||i<o.current_step||log?.ended_at;const isAct=i===o.current_step&&o.status!=='완료'&&o.status!=='대기';return`<div class="dstep ${isDone?'done':''} ${isAct?'act':''}"><div class="mono" style="color:var(--dim);width:18px">${i+1}</div><div style="flex:1"><div style="font-weight:600">${step}</div>${log?.worker?`<div style="font-size:10px;color:var(--primary)">👤 ${log.worker}</div>`:''}</div><div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;line-height:1.7">${log?.started_at?`▶ ${fmtDT(log.started_at)}`:''}${log?.ended_at?`<br>✓ ${fmtDT(log.ended_at)}`:''}${log?.started_at&&log?.ended_at?`<br>⏱ ${calcWorkH(log.started_at,log.ended_at)||'?'}h`:''}</div><div>${isDone?'✅':isAct?'⚡':'⬜'}</div></div>`;}).join('')}</div>
+  <div style="font-weight:700;font-size:11px;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">자재 미불출 현황</div>
+  <div class="mat-grid">${mats.map(m=>buildMatCard(m)).join('')}</div>
+  ${o.notes?`<div style="margin-top:12px;padding:9px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--dim)">📝 ${o.notes}</div>`:''}`,
+  [{l:'작업지시서',c:'btn-s',a:`closeM();doPrint('${oid}')`},{l:'닫기',c:'btn-p',a:'closeM()'}],true);}
+
+function initModalSteps(steps,colors){modalSteps=steps.map((s,i)=>({name:s,color:colors[i]||STEP_COLORS[i%STEP_COLORS.length]}));renderModalSteps();}
+function renderModalSteps(){
+  const c=document.getElementById('steps-rows');if(!c)return;
+  c.innerHTML=modalSteps.map((s,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:7px 9px;background:var(--s3);border-radius:var(--r);border-left:3px solid ${s.color}">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--dim);width:18px;flex-shrink:0">${i+1}</span>
+      <input class="fi" style="flex:1;padding:5px 7px;font-size:12px" value="${s.name}" oninput="modalSteps[${i}].name=this.value;updateTplPreview()">
+      <div style="display:flex;gap:3px;flex-wrap:wrap;max-width:140px">
+        ${STEP_COLORS.map(col=>`<div onclick="setStepColor(${i},'${col}')" style="width:14px;height:14px;border-radius:50%;background:${col};cursor:pointer;box-sizing:border-box;border:2px solid ${col===s.color?'white':'transparent'};flex-shrink:0"></div>`).join('')}
+      </div>
+      <button onclick="removeModalStep(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;line-height:1;padding:0 3px">×</button>
+    </div>`).join('');
+  updateTplPreview();
+}
+function updateTplPreview(){const p=document.getElementById('tpl-prev2');if(p)p.innerHTML=modalSteps.map((s,i)=>`<span class="chip act" style="border-color:${s.color};color:${s.color};background:${s.color}18">${s.name}</span>${i<modalSteps.length-1?'<span class="chip arr">→</span>':''}`).join('');}
+function setStepColor(i,col){modalSteps[i].color=col;renderModalSteps();}
+function addModalStep(){modalSteps.push({name:'새 공정',color:STEP_COLORS[modalSteps.length%STEP_COLORS.length]});renderModalSteps();}
+function removeModalStep(i){if(modalSteps.length<=2){toast('최소 2개 필요','err');return;}modalSteps.splice(i,1);renderModalSteps();}
+
+function tplModalBody(initS,initC){return`
+  <div class="fg" style="margin-bottom:12px"><label class="fl">템플릿 이름</label><input class="fi" id="tpl-nm" value="${initS?'':''}" placeholder="예: 표준 공정 C"></div>
+  <div class="fl" style="margin-bottom:6px">공정 단계 · 색상 지정</div>
+  <div id="steps-rows"></div>
+  <button class="btn btn-s btn-sm" onclick="addModalStep()" style="margin-bottom:12px;margin-top:2px">+ 단계 추가</button>
+  <div class="fl" style="margin-bottom:4px">미리보기</div>
+  <div id="tpl-prev2" class="tpl-preview"></div>`;}
+
+function mAddTpl(){
+  openM('공정 템플릿 추가', tplModalBody(),
+  [{l:'취소',c:'btn-s',a:'closeM()'},{l:'추가',c:'btn-p',a:'doAddTpl()'}]);
+  initModalSteps(['입고','수검사','부착','배선','자검사','출검사','포장'],STEP_COLORS);
+  document.getElementById('tpl-nm').value='';
+}
+function mEditTpl(id){
+  const t=S.templates.find(x=>x.id===id);if(!t)return;
+  openM('공정 템플릿 수정', tplModalBody(),
+  [{l:'취소',c:'btn-s',a:'closeM()'},{l:'저장',c:'btn-p',a:`doEditTpl('${id}')`}]);
+  document.getElementById('tpl-nm').value=t.name;
+  initModalSteps(t.steps,t.colors||[]);
+}
+
+function mImport(){importRows=[];openM('📥 엑셀 발주 등록',`<div style="margin-bottom:12px"><div style="font-size:12px;color:var(--dim);margin-bottom:8px">엑셀 컬럼: <strong style="color:var(--text)">발주처, 발주번호, 납품일, 구분(REV), 품번, 품목명, 호기, 수량, 공정명</strong></div><div style="font-size:12px;color:var(--dim);margin-bottom:10px">※ <strong>공정명</strong>이 등록된 템플릿 이름과 일치하면 자동 연결됩니다</div><label class="btn btn-s" style="cursor:pointer;display:inline-flex">📂 엑셀 파일 선택<input type="file" id="excel-file" accept=".xlsx,.xls" style="display:none" onchange="parseExcel(this)"></label></div>
+<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:12px">
+  <div style="font-size:11px;font-weight:700;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">생산완료요청일 일괄 설정</div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="prd-mode" value="auto" checked onchange="togglePrdMode()"> 납기일 기준</label>
+    <div style="display:flex;align-items:center;gap:4px"><input class="fi" type="number" id="prd-offset" value="-3" style="width:50px;padding:4px 6px;font-size:12px"><span style="font-size:12px;color:var(--dim)">일 (음수 = 납기 이전)</span></div>
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="prd-mode" value="fixed" onchange="togglePrdMode()"> 날짜 직접 입력</label>
+    <input class="fi" type="date" id="prd-fixed" style="padding:4px 6px;font-size:12px;display:none">
+  </div>
+</div>
+<div id="import-preview"></div>`,[{l:'취소',c:'btn-s',a:'closeM()'},{l:'일괄 등록',c:'btn-p',a:'doImport()'}],true);}
+
+let importRows=[];
+function parseExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(raw.length<2){document.getElementById('import-preview').innerHTML='<div style="color:var(--danger)">데이터가 없습니다</div>';return;}
+    const hdr=raw[0].map(h=>(h+'').replace(/\s+/g,''));
+    const ci=names=>{for(const n of names){const i=hdr.findIndex(h=>h.includes(n));if(i>=0)return i;}return -1;};
+    const COL={cust:ci(['발주처']),ono:ci(['발주번호','발주번']),date:ci(['납품일']),rev:ci(['구분']),pno:ci(['품번']),pnm:ci(['품목명','품명']),lot:ci(['호기']),qty:ci(['수량']),proc:ci(['공정명','공정'])};
+    importRows=[];
+    for(let i=1;i<raw.length;i++){
+      const r=raw[i];if(!r[COL.pno]&&!r[COL.cust])continue;
+      const del=COL.date>=0&&typeof r[COL.date]==='number'?excelDate(r[COL.date]):(r[COL.date]||'');
+      const procName=COL.proc>=0?(r[COL.proc]||''):'';
+      const tpl=getTpl(procName);
+      importRows.push({customer:r[COL.cust]||'',order_no:r[COL.ono]||'',part_no:String(r[COL.pno]||''),part_name:r[COL.pnm]||'',rev:r[COL.rev]||'',lot_no:r[COL.lot]||'',quantity:parseInt(r[COL.qty])||1,delivery_date:del,production_deadline:del?addDays(del,-3):'',template_id:tpl?.id||'',_tplMatch:!!tpl,_tplName:tpl?.name||'',_procRaw:procName});
+    }
+    const prev=document.getElementById('import-preview');
+    if(!importRows.length){prev.innerHTML='<div style="color:var(--danger)">파싱된 데이터가 없습니다</div>';return;}
+    prev.innerHTML=`<div style="font-size:12px;color:var(--dim);margin-bottom:8px">${importRows.length}건 파싱됨 · <span style="color:var(--success)">녹색: 템플릿 매칭</span> · <span style="color:var(--warning)">주황: 미매칭</span></div><div class="import-table-wrap"><table class="import-table"><thead><tr><th>#</th><th>고객사</th><th>품번</th><th>품명</th><th>호기</th><th>수량</th><th>납기일</th><th>공정</th></tr></thead><tbody>${importRows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.customer}</td><td>${r.part_no}</td><td>${r.part_name}</td><td>${r.lot_no}</td><td>${r.quantity}</td><td>${r.delivery_date}</td><td class="${r._tplMatch?'row-ok':'row-warn'}">${r._tplMatch?r._tplName:'⚠ '+r._procRaw}</td></tr>`).join('')}</tbody></table></div>`;
+  };reader.readAsArrayBuffer(file);}
+
+function togglePrdMode(){const mode=document.querySelector('input[name="prd-mode"]:checked')?.value;const fixed=document.getElementById('prd-fixed');if(fixed)fixed.style.display=mode==='fixed'?'':'none';}
+async function doImport(){
+  if(!importRows.length){toast('파싱된 데이터가 없습니다','err');return;}
+  const mode=document.querySelector('input[name="prd-mode"]:checked')?.value||'auto';
+  const offset=parseInt(document.getElementById('prd-offset')?.value)||-3;
+  const fixedDate=document.getElementById('prd-fixed')?.value||'';
+  const defTpl=S.templates[0]?.id||'';
+  let ok=0,fail=0;
+  for(const r of importRows){
+    try{
+      let prd='';
+      if(mode==='fixed'&&fixedDate)prd=fixedDate;
+      else if(r.delivery_date)prd=addDays(r.delivery_date,offset);
+      await qSaveOrder({...r,template_id:r.template_id||defTpl,production_deadline:prd||'',notes:''});ok++;
+    }catch(e){fail++;}
+  }
+  closeM();await loadData();render();toast(`등록 완료 ${ok}건${fail>0?' / 실패 '+fail+'건':''}`);}
+async function saveMat(id,field,value){await qSaveMat(id,field,value);}
+function openM(title,body,btns=[],lg=false){document.getElementById('modals').innerHTML=`<div class="ov" onclick="if(event.target===this)closeM()"><div class="modal ${lg?'modal-lg':''}"><div class="mh"><div class="mt">${title}</div><button class="mx" onclick="closeM()">×</button></div><div class="mb">${body}</div>${btns.length?`<div class="mf">${btns.map(b=>`<button class="btn ${b.c}" onclick="${b.a}">${b.l}</button>`).join('')}</div>`:''}</div></div>`;}
+function closeM(){document.getElementById('modals').innerHTML='';}
+
+async function doSetup(){const u=document.getElementById('sb-url').value.trim(),k=document.getElementById('sb-key').value.trim();if(!u||!k){toast('URL과 Key를 입력하세요','err');return;}saveConf(u,k);initSB(u,k);await loadData();S.page='dashboard';render();toast('✅ 연결 완료!');}
+async function doSaveConf(){const u=document.getElementById('cfg-url').value.trim(),k=document.getElementById('cfg-key').value.trim();if(!u||!k){toast('URL과 Key를 입력하세요','err');return;}saveConf(u,k);initSB(u,k);await loadData();toast('설정 저장됨');render();}
+async function doOrderSave(oid){const d={id:oid||null,customer:document.getElementById('f-cust').value.trim(),order_no:document.getElementById('f-ono').value.trim(),part_no:document.getElementById('f-pno').value.trim(),part_name:document.getElementById('f-pnm').value.trim(),rev:document.getElementById('f-rev').value.trim(),lot_no:document.getElementById('f-lot').value.trim(),quantity:parseInt(document.getElementById('f-qty').value)||1,template_id:document.getElementById('f-tpl').value,delivery_date:document.getElementById('f-del').value||null,production_deadline:document.getElementById('f-prd').value||null,notes:document.getElementById('f-note').value.trim()};if(!d.customer||!d.part_no||!d.part_name){toast('고객사, 품번, 품명은 필수입니다','err');return;}try{await qSaveOrder(d);closeM();await loadData();render();toast(oid?'수정 완료':'등록 완료 ✓');}catch(e){toast('저장 실패: '+e.message,'err');}}
+async function doDelete(id){if(!confirm('삭제하시겠습니까?\n(작업이력, 자재현황 모두 삭제)'))return;await qDelOrder(id);await loadData();render();toast('삭제됨');}
+async function doStart(oid,idx,name){const worker=document.getElementById('worker-name')?.value.trim()||localStorage.getItem('pm_worker')||'';await qStartStep(oid,idx,name,worker);const logs=await qWlogs(oid);S.wlogs[oid]=logs;const o=S.orders.find(x=>x.id===oid);if(o)o.status='진행중';S.scanResult=S.orders.find(x=>x.id===oid);render();toast(`▶ ${name} 시작${worker?' ('+worker+')':''}`);}
+async function doEnd(oid,idx,total){await qEndStep(oid,idx,total);await loadData();const logs=await qWlogs(oid);S.wlogs[oid]=logs;S.scanResult=S.orders.find(x=>x.id===oid);const steps=getSteps(S.scanResult);render();toast(idx+1>=total?'✅ 전 공정 완료!':'✓ 다음: '+steps[idx+1]);}
+async function doAddTpl(){const nm=document.getElementById('tpl-nm').value.trim();if(!nm){toast('이름을 입력하세요','err');return;}const steps=modalSteps.map(s=>s.name.trim()).filter(Boolean);const colors=modalSteps.map(s=>s.color);if(steps.length<2){toast('공정을 2개 이상 입력하세요','err');return;}try{await qSaveTpl(nm,steps,colors);S.templates=await qTemplates();closeM();render();toast('템플릿 추가됨');}catch(e){toast('저장 실패: '+e.message,'err');console.error(e);}}
+async function doEditTpl(id){const nm=document.getElementById('tpl-nm').value.trim();if(!nm){toast('이름을 입력하세요','err');return;}const steps=modalSteps.map(s=>s.name.trim()).filter(Boolean);const colors=modalSteps.map(s=>s.color);try{await qSaveTpl(nm,steps,colors,id);S.templates=await qTemplates();closeM();render();toast('수정됨');}catch(e){toast('저장 실패: '+e.message,'err');console.error(e);}}
+async function doDelTpl(id){if(!confirm('삭제하시겠습니까?'))return;await qDelTpl(id);S.templates=await qTemplates();render();toast('삭제됨');}
+async function doScan(bc){if(!bc)return;const o=S.orders.find(x=>x.barcode===bc||x.order_no===bc);if(!o){toast(`바코드 없음: ${bc}`,'err');return;}const logs=await qWlogs(o.id);S.wlogs[o.id]=logs;S.scanResult=o;render();toast(`📦 ${o.part_no} 조회됨`);}
+async function saveMat(id,field,value){await qSaveMat(id,field,value);}
+function doPrint(oid){const o=S.orders.find(x=>x.id===oid);if(!o)return;const steps=getSteps(o);document.getElementById('parea').innerHTML=`<div class="ph"><div><div class="pco">㈜진선테크 JinsunTech Co.,Ltd.</div><div class="ptitle">작업지시서</div></div><div style="text-align:right;font-size:11px"><div>발행일: ${fmtDate(new Date().toISOString())}</div><div>바코드: ${o.barcode}</div></div></div><div class="pig"><div class="pf"><span class="pfl">고객사</span>${o.customer}</div><div class="pf"><span class="pfl">수주번호</span>${o.order_no||'—'}</div><div class="pf"><span class="pfl">품번</span>${o.part_no}</div><div class="pf"><span class="pfl">호기</span>${o.lot_no||'—'}</div><div class="pf"><span class="pfl">REV</span>${o.rev||'—'}</div><div class="pf"><span class="pfl">품명</span>${o.part_name}</div><div class="pf"><span class="pfl">수량</span>${o.quantity}</div><div class="pf"><span class="pfl">납기일</span>${fmtDate(o.delivery_date)}</div><div class="pf"><span class="pfl">생산완료</span>${fmtDate(o.production_deadline)}</div></div><div class="pbc"><svg id="pbc-svg"></svg></div><table class="ptbl"><thead><tr><th>#</th><th>공정</th><th>작업자</th><th>시작시간</th><th>완료시간</th><th>소요(h)</th><th>확인</th></tr></thead><tbody>${steps.map((s,i)=>`<tr><td>${i+1}</td><td>${s}</td><td style="min-width:60px"></td><td style="min-width:90px"></td><td style="min-width:90px"></td><td style="min-width:50px"></td><td style="min-width:30px"></td></tr>`).join('')}</tbody></table>${o.notes?`<div style="margin-top:12px;font-size:11px"><strong>메모:</strong> ${o.notes}</div>`:''}`; setTimeout(()=>{try{JsBarcode('#pbc-svg',o.barcode,{format:'CODE128',width:2,height:60,displayValue:true,fontSize:13});}catch(e){}window.print();},200);}
+
+let qrScanner=null;
+async function toggleCam(){const btn=document.getElementById('cam-btn');if(qrScanner){try{if(qrScanner.isScanning)await qrScanner.stop();}catch(e){}qrScanner=null;if(btn)btn.textContent='📷 카메라 시작';return;}if(!window.Html5Qrcode){toast('라이브러리 로딩 중','err');return;}try{qrScanner=new Html5Qrcode('cam-reader');const fmts=window.Html5QrcodeSupportedFormats?[Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_39]:undefined;await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:120},...(fmts?{formatsToSupport:fmts}:{})},async text=>await doScan(text),()=>{});if(btn)btn.textContent='⏹ 카메라 중지';}catch(e){toast('카메라 오류: '+e.message,'err');}}
+
+function nav(page){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});qrScanner=null;}S.page=page;S.scanResult=null;render();if(page==='scan')setTimeout(()=>document.getElementById('usb-in')?.focus(),120);}
+function setFS(s){S.fStatus=s;render();}function setTab(t){S.tab=t;render();}
+function calNav(d){const m=new Date(S.calMonth);m.setMonth(m.getMonth()+d);S.calMonth=m;render();}
+function setScanTab(t){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});qrScanner=null;}S.scanTab=t;render();if(t==='usb')setTimeout(()=>document.getElementById('usb-in')?.focus(),120);}
+
+function render(){const app=document.getElementById('app');if(!getConf()||!sb){app.innerHTML=pageSetup();return;}app.innerHTML=`<nav id="navbar">${pageNav()}</nav><div id="page">${S.loading?'<div class="loading"><div class="spin"></div> 로딩 중...</div>':S.page==='dashboard'?pageDash():S.page==='scan'?pageScan():S.page==='stats'?pageStats():S.page==='settings'?pageSettings():pageDash()}</div>`;}
+
+async function loadData(){S.loading=true;render();[S.templates,S.orders]=await Promise.all([qTemplates(),qOrders()]);S.loading=false;}
+async function init(){const cfg=getConf();if(cfg){initSB(cfg.url,cfg.key);await loadData();}render();}
+init();
+</script>
+</body>
+</html>
