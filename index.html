@@ -257,7 +257,7 @@ function pageDash(){
   const custs=[...new Set(all.map(o=>o.customer).filter(Boolean))].sort();
   const orders=filteredOrders();
   return`<div class="stat-row"><div class="stat c-p ${S.fStatus==='all'?'on':''}" onclick="setFS('all')"><div class="v">${stats.total}</div><div class="l">전체</div></div><div class="stat c-w ${S.fStatus==='진행중'?'on':''}" onclick="setFS('진행중')"><div class="v">${stats.prog}</div><div class="l">진행중</div></div><div class="stat c-s ${S.fStatus==='완료'?'on':''}" onclick="setFS('완료')"><div class="v">${stats.done}</div><div class="l">완료</div></div><div class="stat c-d ${S.fStatus==='지연'?'on':''}" onclick="setFS('지연')"><div class="v">${stats.late}</div><div class="l">지연</div></div></div>
-  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더'],['materials','자재현황']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div>${S.tab!=='materials'?`<select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()"><div style="display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:3px 8px"><span style="font-size:10px;color:var(--dim);white-space:nowrap">완료요청 납기-</span><input type="number" value="${getMatOffset()}" style="width:32px;background:none;border:none;color:var(--primary);font-size:12px;font-family:var(--mono);outline:none;text-align:center" oninput="localStorage.setItem('pm_mat_offset',this.value);render()"><span style="font-size:10px;color:var(--dim)">일</span></div>`:''}<div class="mla" style="display:flex;gap:6px">${S.tab!=='materials'?`<button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button>`:'<button class="btn btn-s btn-sm" onclick="loadAllMats()">↻ 새로고침</button>'}<button class="btn btn-s btn-sm" onclick="loadData().then(render)">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
+  <div class="toolbar"><div class="ttabs">${[['list','목록'],['customer','고객사별'],['calendar','캘린더'],['materials','자재현황']].map(([t,l])=>`<button class="ttab ${S.tab===t?'on':''}" onclick="setTab('${t}')">${l}</button>`).join('')}</div>${S.tab!=='materials'?`<select class="flt" onchange="S.fCustomer=this.value;render()"><option value="all">전체 고객사</option>${custs.map(c=>`<option value="${c}" ${S.fCustomer===c?'selected':''}>${c}</option>`).join('')}</select><input class="flt" id="srch" placeholder="🔍 품번/품명/호기" style="min-width:120px" oninput="render()"><div style="display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:3px 8px"><span style="font-size:10px;color:var(--dim);white-space:nowrap">완료요청 납기-</span><input type="number" value="${getMatOffset()}" style="width:32px;background:none;border:none;color:var(--primary);font-size:12px;font-family:var(--mono);outline:none;text-align:center" oninput="localStorage.setItem('pm_mat_offset',this.value);render()"><span style="font-size:10px;color:var(--dim)">일</span></div>`:''}<div class="mla" style="display:flex;gap:6px">${S.tab!=='materials'?`<button class="btn btn-s btn-sm" onclick="mImport()">📥 엑셀 등록</button>`:'<button class="btn btn-s btn-sm" onclick="loadAllMats()">↻ 새로고침</button>'}<button class="btn btn-s btn-sm" onclick="loadData(true).then(render)">↻</button><button class="btn btn-p" onclick="mOrder()">+ 발주 등록</button></div></div>
   ${S.tab==='list'?vList(orders):S.tab==='customer'?vCust(orders):S.tab==='calendar'?vCal():vMaterials()}`;}
 
 function filteredOrders(){let list=[...S.orders];if(S.fStatus!=='all')list=list.filter(o=>S.fStatus==='지연'?isLate(o):o.status===S.fStatus);if(S.fCustomer!=='all')list=list.filter(o=>o.customer===S.fCustomer);const q=document.getElementById('srch')?.value?.toLowerCase();if(q)list=list.filter(o=>o.part_no?.toLowerCase().includes(q)||o.part_name?.toLowerCase().includes(q)||o.customer?.toLowerCase().includes(q)||o.order_no?.toLowerCase().includes(q)||(o.lot_no||'').toLowerCase().includes(q));return list;}
@@ -354,7 +354,42 @@ function vList(orders){
 
 function vCust(orders){const groups={};orders.forEach(o=>{if(!groups[o.customer])groups[o.customer]=[];groups[o.customer].push(o);});if(!Object.keys(groups).length)return`<div class="empty"><div class="ic">🏢</div><h3>데이터 없음</h3></div>`;return Object.entries(groups).map(([c,ords])=>`<div style="margin-bottom:16px"><div class="cg-head"><span style="font-weight:700">${c}</span><span class="badge bp">${ords.length}건</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">완료 ${ords.filter(o=>o.status==='완료').length} / 지연 ${ords.filter(o=>isLate(o)).length}</span></div><div class="tw" style="border-radius:0 0 var(--rl) var(--rl)"><table><thead><tr><th>품번/품명</th><th>호기</th><th>수량</th><th>납기일</th><th>공정</th><th>상태</th></tr></thead><tbody>${ords.map(o=>`<tr onclick="mDetail('${o.id}')"><td><div style="font-weight:600;font-size:12px">${o.part_no}</div><div class="mono" style="color:var(--dim)">${o.part_name}</div></td><td><span class="badge by">${o.lot_no||'—'}</span></td><td class="mono">${o.quantity}</td><td><span class="${dcls(o.delivery_date,o.status)}">${fmtDateS(o.delivery_date)}</span></td><td>${getDots(o)}</td><td>${getBadge(o)}</td></tr>`).join('')}</tbody></table></div></div>`).join('');}
 
-function vCal(){const yr=S.calMonth.getFullYear(),mo=S.calMonth.getMonth();const today=new Date();const first=new Date(yr,mo,1).getDay(),days=new Date(yr,mo+1,0).getDate(),prev=new Date(yr,mo,0).getDate();const byDate={};S.orders.forEach(o=>{if(o.delivery_date){const k=o.delivery_date.slice(0,10);if(!byDate[k])byDate[k]=[];byDate[k].push(o);}});let cells='';for(let i=0;i<first;i++)cells+=`<div class="cal-day om"><div class="cd">${prev-first+i+1}</div></div>`;for(let d=1;d<=days;d++){const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const isT=today.getFullYear()===yr&&today.getMonth()===mo&&today.getDate()===d;const dos=byDate[ds]||[];cells+=`<div class="cal-day ${isT?'tod':''}"><div class="cd">${d}</div>${dos.slice(0,3).map(o=>`<div class="ce ce-${o.status==='완료'?'done':isLate(o)?'late':'prog'}" onclick="event.stopPropagation();mDetail('${o.id}')">${o.part_no}${o.lot_no?' '+o.lot_no:''}</div>`).join('')}${dos.length>3?`<div style="font-size:9px;color:var(--dim)">+${dos.length-3}</div>`:''}</div>`;}const rem=(7-(first+days)%7)%7;for(let i=1;i<=rem;i++)cells+=`<div class="cal-day om"><div class="cd">${i}</div></div>`;return`<div class="cal-wrap"><div class="cal-hd"><button class="cal-nav" onclick="calNav(-1)">‹</button><div style="font-weight:700;font-size:14px">${yr}년 ${mo+1}월</div><button class="cal-nav" onclick="calNav(1)">›</button></div><div class="cal-grid">${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dn">${d}</div>`).join('')}${cells}</div></div>`;}
+function vCal(){
+  const yr=S.calMonth.getFullYear(),mo=S.calMonth.getMonth();
+  const today=new Date();
+  const first=new Date(yr,mo,1).getDay(),days=new Date(yr,mo+1,0).getDate(),prev=new Date(yr,mo,0).getDate();
+  const byDate={};
+  S.orders.forEach(o=>{if(o.delivery_date){const k=o.delivery_date.slice(0,10);if(!byDate[k])byDate[k]=[];byDate[k].push(o);}});
+  let cells='';
+  for(let i=0;i<first;i++)cells+=`<div class="cal-day om"><div class="cd">${prev-first+i+1}</div></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isT=today.getFullYear()===yr&&today.getMonth()===mo&&today.getDate()===d;
+    const dos=byDate[ds]||[];
+    cells+=`<div class="cal-day ${isT?'tod':''}">
+      <div class="cd">${d}</div>
+      ${dos.slice(0,3).map(o=>`
+        <div class="ce ce-${o.status==='완료'?'done':isLate(o)?'late':'prog'}" onclick="event.stopPropagation();mDetail('${o.id}')" title="${o.customer} · ${o.part_name} · ${o.quantity}ea" style="cursor:pointer">
+          <div style="font-weight:700;overflow:hidden;text-overflow:ellipsis">${o.part_no}${o.lot_no?' '+o.lot_no:''}</div>
+          <div style="opacity:.8;overflow:hidden;text-overflow:ellipsis">${o.customer}</div>
+          <div style="opacity:.7;overflow:hidden;text-overflow:ellipsis">${o.part_name.length>8?o.part_name.slice(0,8)+'…':o.part_name} · ${o.quantity}ea</div>
+        </div>`).join('')}
+      ${dos.length>3?`<div style="font-size:9px;color:var(--dim);padding:1px 4px">+${dos.length-3}건 더보기</div>`:''}
+    </div>`;
+  }
+  const rem=(7-(first+days)%7)%7;
+  for(let i=1;i<=rem;i++)cells+=`<div class="cal-day om"><div class="cd">${i}</div></div>`;
+  return`<div class="cal-wrap">
+    <div class="cal-hd">
+      <button class="cal-nav" onclick="calNav(-1)">‹</button>
+      <div style="font-weight:700;font-size:14px">${yr}년 ${mo+1}월</div>
+      <button class="cal-nav" onclick="calNav(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      ${['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dn">${d}</div>`).join('')}${cells}
+    </div>
+  </div>`;
+}
 
 async function loadAllMats(){
   if(!sb)return;
@@ -460,6 +495,7 @@ async function mDetail(oid){
   const logs=await qWlogs(oid);S.wlogs[oid]=logs;
   const mats=await qMaterials(oid);S.materials[oid]=mats;
   const miss=mats.filter(m=>['하네스','전장'].includes(m.category)&&!m.issued).length;
+  const savedWorker=localStorage.getItem('pm_worker')||'';
   openM(`${o.part_no} ${o.lot_no?'('+o.lot_no+')':''} · ${o.customer}`,`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:10px;background:var(--s2);border-radius:var(--r)">
     <div><span style="color:var(--dim);font-size:11px">품명</span><br><strong>${o.part_name}</strong></div>
@@ -469,11 +505,80 @@ async function mDetail(oid){
     <div><span style="color:var(--dim);font-size:11px">바코드</span><br><span class="mono" style="font-size:12px">${o.barcode}</span></div>
     <div><span style="color:var(--dim);font-size:11px">상태</span><br>${getBadge(o)} ${miss>0?`<span class="missing-badge">미불출 ${miss}</span>`:''}</div>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 10px;background:var(--s2);border-radius:var(--r);border:1px solid var(--border)">
+    <span style="font-size:11px;color:var(--dim);white-space:nowrap">👤 작업자</span>
+    <input class="fi" id="detail-worker" value="${savedWorker}" placeholder="이름 입력 후 공정 조작" oninput="localStorage.setItem('pm_worker',this.value)" style="flex:1;padding:5px 8px;font-size:12px">
+  </div>
   <div style="font-weight:700;font-size:11px;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">공정 진행 현황</div>
-  <div style="margin-bottom:16px">${steps.map((step,i)=>{const log=logs.find(l=>l.step_index===i);const isDone=o.status==='완료'||i<o.current_step||log?.ended_at;const isAct=i===o.current_step&&o.status!=='완료'&&o.status!=='대기';return`<div class="dstep ${isDone?'done':''} ${isAct?'act':''}"><div class="mono" style="color:var(--dim);width:18px">${i+1}</div><div style="flex:1"><div style="font-weight:600">${step}</div>${log?.worker?`<div style="font-size:10px;color:var(--primary)">👤 ${log.worker}</div>`:''}</div><div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;line-height:1.7">${log?.started_at?`▶ ${fmtDT(log.started_at)}`:''}${log?.ended_at?`<br>✓ ${fmtDT(log.ended_at)}`:''}${log?.started_at&&log?.ended_at?`<br>⏱ ${calcWorkH(log.started_at,log.ended_at)||'?'}h`:''}</div><div>${isDone?'✅':isAct?'⚡':'⬜'}</div></div>`;}).join('')}</div>
+  <div style="margin-bottom:16px" id="step-list-${oid}">
+    ${buildStepList(o,steps,logs)}
+  </div>
   <div style="font-weight:700;font-size:11px;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">자재 미불출 현황</div>
   <div class="mat-grid">${mats.map(m=>buildMatCard(m)).join('')}</div>
   ${o.notes?`<div style="margin-top:12px;padding:9px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--dim)">📝 ${o.notes}</div>`:''}`,
+  [{l:'작업지시서',c:'btn-s',a:`closeM();doPrint('${oid}')`},{l:'닫기',c:'btn-p',a:`closeM();loadData(true).then(render)`}],true);
+}
+function buildStepList(o,steps,logs){
+  return steps.map((step,i)=>{
+    const log=logs.find(l=>l.step_index===i);
+    const isDone=o.status==='완료'||i<o.current_step||log?.ended_at;
+    const isAct=i===o.current_step&&o.status!=='완료';
+    const isFut=i>o.current_step&&o.status!=='완료';
+    return`<div class="dstep ${isDone?'done':''} ${isAct&&!isDone?'act':''}">
+      <div class="mono" style="color:var(--dim);width:18px">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-weight:600">${step}</div>
+        ${log?.worker?`<div style="font-size:10px;color:var(--primary)">👤 ${log.worker}</div>`:''}
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;line-height:1.7;margin-right:8px">
+        ${log?.started_at?`▶ ${fmtDT(log.started_at)}`:''}
+        ${log?.ended_at?`<br>✓ ${fmtDT(log.ended_at)}`:''}
+        ${log?.started_at&&log?.ended_at?`<br>⏱ ${calcWorkH(log.started_at,log.ended_at)||'?'}h`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:70px">
+        ${isDone?'<span style="color:var(--success)">✅완료</span>':
+          isAct?`${!log?.started_at?`<button class="btn btn-p btn-sm" onclick="detailStart('${o.id}',${i},'${step}')">▶ 시작</button>`:
+          !log?.ended_at?`<button class="btn btn-g btn-sm" onclick="detailEnd('${o.id}',${i},${steps.length})">✓ 완료</button>`:''}`:
+          isFut?`<button class="btn btn-s btn-sm" style="font-size:10px;opacity:.6" onclick="if(confirm('이 공정을 건너뛰고 완료 처리할까요?'))detailSkip('${o.id}',${i},'${step}',${steps.length})">건너뛰기</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+async function detailStart(oid,idx,name){
+  const worker=document.getElementById('detail-worker')?.value.trim()||localStorage.getItem('pm_worker')||'';
+  await qStartStep(oid,idx,name,worker);
+  const o=S.orders.find(x=>x.id===oid);if(o)o.status='진행중';
+  const logs=await qWlogs(oid);S.wlogs[oid]=logs;
+  const steps=getSteps(o);
+  const el=document.getElementById('step-list-'+oid);
+  if(el)el.innerHTML=buildStepList(o,steps,logs);
+  toast(`▶ ${name} 시작${worker?' ('+worker+')':''}`);
+}
+async function detailEnd(oid,idx,total){
+  const o=S.orders.find(x=>x.id===oid);
+  const steps=getSteps(o);
+  await qEndStep(oid,idx,total);
+  const logs=await qWlogs(oid);S.wlogs[oid]=logs;
+  await loadData(true);
+  const updO=S.orders.find(x=>x.id===oid);
+  const el=document.getElementById('step-list-'+oid);
+  if(el&&updO)el.innerHTML=buildStepList(updO,steps,logs);
+  toast(idx+1>=total?'✅ 전 공정 완료!':'✓ 다음 공정으로 이동');
+}
+async function detailSkip(oid,idx,name,total){
+  const worker=document.getElementById('detail-worker')?.value.trim()||localStorage.getItem('pm_worker')||'';
+  const now=new Date().toISOString();
+  const{data:ex}=await sb.from('work_logs').select('id').eq('order_id',oid).eq('step_index',idx);
+  if(!ex||!ex.length)await sb.from('work_logs').insert({order_id:oid,step_index:idx,step_name:name,worker:worker+'(건너뜀)',started_at:now,ended_at:now});
+  await qEndStep(oid,idx,total);
+  const logs=await qWlogs(oid);S.wlogs[oid]=logs;
+  await loadData(true);
+  const o=S.orders.find(x=>x.id===oid);
+  const steps=getSteps(o);
+  const el=document.getElementById('step-list-'+oid);
+  if(el&&o)el.innerHTML=buildStepList(o,steps,logs);
+  toast(`⏭ ${name} 건너뜀`);
+}  ${o.notes?`<div style="margin-top:12px;padding:9px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--dim)">📝 ${o.notes}</div>`:''}`,
   [{l:'작업지시서',c:'btn-s',a:`closeM();doPrint('${oid}')`},{l:'닫기',c:'btn-p',a:'closeM()'}],true);}
 
 function initModalSteps(steps,colors){modalSteps=steps.map((s,i)=>({name:s,color:colors[i]||STEP_COLORS[i%STEP_COLORS.length]}));renderModalSteps();}
@@ -631,20 +736,38 @@ function setTab(t){S.tab=t;if(t==='materials'&&!S.allMats.length)loadAllMats();e
 function calNav(d){const m=new Date(S.calMonth);m.setMonth(m.getMonth()+d);S.calMonth=m;render();}
 function setScanTab(t){if(qrScanner?.isScanning){qrScanner.stop().catch(()=>{});qrScanner=null;}S.scanTab=t;render();if(t==='usb')setTimeout(()=>document.getElementById('usb-in')?.focus(),120);}
 
-function render(){const app=document.getElementById('app');if(!getConf()||!sb){app.innerHTML=pageSetup();return;}app.innerHTML=`<nav id="navbar">${pageNav()}</nav><div id="page">${S.loading?'<div class="loading"><div class="spin"></div> 로딩 중...</div>':S.page==='dashboard'?pageDash():S.page==='scan'?pageScan():S.page==='stats'?pageStats():S.page==='settings'?pageSettings():pageDash()}</div>`;}
-
-async function loadData(){
-  S.loading=true;render();
-  [S.templates,S.orders]=await Promise.all([qTemplates(),qOrders()]);
-  if(sb){const{data}=await sb.from('order_materials').select('*');S.allMats=(data||[]).map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));}
-  S.loading=false;
+function render(){
+  const app=document.getElementById('app');
+  if(!getConf()||!sb){app.innerHTML=pageSetup();return;}
+  app.innerHTML=`<nav id="navbar">${pageNav()}</nav><div id="page">${S.page==='dashboard'?pageDash():S.page==='scan'?pageScan():S.page==='stats'?pageStats():S.page==='settings'?pageSettings():pageDash()}</div>`;
 }
+function renderLoading(){
+  const pg=document.getElementById('page');
+  if(pg)pg.innerHTML='<div class="loading"><div class="spin"></div> 로딩 중...</div>';
+}
+
+async function loadData(silent=false){
+  if(!silent){renderLoading();}
+  // orders + templates 먼저 빠르게 로드
+  [S.templates,S.orders]=await Promise.all([qTemplates(),qOrders()]);
+  if(!silent)render();
+  // materials는 백그라운드 로드
+  if(sb){
+    const{data}=await sb.from('order_materials').select('*');
+    S.allMats=(data||[]).map(m=>({...m,missing_items:m.missing_items?JSON.parse(m.missing_items):[]}));
+    if(document.getElementById('page'))render();
+  }
+}
+
 async function init(){
   const SB_URL='https://zlmdxxginskguqqitsbp.supabase.co';
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbWR4eGdpbnNrZ3VxcWl0c2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjQyMTcsImV4cCI6MjA5MzYwMDIxN30.1b1bGTNfq7a1ZTBeHVnzTRsjWgwZP4rY9ei3XqljNi0';
   saveConf(SB_URL,SB_KEY);
   initSB(SB_URL,SB_KEY);
-  await loadData();
+  // 즉시 네비 보여주고 로딩 시작
+  const app=document.getElementById('app');
+  app.innerHTML=`<nav id="navbar">${pageNav()}</nav><div id="page"><div class="loading"><div class="spin"></div> 데이터 불러오는 중...</div></div>`;
+  await loadData(true);
   render();
 }
 init();
