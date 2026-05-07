@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>JS 공정관리 v1.9.0</title>
+<title>JS 공정관리 v2.1.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -148,18 +148,20 @@ td{padding:7px 8px;vertical-align:middle;font-size:12px}
 <div id="toast"></div>
 <script>
 // ── CONFIG ──────────────────────────────────────────
-const APP_VER = 'v2.0.0';
+const APP_VER = 'v2.1.0';
 const VER_LOG = [
-  {v:'v2.0.0',d:'2026-05-07',t:'간트차트, 자재현황 통합탭(품번/제조사/수량/입고예정/비고), 공정 수동제어 개선, 발주폼 자재입력 추가'},
-  {v:'v1.8.0',d:'2026-05-07',t:'버전관리, 로딩개선, 캘린더 정보표시, 공정 수동진행'},
-  {v:'v1.7.0',d:'2026-05-07',t:'메인화면 PD BOX 스타일 자재컬럼, 미불출품목 편집, 완료요청 납기-N일'},
-  {v:'v1.6.0',d:'2026-05-07',t:'자재현황 탭, 작업자 바코드 자동인식, 하네스 상세 날짜'},
-  {v:'v1.5.0',d:'2026-05-07',t:'엑셀 완료요청일 일괄설정, 미불출품목 관리'},
-  {v:'v1.4.0',d:'2026-05-07',t:'공정별 색상지정, 단계 추가/삭제, RLS 수정'},
-  {v:'v1.3.0',d:'2026-05-06',t:'Supabase 키 내장, GitHub Pages 배포'},
-  {v:'v1.2.0',d:'2026-05-06',t:'호기, 납기자동계산, 엑셀등록, 집계'},
-  {v:'v1.1.0',d:'2026-05-06',t:'바코드 스캔, 공정시작/완료, 작업지시서'},
-  {v:'v1.0.0',d:'2026-05-06',t:'최초 구축'},
+  {v:'v2.1.0',d:'2026-05-07',t:'공정버튼 즉시반영 버그수정, 목록 납기월별 그룹핑(Notion스타일), 가공물/하네스/전장 날짜컬럼, 상세상태(진행중-제조/품질/수급 등), 간트 필터, 엑셀양식 다운로드'},
+  {v:'v2.0.0',d:'2026-05-07',t:'간트차트, 자재현황 통합탭(품번/제조사/수량/입고예정/비고), 공정 시작/중지/재개/완료 버튼, 고객사별탭→필터로 전환, 발주폼 자재입력 추가'},
+  {v:'v1.9.0',d:'2026-05-07',t:'전체 코드 재작성(구문오류 완전 해결), 캘린더 고객사/품명/수량, 공정 수동진행+건너뛰기, 작업자이력, 로딩속도 개선'},
+  {v:'v1.8.0',d:'2026-05-07',t:'버전관리 UI 추가, 로딩 개선, 캘린더 정보표시'},
+  {v:'v1.7.0',d:'2026-05-07',t:'메인화면 PD BOX 스타일 자재컬럼, 미불출품목 편집, 완료요청 납기-N일 설정'},
+  {v:'v1.6.0',d:'2026-05-07',t:'자재현황 탭, 작업자 바코드 자동인식, 하네스 작업/완료/불출일 추가'},
+  {v:'v1.5.0',d:'2026-05-07',t:'엑셀 완료요청일 일괄설정, 미불출품목(품번/품명/수량/입고예정) 관리'},
+  {v:'v1.4.0',d:'2026-05-07',t:'공정별 색상지정, 단계 추가/삭제, RLS 오류 수정'},
+  {v:'v1.3.0',d:'2026-05-06',t:'Supabase 키 내장, GitHub Pages 배포, 자동 연결'},
+  {v:'v1.2.0',d:'2026-05-06',t:'호기 탭, 납기-3일 자동, 엑셀 발주등록, 공정템플릿 관리, 집계 페이지'},
+  {v:'v1.1.0',d:'2026-05-06',t:'바코드 스캔(USB/카메라), 공정 시작/완료, 작업지시서 출력'},
+  {v:'v1.0.0',d:'2026-05-06',t:'최초 공정관리 시스템 구축 (발주등록, 공정추적, 자재관리)'},
 ];
 const SB_URL = 'https://zlmdxxginskguqqitsbp.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbWR4eGdpbnNrZ3VxcWl0c2JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjQyMTcsImV4cCI6MjA5MzYwMDIxN30.1b1bGTNfq7a1ZTBeHVnzTRsjWgwZP4rY9ei3XqljNi0';
@@ -221,7 +223,9 @@ async function dbSaveOrder(d){
     customer:d.customer, order_no:d.order_no||'', part_no:d.part_no, part_name:d.part_name,
     rev:d.rev||'', lot_no:d.lot_no||'', quantity:d.quantity,
     delivery_date:d.delivery_date||null, production_deadline:prd||null,
-    template_id:d.template_id, notes:d.notes||'', updated_at:new Date().toISOString()
+    template_id:d.template_id, notes:d.notes||'',
+    detail_status:d.detail_status||'',
+    updated_at:new Date().toISOString()
   };
   if(d.id){
     const {error} = await sb.from('orders').update(payload).eq('id',d.id);
@@ -575,38 +579,110 @@ function filteredOrders(){
 
 function vList(orders,off){
   if(!orders.length) return '<div class="empty"><div class="ic">📋</div><h3>표시할 발주가 없습니다</h3></div>';
-  var rows=orders.map(function(o){
-    var prd=o.production_deadline||addDays(o.delivery_date,-off);
-    return '<tr onclick="mDetail(\''+o.id+'\')">'
-      +'<td style="font-weight:600">'+o.customer+'</td>'
-      +'<td><div style="font-weight:600;font-size:12px">'+o.part_no+'</div>'
-      +'<div class="mono" style="color:var(--dim);font-size:10px">'+o.part_name+'</div></td>'
-      +'<td><span class="badge by">'+(o.lot_no||'—')+'</span></td>'
-      +'<td>'
-      +'<span class="'+dcls(o.delivery_date,o.status)+'">'+fmtDateS(o.delivery_date)+'</span>'
-      +(prd?'<div style="font-size:10px;color:var(--dim)">완료 '+fmtDateS(prd)+'</div>':'')
-      +'</td>'
-      +'<td>'+getDots(o)+'<div style="font-size:10px;color:var(--dim);margin-top:2px">'+(o.status==='완료'?'✅완료':(getSteps(o)[o.current_step]||'—'))+'</div></td>'
-      +'<td>'+getBadge(o)+'</td>'
-      +'<td onclick="event.stopPropagation()">'
-      +'<div style="display:flex;gap:3px">'
-      +'<button class="btn btn-s btn-sm" onclick="doPrint(\''+o.id+'\')">출력</button>'
-      +'<button class="btn btn-s btn-sm" onclick="mOrder(\''+o.id+'\')">수정</button>'
-      +'<button class="btn btn-d btn-sm" onclick="doDelOrder(\''+o.id+'\')">삭제</button>'
-      +'</div></td></tr>';
-  }).join('');
-  return '<div class="tw"><table>'
-    +'<thead><tr>'
-    +'<th>고객사</th><th>품번/품명</th><th>호기</th><th>납기일/완료요청</th>'
-    +'<th>공정 진행</th><th>상태</th><th>액션</th>'
-    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+
+  // group by delivery month
+  var groups={};
+  orders.forEach(function(o){
+    var k=o.delivery_date?o.delivery_date.slice(0,7):'9999-99';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(o);
+  });
+  var keys=Object.keys(groups).sort();
+
+  var TH='<thead><tr>'
+    +'<th style="min-width:80px">고객사</th>'
+    +'<th style="min-width:200px">프로젝트</th>'
+    +'<th style="min-width:110px">상태</th>'
+    +'<th style="min-width:90px">가공물<br>입고일</th>'
+    +'<th style="min-width:90px">하네스<br>요청일</th>'
+    +'<th style="min-width:90px">전장팀<br>시작일</th>'
+    +'<th style="min-width:90px">품질검수일<br><span style="font-weight:400;color:var(--muted)">(완료요청)</span></th>'
+    +'<th style="min-width:90px">납품일자</th>'
+    +'<th style="min-width:80px">액션</th>'
+    +'</tr></thead>';
+
+  var html='';
+  keys.forEach(function(k){
+    var label=k==='9999-99'?'납기일 미정':(k.slice(0,4)+'년 '+(parseInt(k.slice(5),10))+'월');
+    html+='<div style="margin-bottom:18px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);padding:8px 0 6px;border-bottom:2px solid var(--primary);margin-bottom:0;display:flex;align-items:center;gap:8px">'
+      +'<span>▼ '+label+'</span>'
+      +'<span style="font-size:11px;font-weight:400;color:var(--dim)">'+groups[k].length+'건</span>'
+      +'</div>'
+      +'<div class="tw" style="border-radius:0 0 var(--rl) var(--rl);border-top:none">'
+      +'<table>'+TH+'<tbody>'
+      +groups[k].map(function(o){
+        var m=getOrderMats(o.id);
+        var gak=m['가공물']||{};
+        var har=m['하네스']||{};
+        var jun=m['전장']||{};
+        var prd=o.production_deadline||addDays(o.delivery_date,-off);
+        // 가공물 입고일
+        var gakDate=gak.incoming_date||'';
+        var gakDone=!!gak.ordered;
+        // 하네스 요청일
+        var harDate=har.work_request_date||'';
+        // 전장 시작일 = 전장 completion_date 또는 autoDate
+        var junDate=jun.completion_date||addDays(o.delivery_date,-off)||'';
+        // 고객사 배지 색
+        var custColors={'AXCELIS':'#3b82f6','EDWARDS':'#ec4899','VM':'#f97316','SNG ENG':'#10b981','남일인스트루먼트':'#8b5cf6'};
+        var custBg=custColors[o.customer]||'#6b7280';
+        var custStyle='background:'+custBg+'22;color:'+custBg+';border:1px solid '+custBg+'55;';
+        return '<tr onclick="mDetail(\''+o.id+'\')">'
+          +'<td><span class="badge" style="'+custStyle+'font-size:11px;font-weight:700">'+o.customer+'</span></td>'
+          +'<td>'
+          +'<div style="font-size:12px;font-weight:600">'+o.part_no+(o.lot_no?' <span class="badge by" style="font-size:9px;padding:1px 4px">'+o.lot_no+'</span>':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--dim)">'+o.part_name+'</div>'
+          +(o.order_no?'<div style="font-size:10px;color:var(--muted)">'+o.order_no+'</div>':'')
+          +'</td>'
+          +'<td>'+getDetailBadge(o)+'</td>'
+          +'<td>'+(gakDate?'<div style="font-size:11px;font-family:var(--mono)">'+fmtDate2(gakDate)+'</div>':'')
+          +(gakDone?'<div style="font-size:10px;color:var(--success)">✓ 입고완료</div>':'')+'</td>'
+          +'<td>'+(harDate?'<span style="font-size:11px;font-family:var(--mono)">'+fmtDate2(harDate)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'
+          +'<td>'+(junDate?'<span style="font-size:11px;font-family:var(--mono);'+dateStyle(junDate)+'">'+fmtDate2(junDate)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'
+          +'<td>'+(prd?'<span style="font-size:11px;font-family:var(--mono);'+dateStyle(prd)+'">'+fmtDate2(prd)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'
+          +'<td><span style="font-size:11px;font-family:var(--mono);font-weight:600;'+dcls(o.delivery_date,o.status)+'">'+fmtDate2(o.delivery_date)+'</span></td>'
+          +'<td onclick="event.stopPropagation()">'
+          +'<div style="display:flex;gap:3px">'
+          +'<button class="btn btn-s btn-sm" title="수정" onclick="mOrder(\''+o.id+'\')">✎</button>'
+          +'<button class="btn btn-s btn-sm" title="출력" onclick="doPrint(\''+o.id+'\')">🖨</button>'
+          +'<button class="btn btn-d btn-sm" title="삭제" onclick="doDelOrder(\''+o.id+'\')">×</button>'
+          +'</div></td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div></div>';
+  });
+  return html;
+}
+
+function fmtDate2(d){
+  if(!d) return '—';
+  var dt=new Date(d+'T00:00:00');
+  return (dt.getFullYear())+'/'+(String(dt.getMonth()+1).padStart(2,'0'))+'/'+(String(dt.getDate()).padStart(2,'0'));
+}
+
+function getDetailBadge(o){
+  var ds=o.detail_status||o.status||'대기';
+  var map={
+    '시작 전':'background:#374151;color:#9ca3af',
+    '납품 대기':'background:#fff1f2;color:#e11d48;border:1px solid #fecdd3',
+    '진행 중 - 제조':'background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe',
+    '진행 중 - 품질':'background:#fffbeb;color:#d97706;border:1px solid #fde68a',
+    '진행 중 - 수급':'background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe',
+    '완료':'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0',
+    '지연':'background:#fef2f2;color:#dc2626;border:1px solid #fecaca',
+    '대기':'background:#374151;color:#9ca3af',
+    '진행중':'background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe',
+  };
+  if(isLate(o)&&ds!=='완료'&&ds!=='납품 대기') ds='지연';
+  var st=map[ds]||map['대기'];
+  return '<span class="badge" style="'+st+';font-size:11px">'+ds+'</span>';
 }
 
 function $$(id){ return document.getElementById(id); }
 
 
 function vGantt(allOrders){
-  // apply gantt filters
   var orders=[...allOrders];
   if(S.fGanttCust!=='all') orders=orders.filter(function(o){return o.customer===S.fGanttCust;});
   if(S.fGanttSort==='customer') orders.sort(function(a,b){return (a.customer||'').localeCompare(b.customer||'');});
@@ -892,13 +968,15 @@ function pageSettings(){
 // ── ORDER MODAL ──────────────────────────────────────
 function mOrder(oid){
   oid=oid||null;
-  const o=oid?S.orders.find(function(x){return x.id===oid;}):null;
-  const custs=[...new Set(S.orders.map(function(x){return x.customer;}).filter(Boolean))];
-  const curTpl=o?S.templates.find(function(t){return t.id===o.template_id;}):null;
-  const prevHtml=curTpl?curTpl.steps.map(function(s,i){return '<span class="chip act">'+s+'</span>'+(i<curTpl.steps.length-1?'<span style="color:var(--border2);margin:0 2px">→</span>':'');}).join(''):'<span style="color:var(--dim);font-size:12px">템플릿 선택 후 표시</span>';
-  const tplOpts=S.templates.map(function(t){return '<option value="'+t.id+'"'+(o&&o.template_id===t.id?' selected':'')+'>'+t.name+'</option>';}).join('');
-  const custOpts=custs.map(function(c){return '<option value="'+c+'">';}).join('');
-  const body='<div class="fg2">'
+  var o=oid?S.orders.find(function(x){return x.id===oid;}):null;
+  var custs=[...new Set(S.orders.map(function(x){return x.customer;}).filter(Boolean))];
+  var curTpl=o?S.templates.find(function(t){return t.id===o.template_id;}):null;
+  var prevHtml=curTpl?curTpl.steps.map(function(s,i){return '<span class="chip act">'+s+'</span>'+(i<curTpl.steps.length-1?'<span style="color:var(--border2);margin:0 2px">→</span>':'');}).join(''):'<span style="color:var(--dim);font-size:12px">템플릿 선택 후 표시</span>';
+  var tplOpts=S.templates.map(function(t){return '<option value="'+t.id+'"'+(o&&o.template_id===t.id?' selected':'')+'>'+t.name+'</option>';}).join('');
+  var custOpts=custs.map(function(c){return '<option value="'+c+'">';}).join('');
+  var curDS=o?o.detail_status||'':'' ;
+  var statusOpts=['시작 전','납품 대기','진행 중 - 제조','진행 중 - 품질','진행 중 - 수급','완료'].map(function(s){return '<option value="'+s+'"'+(curDS===s?' selected':'')+'>'+s+'</option>';}).join('');
+  var body='<div class="fg2">'
     +'<div class="fg"><label class="fl-label">고객사 *</label><input class="fi" id="f-cust" value="'+(o?o.customer:'')+'" list="clist"><datalist id="clist">'+custOpts+'</datalist></div>'
     +'<div class="fg"><label class="fl-label">수주번호</label><input class="fi" id="f-ono" value="'+(o?o.order_no:'')+'"></div>'
     +'<div class="fg"><label class="fl-label">품번 *</label><input class="fi" id="f-pno" value="'+(o?o.part_no:'')+'"></div>'
@@ -906,13 +984,15 @@ function mOrder(oid){
     +'<div class="fg full"><label class="fl-label">품명 *</label><input class="fi" id="f-pnm" value="'+(o?o.part_name:'')+'"></div>'
     +'<div class="fg"><label class="fl-label">호기</label><input class="fi" id="f-lot" value="'+(o?o.lot_no:'')+'" placeholder="#1, #FA"></div>'
     +'<div class="fg"><label class="fl-label">수량 *</label><input class="fi" type="number" id="f-qty" value="'+(o?o.quantity:1)+'" min="1"></div>'
-    +'<div class="fg"><label class="fl-label">납기일</label><input class="fi" type="date" id="f-del" value="'+(o&&o.delivery_date?o.delivery_date:'')+'" oninput="autoPrd()"></div>'
-    +'<div class="fg"><label class="fl-label">생산완료요청일 <span style="color:var(--dim);font-size:10px">(납기-3일 자동)</span></label><input class="fi" type="date" id="f-prd" value="'+(o&&o.production_deadline?o.production_deadline:'')+'"></div>'
+    +'<div class="fg"><label class="fl-label">납기일 (납품일자)</label><input class="fi" type="date" id="f-del" value="'+(o&&o.delivery_date?o.delivery_date:'')+'" oninput="autoPrd()"></div>'
+    +'<div class="fg"><label class="fl-label">품질검수일 <span style="color:var(--dim);font-size:10px">(납기-3일 자동)</span></label><input class="fi" type="date" id="f-prd" value="'+(o&&o.production_deadline?o.production_deadline:'')+'"></div>'
+    +'<div class="fg"><label class="fl-label">상태</label><select class="fs" id="f-ds"><option value="">— 선택 —</option>'+statusOpts+'</select></div>'
     +'<div class="fg full"><label class="fl-label">공정 템플릿 *</label><select class="fs" id="f-tpl" onchange="onTplChange()">'+tplOpts+'</select><div class="tpl-prev" id="tpl-prev" style="margin-top:6px">'+prevHtml+'</div></div>'
     +'<div class="fg full"><label class="fl-label">메모</label><textarea class="fta" id="f-note">'+(o?o.notes:'')+'</textarea></div>'
     +'</div>';
-  openM(o?'발주 수정':'발주 등록',body,[{l:'취소',c:'btn-s',a:'closeM()'},{l:o?'수정':'등록',c:'btn-p',a:'doSaveOrder(\''+(oid||'')+'\')'  }]);
+  openM(o?'발주 수정':'발주 등록',body,[{l:'취소',c:'btn-s',a:'closeM()'},{l:o?'수정':'등록',c:'btn-p',a:'doSaveOrder(\''+(oid||'')+'\')'}]);
 }
+
 function onTplChange(){
   const id=$('f-tpl')&&$('f-tpl').value;
   const t=S.templates.find(function(x){return x.id===id;});
@@ -957,7 +1037,7 @@ async function mDetail(oid){
   var matHtml=buildPartsTable(oid,parts);
 
   var body=infoGrid+workerBox+tabBar
-    +'<div id="dtab-proc-content">'+stepHtml+'</div>'
+    +'<div id="dtab-proc-content"><div id="dstep-'+oid+'">'+stepHtml+'</div></div>'
     +'<div id="dtab-mat-content" style="display:none">'+matHtml+'</div>'
     +(o.notes?'<div style="margin-top:12px;padding:9px;background:var(--s2);border-radius:var(--r);font-size:12px;color:var(--dim)">📝 '+o.notes+'</div>':'');
 
@@ -1271,6 +1351,7 @@ async function doSaveOrder(oid){
     template_id:($('f-tpl')&&$('f-tpl').value)||'',
     delivery_date:($('f-del')&&$('f-del').value)||null,
     production_deadline:($('f-prd')&&$('f-prd').value)||null,
+    detail_status:($('f-ds')&&$('f-ds').value)||'',
     notes:($('f-note')&&$('f-note').value)||'',
   };
   if(!d.customer||!d.part_no||!d.part_name){ toast('고객사, 품번, 품명은 필수입니다','err'); return; }
