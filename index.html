@@ -523,6 +523,12 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <button class="sp-tab" id="spt-log" onclick="setSpTab('log')">📋 이력 관리</button>
         </div>
         <div class="sp-sep"></div>
+        <div style="position:relative;display:flex;align-items:center">
+          <span style="position:absolute;left:10px;font-size:13px;color:var(--tx3);pointer-events:none">🔍</span>
+          <input class="sp-search" id="sp-search" placeholder="도면번호 / 고객사 / 프로젝트 / 작업자..." oninput="refreshSpTab()" style="padding-left:30px;width:260px">
+          <button id="sp-search-clear" onclick="document.getElementById('sp-search').value='';refreshSpTab()" style="position:absolute;right:8px;border:none;background:none;color:var(--tx3);cursor:pointer;font-size:14px;display:none;line-height:1;padding:2px" title="검색 초기화">×</button>
+        </div>
+        <div class="sp-sep"></div>
         <select class="sp-filter" id="flt-cust" onchange="refreshSpTab()"><option value="">전체 고객사</option></select>
         <select class="sp-filter" id="flt-proj" onchange="refreshSpTab()"><option value="">전체 프로젝트</option></select>
         <div class="sp-show-btns">
