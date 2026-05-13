@@ -275,7 +275,6 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .sc-log-dur{font-size:11px;font-family:var(--mono);color:var(--tx2);white-space:nowrap}
 
 /* ── PROCESS QR MODAL ── */
-.pqr-modal-ovl{position:fixed;inset:0;background:rgba(15,30,65,.65);display:flex;align-items:center;justify-content:center;z-index:900;backdrop-filter:blur(4px)}
 .pqr-modal-box{background:var(--white);border-radius:var(--r2);padding:32px 40px;text-align:center;box-shadow:var(--sh);min-width:260px}
 .pqr-modal-title{font-size:22px;font-weight:700;color:var(--tx);margin-bottom:4px}
 .pqr-modal-sub{font-size:12px;color:var(--tx3);margin-bottom:20px}
@@ -426,6 +425,29 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     .app,.main,.page{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
   }
 }
+/* sp tabs */
+.sp-tabs{display:flex;gap:4px}
+.sp-tab{padding:7px 16px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--tx2);transition:all .18s}
+.sp-tab:hover{border-color:var(--border2);background:var(--bg)}
+.sp-tab.on{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
+/* log management */
+.log-toolbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
+.log-table{width:100%;border-collapse:collapse;font-size:13px}
+.log-table th{background:var(--bg);padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+.log-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.log-table tr:last-child td{border-bottom:none}
+.log-table tr:hover td{background:var(--bg2)}
+.log-chk{width:14px;height:14px;cursor:pointer;accent-color:var(--blue)}
+/* version sidebar */
+.sb-ver{margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-ver-num{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);font-family:var(--mono);cursor:pointer;transition:color .15s}
+.sb-ver-num:hover{color:rgba(255,255,255,.65)}
+/* version log */
+.ver-log-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.ver-log-item:last-child{border-bottom:none}
+.ver-v{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue)}
+.ver-d{font-size:11px;color:var(--tx3);font-family:var(--mono);margin-left:8px}
+.ver-t{font-size:12px;color:var(--tx2);margin-top:4px;line-height:1.6}
 @media print{.app>*{display:none!important}#print-area{display:block!important}}
 #print-area{display:none;padding:16mm}
 .pqr-print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
@@ -451,17 +473,33 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <!-- Print area for process QRs -->
 <div id="print-area"><div class="pqr-print-grid" id="print-grid"></div></div>
 
-<!-- Process QR Modal -->
-<div id="pqr-modal-ovl" class="pqr-modal-ovl hidden" onclick="if(event.target===this)document.getElementById('pqr-modal-ovl').classList.add('hidden')">
-  <div class="pqr-modal-box">
-    <div class="pqr-modal-title" id="pqr-modal-name"></div>
-    <div class="pqr-modal-sub" id="pqr-modal-sub"></div>
-    <canvas id="pqr-modal-canvas" class="pqr-modal-canvas" width="220" height="220"></canvas>
-    <div class="pqr-modal-code" id="pqr-modal-code"></div>
-    <div class="pqr-modal-btns">
-      <button class="btn btn-pr" onclick="printSingleProcessQR()">🖨 인쇄</button>
-      <button class="btn btn-outline" onclick="document.getElementById('pqr-modal-ovl').classList.add('hidden')">닫기</button>
+<!-- 이력 수정 모달 -->
+<div id="log-edit-ovl" class="po-ovl hidden" onclick="if(event.target===this)closeLogEdit()">
+  <div class="po-box" style="max-width:420px">
+    <div class="po-hd"><div class="po-hd-title">이력 수정</div><button class="po-hd-x" onclick="closeLogEdit()">×</button></div>
+    <div class="po-body">
+      <div class="po-fg" style="margin-bottom:10px"><div class="po-label">도면번호 / 공정</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--tx);padding:8px 0" id="le-info">—</div></div>
+      <div class="po-fg" style="margin-bottom:10px"><div class="po-label">작업자</div>
+        <input class="po-inp" id="le-worker" placeholder="작업자 이름"></div>
+      <div class="po-row2">
+        <div class="po-fg"><div class="po-label">시작시간</div>
+          <input type="datetime-local" class="po-inp" id="le-start"></div>
+        <div class="po-fg"><div class="po-label">완료시간</div>
+          <input type="datetime-local" class="po-inp" id="le-end" placeholder="미완료 시 비움"></div>
+      </div>
     </div>
+    <div class="po-ft">
+      <button class="btn btn-outline" onclick="closeLogEdit()">취소</button>
+      <button class="btn btn-pr" onclick="saveLogEdit()">저장</button>
+    </div>
+  </div>
+</div>
+<!-- 버전 이력 모달 -->
+<div id="ver-modal-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('ver-modal-ovl').classList.add('hidden')">
+  <div class="po-box" style="max-width:400px">
+    <div class="po-hd"><div class="po-hd-title">버전 이력</div><button class="po-hd-x" onclick="document.getElementById('ver-modal-ovl').classList.add('hidden')">×</button></div>
+    <div class="po-body" id="ver-log-body"></div>
   </div>
 </div>
 
@@ -477,12 +515,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-stamp" onclick="setPage('stamp')"><span class="sn-ic">📐</span> QR 스탬프</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
     </div>
-    <div class="sb-section">
-      <div class="sb-sec-title">공정 QR 코드</div>
-      <div id="sb-pqr-list"></div>
-    </div>
-    <div class="sb-foot">
-      <button class="sb-foot-btn" onclick="printAllProcessQR()">🖨 전체 인쇄</button>
+    <div class="sb-ver">
+      <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.1 <span style="opacity:.5;font-size:9px">클릭하면 이력</span></div>
+      <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
     </div>
   </aside>
 
@@ -492,12 +527,15 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <!-- PAGE: 공정현황 -->
     <div id="pg-status" class="page">
       <div class="sp-bar">
-        <div class="sp-title">공정 현황판</div>
-        <input class="sp-search" id="sp-search" placeholder="🔍 도면번호 / 고객사 / 프로젝트" oninput="renderStatus()">
+        <div class="sp-tabs">
+          <button class="sp-tab on" id="spt-board" onclick="setSpTab('board')">📊 현황판</button>
+          <button class="sp-tab" id="spt-log" onclick="setSpTab('log')">📋 이력 관리</button>
+        </div>
+        <input class="sp-search" id="sp-search" placeholder="🔍 도면번호 / 고객사 / 프로젝트" oninput="refreshSpTab()" style="margin-left:12px">
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
-          <button class="btn btn-outline btn-sm" onclick="renderStatus()">↻</button>
-          <button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="clearAllData()">데이터 초기화</button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="refreshSpTab()">↻</button>
         </div>
       </div>
       <div class="sp-content" id="sp-board">
@@ -691,7 +729,7 @@ function setPage(p){
   });
   // 스캔 페이지 이탈 시 카메라 중지
   if(p!=='scan') stopCamera();
-  if(p==='status') renderStatus();
+  if(p==='status') refreshSpTab();
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -703,85 +741,16 @@ function setPage(p){
 // ════════════════════════════════════════
 // PROCESS QR (사이드바)
 // ════════════════════════════════════════
-function makeQRCanvas(text, size){
-  const qr=qrcode(0,'M');
-  qr.addData(text,'Byte');
-  qr.make();
-  const mc=qr.getModuleCount(), mg=2;
-  const cell=Math.floor(size/(mc+mg*2));
-  const sz=(mc+mg*2)*cell;
-  const cv=document.createElement('canvas');
-  cv.width=cv.height=sz;
-  const ctx=cv.getContext('2d');
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,sz,sz);
-  ctx.fillStyle='#000';
-  for(let r=0;r<mc;r++) for(let c=0;c<mc;c++)
-    if(qr.isDark(r,c)) ctx.fillRect((c+mg)*cell,(r+mg)*cell,cell,cell);
-  return cv;
-}
 
-function buildSidebarProcessQR(){
-  const list=document.getElementById('sb-pqr-list'); if(!list) return;
-  list.innerHTML='';
-  H_STEPS.forEach(step=>{
-    const code=QR_PREFIX+step.id;
-    const cv=makeQRCanvas(code, 52);
-    cv.className='pqr-canvas';
-    cv.style.width='38px'; cv.style.height='38px';
-    const item=document.createElement('div');
-    item.className='pqr-item';
-    item.title='클릭하여 크게 보기 / 인쇄';
-    item.innerHTML=`<div class="pqr-label">${step.icon} ${step.id}</div><div class="pqr-sub">${code}</div>`;
-    item.prepend(cv);
-    item.addEventListener('click',()=>openProcessQRModal(step));
-    list.appendChild(item);
-  });
-}
+
+
 
 let _modalStep=null;
-function openProcessQRModal(step){
-  _modalStep=step;
-  const ovl=document.getElementById('pqr-modal-ovl'); if(!ovl) return;
-  document.getElementById('pqr-modal-name').textContent=step.icon+' '+step.id;
-  document.getElementById('pqr-modal-sub').textContent=step.desc;
-  const code=QR_PREFIX+step.id;
-  document.getElementById('pqr-modal-code').textContent=code;
-  const cv=makeQRCanvas(code, 220);
-  const target=document.getElementById('pqr-modal-canvas');
-  // Copy canvas content
-  const ctx=target.getContext('2d');
-  target.width=cv.width; target.height=cv.height;
-  ctx.drawImage(cv,0,0);
-  target.style.width='200px'; target.style.height='200px';
-  ovl.classList.remove('hidden');
-}
 
-function printSingleProcessQR(){
-  if(!_modalStep) return;
-  const pg=document.getElementById('print-grid');
-  const cv=makeQRCanvas(QR_PREFIX+_modalStep.id, 360);
-  pg.innerHTML=`<div class="pqr-print-card" style="max-width:280px;margin:0 auto">
-    <img src="${cv.toDataURL()}" style="width:200px;height:200px">
-    <div class="pqr-print-name">${_modalStep.icon} ${_modalStep.id}</div>
-    <div class="pqr-print-code">${QR_PREFIX+_modalStep.id}</div>
-    <div style="font-size:11px;color:#666;margin-top:8px">하네스 공정관리 · ㈜진선테크</div>
-  </div>`;
-  document.getElementById('pqr-modal-ovl').classList.add('hidden');
-  window.print();
-}
 
-function printAllProcessQR(){
-  const pg=document.getElementById('print-grid');
-  pg.innerHTML=H_STEPS.map(s=>{
-    const cv=makeQRCanvas(QR_PREFIX+s.id, 300);
-    return `<div class="pqr-print-card">
-      <img src="${cv.toDataURL()}" style="width:160px;height:160px">
-      <div class="pqr-print-name">${s.icon} ${s.id}</div>
-      <div class="pqr-print-code">${QR_PREFIX+s.id}</div>
-    </div>`;
-  }).join('');
-  window.print();
-}
+
+
+
 
 // ════════════════════════════════════════
 // 공정현황 렌더
@@ -1082,8 +1051,137 @@ function renderScanLog(){
 }
 
 // ════════════════════════════════════════
-// QR 스탬프 JS (기존 로직 유지)
 // ════════════════════════════════════════
+// 버전 관리
+// ════════════════════════════════════════
+const APP_VER='v1.1';
+const VER_LOG=[
+  {v:'v1.1',d:'2026-05',t:'CSV 내보내기, 이력 선택/수정/삭제, 버전 관리, 탭 추가'},
+  {v:'v1.0',d:'2026-05',t:'최초 출시 — 공정현황, QR스탬프, QR스캔, 6단계 공정추적'},
+];
+function showVersionModal(){
+  const el=document.getElementById('ver-log-body');if(!el)return;
+  el.innerHTML=VER_LOG.map(v=>`<div class="ver-log-item"><div><span class="ver-v">${v.v}</span><span class="ver-d">${v.d}</span></div><div class="ver-t">${v.t}</div></div>`).join('');
+  document.getElementById('ver-modal-ovl').classList.remove('hidden');
+}
+
+// ════════════════════════════════════════
+// 공정현황 탭 관리
+// ════════════════════════════════════════
+let _spTab='board';
+function setSpTab(tab){
+  _spTab=tab;
+  ['board','log'].forEach(t=>{const b=document.getElementById('spt-'+t);if(b)b.classList.toggle('on',t===tab);});
+  refreshSpTab();
+}
+function refreshSpTab(){
+  if(_spTab==='board')renderStatus();else renderLogMgmt();
+}
+
+// ════════════════════════════════════════
+// CSV 내보내기
+// ════════════════════════════════════════
+function exportCSV(){
+  const headers=['도면번호','고객사','프로젝트','호기','수량','공정','작업자','시작시간','완료시간','소요(분)'];
+  const rows=HS.logs.map(l=>[
+    l.dwg_no||'',l.customer||'',l.project||'',l.unit||'',l.qty||1,
+    l.process||'',l.worker||'',
+    l.started_at?new Date(l.started_at).toLocaleString('ko-KR'):'',
+    l.ended_at?new Date(l.ended_at).toLocaleString('ko-KR'):'',
+    l.duration_min!=null?l.duration_min:''
+  ]);
+  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const now=new Date();
+  a.href=url;a.download='하네스공정_'+now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+  toast('CSV 내보내기 완료 ('+HS.logs.length+'건)','ok');
+}
+
+// ════════════════════════════════════════
+// 이력 관리
+// ════════════════════════════════════════
+let _selLogs=new Set();
+
+function renderLogMgmt(){
+  const board=document.getElementById('sp-board');if(!board)return;
+  const q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
+  let logs=[...HS.logs];
+  if(q)logs=logs.filter(l=>(l.dwg_no||'').toLowerCase().includes(q)||(l.worker||'').toLowerCase().includes(q)||(l.process||'').toLowerCase().includes(q)||(l.customer||'').toLowerCase().includes(q));
+  const cnt=document.getElementById('sp-cnt');if(cnt)cnt.textContent=logs.length+'건';
+  _currentLogIds=logs.map(l=>l.id);
+  if(!logs.length){board.innerHTML='<div class="sp-empty"><div class="sp-empty-ic">📋</div><div class="sp-empty-t">이력이 없습니다</div></div>';return;}
+  const fmt=dt=>{if(!dt)return '—';const d=new Date(dt);const p=n=>String(n).padStart(2,'0');return p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());};
+  const rows=logs.map(function(l){
+    const step=H_STEPS.find(function(s){return s.id===l.process;})||{color:'#888',icon:'?'};
+    const dur=l.duration_min!=null?l.duration_min+'분':'<span style="color:var(--blue)">진행중</span>';
+    const chk=_selLogs.has(l.id)?'checked':'';
+    return '<tr>'
+      +'<td><input type="checkbox" class="log-chk" data-lid="'+l.id+'" '+chk+' onchange="toggleLogSel(this.dataset.lid,this.checked)"></td>'
+      +'<td style="font-family:var(--mono);font-weight:600;font-size:12px">'+(l.dwg_no||'—')+'</td>'
+      +'<td><span style="background:'+step.color+'18;color:'+step.color+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">'+step.icon+' '+l.process+'</span></td>'
+      +'<td>'+(l.worker||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;white-space:nowrap">'+fmt(l.started_at)+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;white-space:nowrap">'+fmt(l.ended_at)+'</td>'
+      +'<td style="font-family:var(--mono);font-size:12px">'+dur+'</td>'
+      +'<td><div style="display:flex;gap:5px">'
+      +'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px" data-lid="'+l.id+'" onclick="openLogEdit(this.dataset.lid)">수정</button>'
+      +'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(211,59,59,.3)" data-lid="'+l.id+'" onclick="deleteLog(this.dataset.lid)">삭제</button>'
+      +'</div></td></tr>';
+  }).join('');
+  const selCnt=_selLogs.size;
+  board.innerHTML='<div class="log-toolbar">'
+    +'<input type="checkbox" class="log-chk" onchange="toggleAllLogs(this.checked)">'
+    +'<span style="font-size:12px;color:var(--tx3)">'+(selCnt>0?selCnt+'건 선택됨':'전체 선택')+'</span>'
+    +(selCnt>0?'<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:rgba(211,59,59,.3)" onclick="deleteSelectedLogs()">🗑 선택 삭제 ('+selCnt+'건)</button>':'')
+    +'<span style="margin-left:auto;font-size:12px;color:var(--tx3)">총 '+logs.length+'건</span>'
+    +'</div>'
+    +'<div class="grp-card"><div style="overflow-x:auto"><table class="log-table">'
+    +'<thead><tr><th style="width:28px"></th><th>도면번호</th><th>공정</th><th>작업자</th><th>시작</th><th>완료</th><th>소요</th><th>관리</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div></div>';
+}
+let _currentLogIds=[];
+function toggleLogSel(id,checked){if(checked)_selLogs.add(id);else _selLogs.delete(id);renderLogMgmt();}
+function toggleAllLogs(checked){if(checked)_currentLogIds.forEach(function(id){_selLogs.add(id);});else _selLogs.clear();renderLogMgmt();}
+function deleteSelectedLogs(){
+  if(!_selLogs.size)return;
+  if(!confirm(_selLogs.size+'건을 삭제할까요?'))return;
+  HS.logs=HS.logs.filter(function(l){return !_selLogs.has(l.id);});
+  _selLogs.clear();hsSaveLogs();renderLogMgmt();renderStatus();toast('삭제 완료','ok');
+}
+function deleteLog(id){
+  if(!confirm('이 이력을 삭제할까요?'))return;
+  HS.logs=HS.logs.filter(function(l){return l.id!==id;});
+  _selLogs.delete(id);hsSaveLogs();renderLogMgmt();renderStatus();toast('삭제 완료','ok');
+}
+let _editId=null;
+function openLogEdit(id){
+  const log=HS.logs.find(l=>l.id===id);if(!log)return;
+  _editId=id;
+  document.getElementById('le-info').textContent=(log.dwg_no||'—')+' / '+(log.process||'—');
+  document.getElementById('le-worker').value=log.worker||'';
+  const toLocal=dt=>{if(!dt)return '';const d=new Date(dt);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());};
+  document.getElementById('le-start').value=toLocal(log.started_at);
+  document.getElementById('le-end').value=toLocal(log.ended_at)||'';
+  document.getElementById('log-edit-ovl').classList.remove('hidden');
+}
+function closeLogEdit(){_editId=null;document.getElementById('log-edit-ovl').classList.add('hidden');}
+function saveLogEdit(){
+  const log=HS.logs.find(l=>l.id===_editId);if(!log)return;
+  log.worker=document.getElementById('le-worker').value.trim();
+  const sv=document.getElementById('le-start').value;
+  const ev=document.getElementById('le-end').value;
+  if(sv)log.started_at=new Date(sv).toISOString();
+  if(ev){log.ended_at=new Date(ev).toISOString();if(log.started_at)log.duration_min=Math.round((new Date(log.ended_at)-new Date(log.started_at))/60000);}
+  else{log.ended_at=null;log.duration_min=null;}
+  hsSaveLogs();closeLogEdit();renderLogMgmt();renderStatus();toast('수정 완료','ok');
+}
+
+// ════════════════════════════════════════
+// QR 스탬프 JS (기존 로직 유지)// ════════════════════════════════════════
 const S={files:[],idx:-1,page:1,applyAll:true,pxPerMm:3.78};
 let dragging=false,dox=0,doy=0;
 const $=id=>document.getElementById(id);
@@ -1433,12 +1531,12 @@ function stopCamera(){
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
-try { buildSidebarProcessQR(); } catch(e){ console.warn('QR 사이드바 생성 오류:', e); }
+// 버전 사이드바 표시
 
 // 모바일 감지 → QR스캔 기본, 데스크탑 → 공정현황 기본
 const isMobile=window.innerWidth<=768||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 try {
-  if(isMobile){ setPage('scan'); } else { setPage('status'); }
+  if(isMobile){ setPage('scan'); } else { setPage('status'); refreshSpTab(); }
 } catch(e){ console.error('페이지 초기화 오류:', e); }
 </script>
 </body>
