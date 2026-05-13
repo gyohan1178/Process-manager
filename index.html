@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v1.7</title>
+<title>하네스 공정관리 v1.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -426,6 +426,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     .app,.main,.page{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
   }
 }
+/* sp filter */
+.sp-sep{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.sp-filter{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--tx);font-size:13px;outline:none;cursor:pointer;transition:border-color .18s;max-width:140px}
+.sp-filter:focus{border-color:var(--blue)}
+.sp-show-btns{display:flex;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden}
+.sp-show-btn{padding:5px 12px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--tx2);cursor:pointer;transition:all .18s}
+.sp-show-btn:hover{background:var(--bg)}
+.sp-show-btn.on{background:var(--blue);color:#fff}
 /* sp tabs */
 .sp-tabs{display:flex;gap:4px}
 .sp-tab{padding:7px 16px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--tx2);transition:all .18s}
@@ -518,7 +526,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.7 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.9 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.35)">⟳ 연결중</div>
       </div>
       <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
@@ -530,12 +538,19 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
     <!-- PAGE: 공정현황 -->
     <div id="pg-status" class="page">
-      <div class="sp-bar">
+      <div class="sp-bar" style="flex-wrap:wrap;gap:8px">
         <div class="sp-tabs">
           <button class="sp-tab on" id="spt-board" onclick="setSpTab('board')">📊 현황판</button>
           <button class="sp-tab" id="spt-log" onclick="setSpTab('log')">📋 이력 관리</button>
         </div>
-        <input class="sp-search" id="sp-search" placeholder="🔍 도면번호 / 고객사 / 프로젝트" oninput="refreshSpTab()" style="margin-left:12px">
+        <div class="sp-sep"></div>
+        <select class="sp-filter" id="flt-cust" onchange="refreshSpTab()"><option value="">전체 고객사</option></select>
+        <select class="sp-filter" id="flt-proj" onchange="refreshSpTab()"><option value="">전체 프로젝트</option></select>
+        <div class="sp-show-btns">
+          <button class="sp-show-btn on" id="show-active" onclick="setShowMode('active')">진행중</button>
+          <button class="sp-show-btn" id="show-done" onclick="setShowMode('done')">완료</button>
+          <button class="sp-show-btn" id="show-all" onclick="setShowMode('all')">전체</button>
+        </div>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
@@ -884,73 +899,114 @@ let _modalStep=null;
 // 공정현황 렌더
 // ════════════════════════════════════════
 function getStepSt(dwg_no, stepId){
-  const logs=HS.logs.filter(l=>l.dwg_no===dwg_no&&l.process===stepId);
-  const run=logs.find(l=>!l.ended_at);
+  var logs=HS.logs.filter(function(l){return l.dwg_no===dwg_no&&l.process===stepId;});
+  var run=logs.find(function(l){return !l.ended_at;});
   if(run) return {s:'run',worker:run.worker,time:run.started_at};
-  const done=logs.filter(l=>l.ended_at).sort((a,b)=>new Date(b.ended_at)-new Date(a.ended_at))[0];
+  var done=logs.filter(function(l){return l.ended_at;}).sort(function(a,b){return new Date(b.ended_at)-new Date(a.ended_at);})[0];
   if(done) return {s:'done',worker:done.worker,time:done.ended_at};
   return {s:'idle'};
 }
 
+let _showMode='active';
+function setShowMode(m){
+  _showMode=m;
+  ['active','done','all'].forEach(function(id){
+    var b=document.getElementById('show-'+id);
+    if(b) b.classList.toggle('on',id===m);
+  });
+  renderStatus();
+}
+function isOrderDone(dwg_no){
+  return HS.logs.some(function(l){return l.dwg_no===dwg_no&&l.process==='포장'&&l.ended_at;});
+}
+function getOrderProgress(dwg_no){
+  var done=0;
+  H_STEPS.forEach(function(s){
+    if(HS.logs.some(function(l){return l.dwg_no===dwg_no&&l.process===s.id&&l.ended_at;})) done++;
+  });
+  return done;
+}
+function populateFilters(orders){
+  var custEl=document.getElementById('flt-cust');
+  var projEl=document.getElementById('flt-proj');
+  if(!custEl||!projEl) return;
+  var curCust=custEl.value, curProj=projEl.value;
+  var custs=[...new Set(orders.map(function(o){return o.customer||'';}).filter(Boolean))].sort();
+  var projs=[...new Set(orders.map(function(o){return o.project||'';}).filter(Boolean))].sort();
+  custEl.innerHTML='<option value="">전체 고객사</option>'+custs.map(function(c){return '<option value="'+c+'"'+(c===curCust?' selected':'')+'>'+c+'</option>';}).join('');
+  projEl.innerHTML='<option value="">전체 프로젝트</option>'+projs.map(function(p){return '<option value="'+p+'"'+(p===curProj?' selected':'')+'>'+p+'</option>';}).join('');
+}
 function renderStatus(){
-  const board=document.getElementById('sp-board'); if(!board) return;
-  const q=((document.getElementById('sp-search')||{}).value||'').toLowerCase().trim();
-  let orders=[...HS.orders];
-  if(q) orders=orders.filter(o=>(o.dwg_no||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)||(o.project||'').toLowerCase().includes(q));
-  const cnt=document.getElementById('sp-cnt');
+  var board=document.getElementById('sp-board'); if(!board) return;
+  var q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
+  var fCust=(document.getElementById('flt-cust')||{}).value||'';
+  var fProj=(document.getElementById('flt-proj')||{}).value||'';
+  var orders=[...HS.orders];
+  if(fCust) orders=orders.filter(function(o){return (o.customer||'')===fCust;});
+  if(fProj) orders=orders.filter(function(o){return (o.project||'')===fProj;});
+  if(q) orders=orders.filter(function(o){
+    return (o.dwg_no||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)||(o.project||'').toLowerCase().includes(q);
+  });
+  if(_showMode==='active') orders=orders.filter(function(o){return !isOrderDone(o.dwg_no);});
+  else if(_showMode==='done') orders=orders.filter(function(o){return isOrderDone(o.dwg_no);});
+  populateFilters(HS.orders);
+  var cnt=document.getElementById('sp-cnt');
   if(cnt) cnt.textContent=orders.length+'건';
   if(!orders.length){
-    board.innerHTML=`<div class="sp-empty"><div class="sp-empty-ic">📋</div><div class="sp-empty-t">${q?'검색 결과 없음':'공정 현황이 없습니다'}</div><div class="sp-empty-d">${q?'':'QR 스캔 탭에서 <b>출도</b> 공정을 스캔하면<br>도면이 자동으로 등록됩니다'}</div></div>`;
+    var msg=_showMode==='done'?'완료된 도면이 없습니다':_showMode==='active'?'진행중인 도면이 없습니다':'등록된 도면이 없습니다';
+    board.innerHTML='<div class="sp-empty"><div class="sp-empty-ic">'+(_showMode==='done'?'✅':'📋')+'</div>'
+      +'<div class="sp-empty-t">'+msg+'</div>'
+      +(_showMode==='active'?'<div class="sp-empty-d">QR 스캔 탭에서 <b>출도</b> 공정을 스캔하면<br>도면이 자동으로 등록됩니다</div>':'')
+      +'</div>';
     return;
   }
-  // group by customer+project+unit
-  const groups={};
-  orders.forEach(o=>{
-    const key=[o.customer,o.project,o.unit].filter(Boolean).join(' · ')||'(미입력)';
-    if(!groups[key]) groups[key]=[];
-    groups[key].push(o);
+  orders.sort(function(a,b){
+    var c=(a.customer||'').localeCompare(b.customer||'','ko');
+    if(c!==0) return c;
+    var p=(a.project||'').localeCompare(b.project||'','ko');
+    if(p!==0) return p;
+    return new Date(b.created_at)-new Date(a.created_at);
   });
-  const stepHeaders=H_STEPS.map(s=>`<th class="step-col">${s.icon}<br><span style="font-size:9px">${s.id}</span></th>`).join('');
-  board.innerHTML=Object.entries(groups).map(([grpName,items])=>{
-    const rows=items.map(o=>{
-      const steps=H_STEPS.map(s=>{
-        const st=getStepSt(o.dwg_no,s.id);
-        let badge='';
-        if(st.s==='run'){
-          const min=Math.round((Date.now()-new Date(st.time))/60000);
-          badge=`<span class="step-badge sb-run" title="${st.worker} (${min}분 경과)">▶${st.worker||'?'}</span>`;
-        } else if(st.s==='done'){
-          const t=new Date(st.time);
-          const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-          badge=`<span class="step-badge sb-done" title="${st.worker} ${ts}">✅${st.worker||'?'}</span>`;
-        } else {
-          badge=`<span class="step-badge sb-idle">○</span>`;
-        }
-        return `<td class="step-col"><div class="step-cell">${badge}</div></td>`;
-      }).join('');
-      const regDt=new Date(o.created_at);
-      const regTs=String(regDt.getMonth()+1).padStart(2,'0')+'-'+String(regDt.getDate()).padStart(2,'0');
-      return `<tr>
-        <td><div class="dwg-no">${o.dwg_no}</div></td>
-        <td style="text-align:center;font-family:var(--mono);font-size:12px">${o.qty||1}</td>
-        <td style="font-size:11px;color:var(--tx3);font-family:var(--mono)">${regTs}</td>
-        ${steps}
-        <td><button class="btn btn-outline" style="font-size:10px;padding:3px 8px;color:var(--red);border-color:rgba(211,59,59,.3)" onclick="deleteDwg('${o.id}')">삭제</button></td>
-      </tr>`;
-    }).join('');
-    return `<div class="grp-card">
-      <div class="grp-hd">
-        <span class="grp-name">${grpName}</span>
-        <span class="grp-cnt">${items.length}건</span>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="dwg-table">
-          <thead><tr><th>도면번호</th><th style="text-align:center">수량</th><th>등록일</th>${stepHeaders}<th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    </div>`;
+  function miniProgress(dwg_no){
+    return '<div style="display:flex;gap:3px;align-items:center">'
+      +H_STEPS.map(function(s){
+        var st=getStepSt(dwg_no,s.id);
+        var bg=st.s==='done'?s.color:st.s==='run'?s.color+'99':'var(--border2)';
+        var op=st.s==='idle'?0.35:1;
+        var anim=st.s==='run'?';animation:blink 1.4s infinite':'';
+        var title=st.s==='done'?s.id+' 완료('+( st.worker||'?')+')':st.s==='run'?s.id+' 진행중('+( st.worker||'?')+')':s.id;
+        return '<div title="'+title+'" style="width:20px;height:20px;border-radius:4px;background:'+bg
+          +';opacity:'+op+';display:flex;align-items:center;justify-content:center;font-size:10px'+anim+'">'+s.icon+'</div>';
+      }).join('')+'</div>';
+  }
+  var rows=orders.map(function(o){
+    var prog=getOrderProgress(o.dwg_no);
+    var done=isOrderDone(o.dwg_no);
+    var dt=new Date(o.created_at);
+    var dtStr=(dt.getMonth()+1)+'/'+(dt.getDate());
+    var rowStyle=done?'opacity:.6':'';
+    return '<tr style="'+rowStyle+'">'
+      +'<td style="font-weight:600;font-size:13px">'+(o.customer||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--tx2)">'+(o.project||'—')+'</td>'
+      +'<td><div class="dwg-no">'+(o.dwg_no||'—')+'</div></td>'
+      +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
+      +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+dtStr+'</td>'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'
+        +miniProgress(o.dwg_no)
+        +'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
+        +(done?'✅완료':prog>0?(prog+'/'+H_STEPS.length):'대기')+'</span>'
+      +'</div></td>'
+      +'<td><button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(211,59,59,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button></td>'
+    +'</tr>';
   }).join('');
+  board.innerHTML='<div class="grp-card"><div style="overflow-x:auto">'
+    +'<table class="dwg-table"><thead><tr>'
+    +'<th>고객사</th><th>프로젝트</th><th>도면번호</th>'
+    +'<th style="text-align:center">호기</th><th style="text-align:center">수량</th>'
+    +'<th>등록일</th><th>현황판</th><th></th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'</div></div>';
 }
 
 function deleteDwg(id){
@@ -1208,8 +1264,12 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v1.7';
+const APP_VER='v1.9';
 const VER_LOG=[
+  {v:'v1.9',d:'2026-05',
+   t:'QR스탬프 파일 개별 삭제 기능 추가 (✕ 버튼)'},
+  {v:'v1.8',d:'2026-05',
+   t:'공정현황 리뷰: 고객사/프로젝트/도면번호/호기/수량/등록일/현황판 컬럼, 고객사·프로젝트 필터, 진행중·완료·전체 토글'},
   {v:'v1.7',d:'2026-05',
    t:'Supabase DB 연동 — 전 기기 실시간 데이터 공유, 오프라인 localStorage 백업'},
   {v:'v1.6',d:'2026-05',
@@ -1443,12 +1503,29 @@ function renderList(){
     const d=document.createElement('div');d.className='fi'+(i===S.idx?' active':'');
     const pc=e.saved?'spill sp-d':e.qrURL?'spill sp-r':'spill sp-w';
     const pt=e.saved?'✓ 저장완료':e.qrURL?'◉ QR완료':'○ 대기';
-    d.innerHTML='<div class="fi-name" title="'+e.file.name+'">'+e.file.name+'</div><div class="fi-row"><span class="'+pc+'">'+pt+'</span><span class="fi-pg">'+e.totalPages+'p</span></div>';
+    d.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">'
+      +'<div class="fi-name" title="'+e.file.name+'" style="flex:1">'+e.file.name+'</div>'
+      +'<button data-idx="'+i+'" onclick="removeFile(parseInt(this.dataset.idx),event)" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:13px;line-height:1;padding:0 2px;flex-shrink:0" title="목록에서 제거">✕</button>'
+      +'</div>'
+      +'<div class="fi-row"><span class="'+pc+'">'+pt+'</span><span class="fi-pg">'+e.totalPages+'p</span></div>';
     d.addEventListener('click',()=>selectFile(i));D.fileList.appendChild(d);
   });
 }
 
-function selectFile(i){
+function removeFile(i, e){
+  e.stopPropagation();
+  S.files.splice(i,1);
+  if(S.idx===i){ S.idx=-1; S.page=1; D.emptyV.classList.remove('hidden'); D.cvWrap.classList.add('hidden'); D.qrStamp.classList.add('hidden'); }
+  else if(S.idx>i){ S.idx--; }
+  if(S.files.length&&S.idx<0) selectFile(0);
+  renderList(); updateBadge();
+  if(!S.files.length){
+    [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty,D.szCustom,D.btnReset,D.btnQrGen].forEach(el=>{ if(el)el.disabled=true; });
+    SZ_BTNS.forEach(b=>b.disabled=true);
+    D.btnSave.disabled=true;
+    updateStatus2({file:{name:''}});
+  }
+}
   saveMeta();S.idx=i;S.page=1;const e=S.files[i];
   D.inpCust.value=e.customer;D.inpProj.value=e.project;D.inpUnit.value=e.unit;D.inpDno.value=e.drawingNo;D.inpQty.value=e.qty||1;
   setSizeBtn(e.qrSize);setApplyMode(e.applyAll,false);
