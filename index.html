@@ -751,9 +751,18 @@ const HS={
 
 function setBadge(s){
   var el=document.getElementById('sb-conn-badge');if(!el)return;
-  var map={ok:['✓ 연결됨','rgba(13,171,106,.25)','#4fd69c'],err:['✕ 오프라인','rgba(211,59,59,.2)','#ff7070'],sync:['⟳ 동기중','rgba(255,255,255,.1)','rgba(255,255,255,.5)']};
+  var map={
+    ok:   ['✓ 연결됨',   'rgba(13,171,106,.25)','#4fd69c'],
+    err:  ['✕ 오프라인','rgba(211,59,59,.2)',  '#ff7070'],
+    pause:['⚠ 일시정지','rgba(232,144,10,.2)', '#ffb84d'],
+    sync: ['⟳ 연결중',  'rgba(255,255,255,.1)','rgba(255,255,255,.5)'],
+  };
   var m=map[s]||map.sync;
   el.textContent=m[0];el.style.background=m[1];el.style.color=m[2];
+  el.onclick=(s==='err'||s==='pause')?function(){hsLoad();}:null;
+  el.style.cursor=(s==='err'||s==='pause')?'pointer':'default';
+  el.title=s==='pause'?'Supabase 일시정지 — supabase.com 접속 후 Resume 클릭, 그 다음 이 배지 클릭':
+           s==='err'?'클릭하여 재연결 시도':'DB 연결 상태';
 }
 
 // ── Supabase 저장 (fire-and-forget, 실패 시 localStorage 백업) ──
@@ -798,31 +807,36 @@ async function hsLoad(){
   setBadge('sync');
   const sb=getSB();
   if(!sb){
-    // 오프라인: localStorage에서 복원
     HS.orders=JSON.parse(localStorage.getItem('hs_orders')||'[]');
     HS.logs=JSON.parse(localStorage.getItem('hs_logs')||'[]');
-    setBadge('err');
-    renderStatus();renderScanSteps&&renderScanSteps();
+    setBadge('err');renderStatus();
     return;
   }
   try{
-    const [r1,r2]=await Promise.all([
+    // ★ 10초 타임아웃 — 프로젝트 일시정지 등 무한대기 방지
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),10000));
+    const dataP=Promise.all([
       sb.from('harness_orders').select('*').order('created_at',{ascending:false}),
       sb.from('harness_logs').select('*').order('started_at',{ascending:false}),
     ]);
+    const [r1,r2]=await Promise.race([dataP,timeout]);
     if(r1.error||r2.error)throw r1.error||r2.error;
     HS.orders=r1.data||[];
     HS.logs=r2.data||[];
-    // localStorage 백업 동기화
     localStorage.setItem('hs_orders',JSON.stringify(HS.orders));
     localStorage.setItem('hs_logs',JSON.stringify(HS.logs));
     setBadge('ok');
     renderStatus();
   }catch(e){
-    console.warn('Supabase load failed, using localStorage:',e);
+    console.warn('Supabase load failed:',e.message||e);
     HS.orders=JSON.parse(localStorage.getItem('hs_orders')||'[]');
     HS.logs=JSON.parse(localStorage.getItem('hs_logs')||'[]');
-    setBadge('err');
+    // 타임아웃이면 프로젝트 일시정지 가능성 안내
+    if((e.message||'').includes('timeout')){
+      setBadge('pause');
+    } else {
+      setBadge('err');
+    }
     renderStatus();
   }
 }
@@ -1884,13 +1898,14 @@ function renderInfoToBytes(rows, pageWpt, isTop){
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
-// 버전 사이드바 표시
-
 // 모바일 감지 → QR스캔 기본, 데스크탑 → 공정현황 기본
 const isMobile=window.innerWidth<=768||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 try {
   if(isMobile){ setPage('scan'); } else { setPage('status'); refreshSpTab(); }
 } catch(e){ console.error('페이지 초기화 오류:', e); }
+
+// Supabase 연결 및 데이터 로드
+hsLoad();
 </script>
 </body>
 </html>
