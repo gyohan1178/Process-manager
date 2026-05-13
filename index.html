@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v2.4</title>
+<title>하네스 공정관리 v2.7</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -504,7 +504,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.6 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.7 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1335,8 +1335,10 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v2.6';
+const APP_VER='v2.7';
 const VER_LOG=[
+  {v:'v2.7',d:'2026-05',
+   t:'CSV 납품정보: 도면 축소(scaleContent) 후 여백 생성, 40pt 폰트 중앙정렬 삽입'},
   {v:'v2.6',d:'2026-05',
    t:'사이드바 다크 복원 / CSV 납품정보 12pt 중앙정렬 5칸구분 / QR 미리보기-저장 위치·크기 일치 수정'},
   {v:'v2.5',d:'2026-05',
@@ -1787,7 +1789,7 @@ async function processFile(entry,notify){
     const qrPng=await pdfDoc.embedPng(dataURLtoBytes(entry.qrURL));
     const pages=pdfDoc.getPages();const target=entry.applyAll?pages:[pages[0]];
     for(const pg of target){const{width:pw,height:ph}=pg.getSize();const qrPt=entry.qrSize*72/25.4;pg.drawImage(qrPng,{x:Math.max(0,entry.pos.x/100*pw),y:Math.max(0,ph-(entry.pos.y/100*ph)-qrPt),width:qrPt,height:qrPt});}
-    // ★ CSV 납품정보 → 도면 상단/하단 여백에 비율로 삽입
+    // ★ CSV 납품정보 → 도면 축소 후 상단/하단 여백에 삽입
     const csvRows=Object.keys(_csvData).length>0?findCsvRows(entry.drawingNo):[];
     const useTop=document.getElementById('csvUseTop')&&document.getElementById('csvUseTop').checked;
     const useBot=document.getElementById('csvUseBot')&&document.getElementById('csvUseBot').checked;
@@ -1795,19 +1797,28 @@ async function processFile(entry,notify){
       const stampPages=entry.applyAll?pdfDoc.getPages():[pdfDoc.getPages()[0]];
       for(const pg2 of stampPages){
         const{width:pw2,height:ph2}=pg2.getSize();
-        // 여백 높이: 페이지 단변의 4.5% (A4 기준 ≈ 9.5pt)
-        const marginPt=Math.round(Math.min(pw2,ph2)*0.045);
+        // 여백 높이: 40pt 텍스트 + 여유 패딩
+        const FONT_PT=40;
+        const marginPt=Math.round(FONT_PT*1.5); // ≈ 60pt
+        const topMarg=useTop?marginPt:0;
+        const botMarg=useBot?marginPt:0;
+        // ★ 도면 내용을 균등 축소 → 축소된 높이만큼 위/아래 여백 생성
+        const scaleY=(ph2-topMarg-botMarg)/ph2;
+        const scaleX=scaleY; // 비율 유지
+        const shiftX=(pw2-pw2*scaleX)/2; // 수평 중앙
+        const shiftY=botMarg;             // 하단 여백만큼 위로 이동
+        pg2.scaleContent(scaleX,scaleY);
+        pg2.translateContent(shiftX,shiftY);
+        // 텍스트 이미지 삽입
         if(useTop){
-          const topRes=renderInfoToBytes(csvRows,pw2,ph2,true);
+          const topRes=renderInfoToBytes(csvRows,pw2,marginPt,true,FONT_PT);
           const topImg=await pdfDoc.embedPng(topRes.bytes);
-          // 상단 여백: 페이지 최상단 (pdf-lib y=0 기준 → 상단=ph2-marginPt)
-          pg2.drawImage(topImg,{x:0,y:ph2-marginPt,width:pw2,height:marginPt});
+          pg2.drawImage(topImg,{x:0,y:ph2-topMarg,width:pw2,height:topMarg});
         }
         if(useBot){
-          const botRes=renderInfoToBytes(csvRows,pw2,ph2,false);
+          const botRes=renderInfoToBytes(csvRows,pw2,marginPt,false,FONT_PT);
           const botImg=await pdfDoc.embedPng(botRes.bytes);
-          // 하단 여백: 페이지 최하단 (y=0)
-          pg2.drawImage(botImg,{x:0,y:0,width:pw2,height:marginPt});
+          pg2.drawImage(botImg,{x:0,y:0,width:pw2,height:botMarg});
         }
       }
     }
@@ -2066,15 +2077,14 @@ function clearCSV(){
 
 // CSV 납품정보를 캔버스로 렌더 → {bytes, widthPt, heightPt} 반환
 // 도면 여백(상단/하단)에 맞게 비율로 배치
-function renderInfoToBytes(rows, pageWpt, pageHpt, isTop){
-  // 여백 높이: 페이지 단변의 4.5%
-  var marginPt=Math.round(Math.min(pageWpt,pageHpt)*0.045);
+function renderInfoToBytes(rows, pageWpt, marginPt, isTop, fontPt){
+  fontPt=fontPt||40;
   // 2배 해상도로 렌더링 (선명도)
   var K=2;
   var cvW=Math.round(pageWpt*K);
   var cvH=Math.round(marginPt*K);
-  // 12pt 폰트 → canvas px
-  var fPx=Math.round(12*K*72/96); // 12pt at 96dpi scaled by K
+  // fontPt → canvas px (K배 해상도)
+  var fPx=Math.round(fontPt*K);
   var cv=document.createElement('canvas');
   cv.width=cvW;cv.height=cvH;
   var ctx=cv.getContext('2d');
