@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v1.4</title>
+<title>하네스 공정관리 v1.6</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -516,7 +516,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
     </div>
       <div class="sb-ver">
-      <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.4 <span style="opacity:.5;font-size:9px">클릭하면 이력</span></div>
+      <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.6 <span style="opacity:.5;font-size:9px">클릭하면 이력</span></div>
       <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
     </div>
   </aside>
@@ -585,7 +585,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               <div class="qr-panel">
                 <div class="qr-img" id="qrBox"><div class="qr-empty">QR<br>미생성</div></div>
                 <div class="qr-cfg">
-                  <div class="cr"><span class="cl">QR 크기</span><div class="sz-btns"><button class="sz-btn on" data-mm="60" id="szBtn60" disabled>60mm</button><button class="sz-btn" data-mm="80" id="szBtn80" disabled>80mm</button><button class="sz-btn" data-mm="100" id="szBtn100" disabled>100mm</button></div></div>
+                  <div class="cr"><span class="cl">QR 크기</span><div class="sz-btns"><button class="sz-btn" data-mm="20" id="szBtn20" disabled>20mm</button><button class="sz-btn on" data-mm="30" id="szBtn30" disabled>30mm</button><button class="sz-btn" data-mm="40" id="szBtn40" disabled>40mm</button><input type="number" id="szCustom" min="10" max="100" placeholder="직접" disabled style="width:56px;text-align:center;font-family:var(--mono);font-size:13px;font-weight:700;padding:6px 4px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg2);color:var(--tx);outline:none" title="직접 입력 (mm)"></div></div>
                   <div class="cr"><span class="cl">범위</span><div class="tg-grp"><button class="tg on" id="btnAll">전체</button><button class="tg" id="btnFirst">첫장</button></div></div>
                   <div class="cr" style="gap:6px"><button class="mb" id="btnReset" disabled>위치초기화</button><button class="mb" id="btnQrGen" disabled>QR재생성</button></div>
                 </div>
@@ -631,7 +631,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             </div>
             <div class="cv-wrap hidden" id="cvWrap">
               <canvas id="pdfCanvas"></canvas>
-              <div class="qr-stamp hidden" id="qrStamp"><img id="qrSImg" src="" alt="QR"><div class="drag-label">드래그</div><div class="size-badge" id="sizeBadge">60mm</div></div>
+              <div class="qr-stamp hidden" id="qrStamp"><img id="qrSImg" src="" alt="QR"><div class="drag-label">드래그</div><div class="size-badge" id="sizeBadge">30mm</div></div>
             </div>
           </div>
           <div class="pg-nav">
@@ -1096,8 +1096,11 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v1.4';
+const APP_VER='v1.6';
 const VER_LOG=[
+  {v:'v1.6',d:'2026-05',
+   t:'카메라 스캔 1회 성공 시 자동 닫기 (중복 스캔 방지)'},
+   t:'QR 크기 20·30·40mm로 변경 (기본 30mm), 직접 입력란 추가 (10~100mm)'},
   {v:'v1.4',d:'2026-05',
    t:'A4 단변(210mm) 기준 QR 크기 일관화 — 가로/세로/대형 PDF 모두 동일 크기 표시\n렌더링 너비·높이 동시 제약 복원 — 페이지 전체가 뷰어에 맞게 표시'},
   {v:'v1.3',d:'2026-05',
@@ -1240,7 +1243,7 @@ const D={
   emptyV:$('emptyV'),cvWrap:$('cvWrap'),pdfCanvas:$('pdfCanvas'),
   qrStamp:$('qrStamp'),qrSImg:$('qrSImg'),qrBox:$('qrBox'),sizeBadge:$('sizeBadge'),
   inpCust:$('inpCust'),inpProj:$('inpProj'),inpUnit:$('inpUnit'),inpDno:$('inpDno'),inpQty:$('inpQty'),
-  szBtn60:$('szBtn60'),szBtn80:$('szBtn80'),szBtn100:$('szBtn100'),
+  szBtn20:$('szBtn20'),szBtn30:$('szBtn30'),szBtn40:$('szBtn40'),szCustom:$('szCustom'),
   btnAll:$('btnAll'),btnFirst:$('btnFirst'),btnReset:$('btnReset'),btnQrGen:$('btnQrGen'),
   btnPrev:$('btnPrev'),btnNext:$('btnNext'),pgCur:$('pgCur'),pgTot:$('pgTot'),
   btnSave:$('btnSave'),btnSaveAll:$('btnSaveAll'),btnMergeNav:$('btnMergeNav'),mergeCount:$('mergeCount'),
@@ -1251,8 +1254,8 @@ const D={
   stFile:$('stFile'),stQr:$('stQr'),stApply:$('stApply'),stBulk:$('stBulk'),stHint:$('stHint'),
   viewer:$('viewer'),
 };
-const SZ_BTNS=[D.szBtn60,D.szBtn80,D.szBtn100];
-const SZ_VALS=[60,80,100];
+const SZ_BTNS=[D.szBtn20,D.szBtn30,D.szBtn40];
+const SZ_VALS=[20,30,40];
 
 D.fileInput.addEventListener('change',e=>{addFiles(Array.from(e.target.files));e.target.value='';});
 D.dropZ.addEventListener('dragover',e=>{e.preventDefault();D.dropZ.classList.add('dov');});
@@ -1273,7 +1276,7 @@ async function addFiles(files){
       const bCust=D.bCust.value.trim(),bProj=D.bProj.value.trim(),bUnit=D.bUnit.value.trim();
       S.files.push({file,bytes,pdfDoc,totalPages:pdfDoc.numPages,
         customer:bCust,project:bProj,unit:bUnit,drawingNo:dno,qty:1,
-        qrSize:60,pos:{x:5,y:5},applyAll:true,qrURL:null,saved:false,
+        qrSize:30,pos:{x:5,y:5},applyAll:true,qrURL:null,saved:false,
         bulkApplied:!!(bCust||bProj||bUnit),pageWidthMm:210,pagePxPerMm:null});
     }catch(err){console.error(err);toast('로딩 실패: '+file.name,'err');}
   }
@@ -1331,8 +1334,8 @@ function selectFile(i){
   saveMeta();S.idx=i;S.page=1;const e=S.files[i];
   D.inpCust.value=e.customer;D.inpProj.value=e.project;D.inpUnit.value=e.unit;D.inpDno.value=e.drawingNo;D.inpQty.value=e.qty||1;
   setSizeBtn(e.qrSize);setApplyMode(e.applyAll,false);
-  [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty,D.btnReset,D.btnQrGen].forEach(el=>el.disabled=false);
-  SZ_BTNS.forEach(b=>b.disabled=false);
+  [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty,D.szCustom,D.btnReset,D.btnQrGen].forEach(el=>el.disabled=false);
+  SZ_BTNS.forEach(b=>b.disabled=false);D.szCustom.disabled=false;
   [D.inpCust,D.inpProj,D.inpUnit].forEach(inp=>inp.classList.toggle('bulk-applied',!!e.bulkApplied));
   D.emptyV.classList.add('hidden');D.cvWrap.classList.remove('hidden');
   renderPage(1).then(()=>{if(e.qrURL)showStamp(e);else if(e.customer||e.project||e.unit||e.drawingNo)genQR(e);updateQRBox(e.qrURL);});
@@ -1357,7 +1360,22 @@ SZ_BTNS.forEach((btn,idx)=>{
     if(S.files[S.idx].qrURL)applyStampPos(S.files[S.idx]);
   });
 });
-function setSizeBtn(mm){SZ_BTNS.forEach((b,i)=>b.classList.toggle('on',SZ_VALS[i]===mm));D.sizeBadge.textContent=mm+'mm';}
+// 직접 입력
+D.szCustom.addEventListener('change',()=>{
+  if(S.idx<0)return;
+  const mm=Math.min(Math.max(parseInt(D.szCustom.value)||30,10),100);
+  D.szCustom.value=mm;
+  S.files[S.idx].qrSize=mm;
+  SZ_BTNS.forEach(b=>b.classList.remove('on'));
+  D.sizeBadge.textContent=mm+'mm';
+  if(S.files[S.idx].qrURL)applyStampPos(S.files[S.idx]);
+});
+function setSizeBtn(mm){
+  SZ_BTNS.forEach((b,i)=>b.classList.toggle('on',SZ_VALS[i]===mm));
+  D.sizeBadge.textContent=mm+'mm';
+  if(D.szCustom&&!SZ_VALS.includes(mm)) D.szCustom.value=mm;
+  else if(D.szCustom) D.szCustom.value='';
+}
 
 function buildContent(e){
   // 구분자: | (USB 스캐너→엑셀 붙여넣기 시 한 셀 안에서 구분)
@@ -1579,6 +1597,8 @@ function toggleCamera(){
         _lastScan=text;_lastScanTime=now;
         handleQRInput(text);
         if(navigator.vibrate)navigator.vibrate(60);
+        // ★ 스캔 성공 시 카메라 자동 닫기
+        stopCamera();
       },
       ()=>{}
     ).then(()=>{
