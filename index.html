@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리</title>
+<title>하네스 공정관리 v1.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -515,8 +515,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-stamp" onclick="setPage('stamp')"><span class="sn-ic">📐</span> QR 스탬프</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
     </div>
-    <div class="sb-ver">
-      <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.1 <span style="opacity:.5;font-size:9px">클릭하면 이력</span></div>
+      <div class="sb-ver">
+      <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v1.4 <span style="opacity:.5;font-size:9px">클릭하면 이력</span></div>
       <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
     </div>
   </aside>
@@ -1096,10 +1096,18 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v1.1';
+const APP_VER='v1.4';
 const VER_LOG=[
-  {v:'v1.1',d:'2026-05',t:'CSV 내보내기, 이력 선택/수정/삭제, 버전 관리, 탭 추가'},
-  {v:'v1.0',d:'2026-05',t:'최초 출시 — 공정현황, QR스탬프, QR스캔, 6단계 공정추적'},
+  {v:'v1.4',d:'2026-05',
+   t:'A4 단변(210mm) 기준 QR 크기 일관화 — 가로/세로/대형 PDF 모두 동일 크기 표시\n렌더링 너비·높이 동시 제약 복원 — 페이지 전체가 뷰어에 맞게 표시'},
+  {v:'v1.3',d:'2026-05',
+   t:'QR 내용 파이프 구분자 변경 (CUST:|PROJ:|UNIT:|DWG:|QTY:) — USB 스캐너→엑셀 호환\n확대/축소 버튼 추가 (－ 25% 단위 ＋ / 1:1 초기화)\nCSV 납품정보 오버레이 기능 추가 — 납품처·발주번호·Order Line·Del Line / 납기·수량·불출일\n동일 도면번호 다중 발주번호 행 지원'},
+  {v:'v1.2',d:'2026-05',
+   t:'공정현황 탭 분리 (현황판 / 이력관리)\n이력 CSV 내보내기 (UTF-8 BOM, 엑셀 직접 열기)\n이력 선택·수정·삭제 (체크박스 다중선택, 시간·작업자 수정)\n공정 QR 코드 사이드바 제거\n사이드바 하단 버전 이력 표시'},
+  {v:'v1.1',d:'2026-05',
+   t:'QR 스캔 → 공정현황 실시간 반영\n스캔 흐름 자동화 — 도면QR+공정QR 스캔 시 시작/완료 자동 판단\n스텝 인디케이터: 다음 스캔 동작 예고 표시 (▶시작 / ■완료)\n공정별 소요시간 자동 계산'},
+  {v:'v1.0',d:'2026-05',
+   t:'최초 출시\n공정현황판 (PO 등록, 도면별 6공정 실시간 상태)\nQR스탬프 (PDF 드래그 위치지정, 병합저장)\nQR스캔 (출도→재단→압착→조립→검사→포장)\n모바일 대응 (하단 탭바, 카메라 스캔)\n다중파일 공통정보 일괄입력'},
 ];
 function showVersionModal(){
   const el=document.getElementById('ver-log-body');if(!el)return;
@@ -1390,12 +1398,15 @@ async function renderPage(pageNum){
     const pg=await entry.pdfDoc.getPage(pageNum);
     const vp1=pg.getViewport({scale:1});
     const vw=D.viewer.clientWidth-40;
-    const baseSc=vw/vp1.width;
+    const vh=D.viewer.clientHeight-40;
+    // 너비·높이 모두 제약 → 페이지가 뷰어 안에 온전히 표시
+    const baseSc=Math.min(vw/vp1.width, vh/vp1.height, 2.5);
     const sc=baseSc*_zoom;
     const vp=pg.getViewport({scale:sc});
     const cv=D.pdfCanvas;cv.width=vp.width;cv.height=vp.height;
     await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
     entry.pageWidthMm=vp1.width*25.4/72;
+    entry.pageHeightMm=vp1.height*25.4/72;
     entry.pagePxPerMm=sc*72/25.4;
     S.pxPerMm=entry.pagePxPerMm;
   }catch(err){console.error('Render:',err);}
@@ -1403,8 +1414,11 @@ async function renderPage(pageNum){
 function showStamp(entry){if(!entry.qrURL)return;D.qrSImg.src=entry.qrURL;D.qrStamp.classList.remove('hidden');applyStampPos(entry);}
 function applyStampPos(entry){
   const cv=D.pdfCanvas;
-  const pageWmm=entry.pageWidthMm||210;
-  const ppm=cv.offsetWidth/pageWmm;
+  // ★ 항상 A4 단변(210mm) 기준 → 가로/세로 PDF 상관없이 일관된 QR 크기
+  const shortMm=Math.min(entry.pageWidthMm||210, entry.pageHeightMm||297);
+  const refMm=Math.min(shortMm, 210);
+  const shortPx=Math.min(cv.offsetWidth, cv.offsetHeight);
+  const ppm=shortPx/refMm;
   const qrPx=Math.round(entry.qrSize*ppm);
   D.qrStamp.style.width=qrPx+'px';D.qrStamp.style.height=qrPx+'px';
   D.qrStamp.style.left=clamp(entry.pos.x/100*cv.offsetWidth,0,cv.offsetWidth-qrPx)+'px';
