@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v2.1</title>
+<title>하네스 공정관리 v2.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -526,7 +526,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.1 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.2 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.35)">⟳ 연결중</div>
       </div>
       <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
@@ -968,15 +968,17 @@ function renderStatus(){
     return new Date(b.created_at)-new Date(a.created_at);
   });
   function miniProgress(dwg_no){
-    return '<div style="display:flex;gap:3px;align-items:center">'
+    return '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
       +H_STEPS.map(function(s){
         var st=getStepSt(dwg_no,s.id);
-        var bg=st.s==='done'?s.color:st.s==='run'?s.color+'99':'var(--border2)';
-        var op=st.s==='idle'?0.35:1;
-        var anim=st.s==='run'?';animation:blink 1.4s infinite':'';
-        var title=st.s==='done'?s.id+' 완료('+( st.worker||'?')+')':st.s==='run'?s.id+' 진행중('+( st.worker||'?')+')':s.id;
-        return '<div title="'+title+'" style="width:20px;height:20px;border-radius:4px;background:'+bg
-          +';opacity:'+op+';display:flex;align-items:center;justify-content:center;font-size:10px'+anim+'">'+s.icon+'</div>';
+        var isDone=st.s==='done', isRun=st.s==='run';
+        var bg=isDone?s.color:isRun?s.color:'var(--border2)';
+        var col=isDone?'#fff':isRun?'#fff':'var(--tx3)';
+        var op=(!isDone&&!isRun)?0.45:1;
+        var anim=isRun?';animation:blink 1.4s infinite':'';
+        var title=isDone?s.id+' 완료('+( st.worker||'?')+')':isRun?s.id+' 진행중('+( st.worker||'?')+')':s.id+' 대기';
+        return '<span title="'+title+'" style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+bg
+          +';color:'+col+';opacity:'+op+';white-space:nowrap'+anim+'">'+s.id+'</span>';
       }).join('')+'</div>';
   }
   var rows=orders.map(function(o){
@@ -1264,8 +1266,11 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v2.1';
+const APP_VER='v2.2';
 const VER_LOG=[
+  {v:'v2.2',d:'2026-05',
+   t:'현황판 이모티콘→텍스트 라벨 변경 (출도/재단/압착/조립/검사/포장)
+CSV 납품정보 위치: 도면 상단/하단 여백에 페이지 비율(4.5%)로 배치'},
   {v:'v2.1',d:'2026-05',
    t:'CSV 도면번호 매칭 강화 — 1600791만 있어도 1600791_M_00 매칭, 경계 체크로 오매칭 방지'},
   {v:'v2.0',d:'2026-05',
@@ -1701,7 +1706,7 @@ async function processFile(entry,notify){
     const qrPng=await pdfDoc.embedPng(dataURLtoBytes(entry.qrURL));
     const pages=pdfDoc.getPages();const target=entry.applyAll?pages:[pages[0]];
     for(const pg of target){const{width:pw,height:ph}=pg.getSize();const qrPt=entry.qrSize*72/25.4;pg.drawImage(qrPng,{x:Math.max(0,entry.pos.x/100*pw),y:Math.max(0,ph-(entry.pos.y/100*ph)-qrPt),width:qrPt,height:qrPt});}
-    // ★ CSV 납품정보 오버레이
+    // ★ CSV 납품정보 → 도면 상단/하단 여백에 비율로 삽입
     const csvRows=Object.keys(_csvData).length>0?findCsvRows(entry.drawingNo):[];
     const useTop=document.getElementById('csvUseTop')&&document.getElementById('csvUseTop').checked;
     const useBot=document.getElementById('csvUseBot')&&document.getElementById('csvUseBot').checked;
@@ -1709,18 +1714,19 @@ async function processFile(entry,notify){
       const stampPages=entry.applyAll?pdfDoc.getPages():[pdfDoc.getPages()[0]];
       for(const pg2 of stampPages){
         const{width:pw2,height:ph2}=pg2.getSize();
-        const panelW=Math.round(pw2*0.6);
-        if(useTop&&csvRows.length>0){
-          const topBytes=renderInfoToBytes(csvRows,panelW,true);
-          const topImg=await pdfDoc.embedPng(topBytes);
-          const ih=topImg.height*(panelW/topImg.width);
-          pg2.drawImage(topImg,{x:Math.round(pw2*0.2),y:ph2-ih-4,width:panelW,height:ih});
+        // 여백 높이: 페이지 단변의 4.5% (A4 기준 ≈ 9.5pt)
+        const marginPt=Math.round(Math.min(pw2,ph2)*0.045);
+        if(useTop){
+          const topRes=renderInfoToBytes(csvRows,pw2,ph2,true);
+          const topImg=await pdfDoc.embedPng(topRes.bytes);
+          // 상단 여백: 페이지 최상단 (pdf-lib y=0 기준 → 상단=ph2-marginPt)
+          pg2.drawImage(topImg,{x:0,y:ph2-marginPt,width:pw2,height:marginPt});
         }
-        if(useBot&&csvRows.length>0){
-          const botBytes=renderInfoToBytes(csvRows,panelW,false);
-          const botImg=await pdfDoc.embedPng(botBytes);
-          const bh=botImg.height*(panelW/botImg.width);
-          pg2.drawImage(botImg,{x:Math.round(pw2*0.2),y:4,width:panelW,height:bh});
+        if(useBot){
+          const botRes=renderInfoToBytes(csvRows,pw2,ph2,false);
+          const botImg=await pdfDoc.embedPng(botRes.bytes);
+          // 하단 여백: 페이지 최하단 (y=0)
+          pg2.drawImage(botImg,{x:0,y:0,width:pw2,height:marginPt});
         }
       }
     }
@@ -1960,57 +1966,69 @@ function clearCSV(){
   toast('CSV 초기화','ok');
 }
 
-// CSV 납품정보를 캔버스로 렌더 → PNG bytes 반환
-function renderInfoToBytes(rows, pageWpt, isTop){
-  var margin=6;
-  var lineH=15;
-  var rowH=(lineH*2+margin*2+6);
-  var h=rowH*rows.length+(rows.length>1?4*(rows.length-1):0)+margin*2;
+// CSV 납품정보를 캔버스로 렌더 → {bytes, widthPt, heightPt} 반환
+// 도면 여백(상단/하단)에 맞게 비율로 배치
+function renderInfoToBytes(rows, pageWpt, pageHpt, isTop){
+  var DPI=150; // 화면 → PDF pt 변환 기준
+  var PT_PER_PX=72/DPI;
+  // 여백 영역: 페이지의 약 4.5% (A4 landscape 기준 ≈ 9.5pt)
+  var marginPt=Math.round(pageHpt*0.045);
+  var padPx=3, lineHpx=13;
+  var maxRows=Math.max(1,Math.floor((marginPt/PT_PER_PX-padPx*2)/lineHpx));
+  var rowsToRender=rows.slice(0,maxRows); // 여백보다 많으면 잘림
+
+  var cvW=Math.round(pageWpt/PT_PER_PX);
+  var cvH=Math.round(marginPt/PT_PER_PX);
   var cv=document.createElement('canvas');
-  cv.width=pageWpt; cv.height=h;
+  cv.width=cvW; cv.height=cvH;
   var ctx=cv.getContext('2d');
-  ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.fillStyle='rgba(255,255,255,0.92)';
-  ctx.fillRect(0,0,cv.width,h);
-  ctx.strokeStyle='#aaa'; ctx.lineWidth=0.5;
-  ctx.strokeRect(0,0,cv.width,h);
-  var fSz=Math.max(10, Math.round(pageWpt/100));
-  ctx.font='600 '+fSz+'px "Noto Sans KR", sans-serif';
+
+  // 배경: 흰색 (불투명) + 아주 얇은 구분선
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,cvW,cvH);
+  if(isTop){
+    ctx.strokeStyle='#cccccc'; ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(0,cvH-0.5);ctx.lineTo(cvW,cvH-0.5);ctx.stroke();
+  } else {
+    ctx.strokeStyle='#cccccc'; ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(0,0.5);ctx.lineTo(cvW,0.5);ctx.stroke();
+  }
+
   ctx.fillStyle='#1a2240';
   var c=_csvCols;
-  for(var ri=0;ri<rows.length;ri++){
-    var row=rows[ri];
-    var y=margin+ri*(rowH+(rows.length>1?4:0));
+  rowsToRender.forEach(function(row,ri){
+    var y=padPx+(ri+1)*lineHpx;
     if(isTop){
-      var topFields=[
-        c.dest>=0?'납품처: '+(row[c.dest]||''):'',
-        c.po>=0?'발주번호: '+(row[c.po]||''):'',
-        c.ordln>=0?'Order Line: '+(row[c.ordln]||''):'',
-        c.delln>=0?'Del Line: '+(row[c.delln]||''):'',
-      ].filter(function(f){return f;});
-      var half=Math.ceil(topFields.length/2);
-      var col1=topFields.slice(0,half); var col2=topFields.slice(half);
-      var colW=cv.width/2-margin*2;
-      col1.forEach(function(f,i){ ctx.fillText(f,margin*2,y+(i+1)*lineH,colW); });
-      col2.forEach(function(f,i){ ctx.fillText(f,cv.width/2+margin,y+(i+1)*lineH,colW); });
+      var fields=[];
+      if(c.dest>=0&&row[c.dest])  fields.push('납품처: '+row[c.dest]);
+      if(c.po>=0&&row[c.po])      fields.push('발주번호: '+row[c.po]);
+      if(c.ordln>=0&&row[c.ordln])fields.push('Order Line: '+row[c.ordln]);
+      if(c.delln>=0&&row[c.delln])fields.push('Del Line: '+row[c.delln]);
+      // 한 줄에 나란히 배치
+      ctx.font='bold '+Math.min(lineHpx-3,10)+'px "Noto Sans KR",sans-serif';
+      var segW=Math.floor(cvW/Math.max(fields.length,1));
+      fields.forEach(function(f,fi){ ctx.fillText(f,fi*segW+padPx,y,segW-padPx*2); });
     } else {
-      var botFields=[
-        c.duedt>=0?'납기: '+(row[c.duedt]||''):'',
-        c.qty>=0?'수량: '+(row[c.qty]||''):'',
-        c.issdt>=0?'불출일: '+(row[c.issdt]||''):'',
-      ].filter(function(f){return f;});
-      var colW2=cv.width/botFields.length-margin*2;
-      botFields.forEach(function(f,i){
-        ctx.fillText(f,i*(cv.width/botFields.length)+margin*2,y+lineH,colW2);
-      });
+      var fields=[];
+      if(c.duedt>=0&&row[c.duedt])fields.push('납기: '+row[c.duedt]);
+      if(c.qty>=0&&row[c.qty])    fields.push('수량: '+row[c.qty]);
+      if(c.issdt>=0&&row[c.issdt])fields.push('불출일: '+row[c.issdt]);
+      ctx.font='bold '+Math.min(lineHpx-3,10)+'px "Noto Sans KR",sans-serif';
+      var segW=Math.floor(cvW/Math.max(fields.length,1));
+      fields.forEach(function(f,fi){ ctx.fillText(f,fi*segW+padPx,y,segW-padPx*2); });
     }
-    // 행 구분선
-    if(ri<rows.length-1){
-      ctx.strokeStyle='#ddd'; ctx.lineWidth=0.5;
-      ctx.beginPath();ctx.moveTo(4,y+rowH-1);ctx.lineTo(cv.width-4,y+rowH-1);ctx.stroke();
+    // 다중 행 구분선
+    if(ri<rowsToRender.length-1){
+      ctx.strokeStyle='#eeeeee'; ctx.lineWidth=0.5;
+      ctx.beginPath();ctx.moveTo(padPx,y+3);ctx.lineTo(cvW-padPx,y+3);ctx.stroke();
     }
-  }
-  return dataURLtoBytes(cv.toDataURL('image/png'));
+  });
+
+  return {
+    bytes: dataURLtoBytes(cv.toDataURL('image/png')),
+    widthPt: pageWpt,
+    heightPt: marginPt,
+  };
 }
 
 // ════════════════════════════════════════
