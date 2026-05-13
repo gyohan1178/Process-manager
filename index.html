@@ -936,22 +936,44 @@ function workerStart(auto){
   const worker=(HS.worker||'').trim();
   if(!worker){ toast('작업자 이름을 입력하세요','err'); return; }
   const already=HS.logs.find(l=>!l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep);
-  if(already){ toast('이미 진행 중인 공정입니다','err'); return; }
-  HS.logs.unshift({id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,worker,process:HS.selStep,started_at:new Date().toISOString(),ended_at:null,duration_min:null});
+  if(already){ toast('이미 진행 중입니다 — 다시 스캔하면 완료','warn'); return; }
+  HS.logs.unshift({
+    id:hsGenId(),...HS.job,
+    qty:parseInt(HS.job.qty)||1,
+    worker,process:HS.selStep,
+    started_at:new Date().toISOString(),
+    ended_at:null,duration_min:null
+  });
   hsSaveLogs();
   renderScanSteps(); renderScanActions(); renderScanLog(); renderScanStepIndicator();
-  toast('▶ '+HS.selStep+' 시작 — '+worker);
+  // ★ 공정현황 실시간 갱신
+  renderStatus();
+  flashScanFeedback('start');
+  toast('▶ ['+HS.selStep+'] 시작 — '+worker);
 }
 
 function workerEnd(auto){
   if(!HS.job||!HS.selStep){ toast('공정을 선택하세요','err'); return; }
   const log=HS.logs.find(l=>!l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep);
-  if(!log){ toast('시작된 공정이 없습니다','err'); return; }
+  if(!log){ toast('시작된 공정이 없습니다 — 먼저 스캔해서 시작하세요','err'); return; }
   log.ended_at=new Date().toISOString();
   log.duration_min=Math.round((new Date(log.ended_at)-new Date(log.started_at))/60000);
   hsSaveLogs();
   renderScanSteps(); renderScanActions(); renderScanLog(); renderScanStepIndicator();
-  toast('✅ '+HS.selStep+' 완료 — '+log.duration_min+'분');
+  // ★ 공정현황 실시간 갱신
+  renderStatus();
+  flashScanFeedback('end');
+  toast('✅ ['+HS.selStep+'] 완료 — '+log.duration_min+'분 소요');
+}
+
+// 스캔 액션 시각적 피드백
+function flashScanFeedback(type){
+  const el=document.getElementById('sc-job-area');
+  if(!el) return;
+  const color=type==='start'?'rgba(23,85,244,.25)':'rgba(13,171,106,.25)';
+  el.style.transition='background .1s';
+  el.style.background=color;
+  setTimeout(()=>{ el.style.background=''; el.style.transition='background .6s'; },400);
 }
 
 // ── scan UI renderers ──
@@ -980,13 +1002,33 @@ function renderScanStepIndicator(){
   const step=H_STEPS.find(s=>s.id===HS.selStep);
   if(!step){ el.innerHTML=''; return; }
   const running=HS.job&&HS.logs.some(l=>!l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep);
-  el.innerHTML=`<div style="background:${step.color}18;border:1.5px solid ${step.color}55;border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px">
-    <span style="font-size:20px">${step.icon}</span>
-    <div>
-      <div style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600;text-transform:uppercase;letter-spacing:.08em">선택된 공정</div>
-      <div style="font-size:16px;font-weight:700;color:${step.color}">${step.id}</div>
+  const runLog=HS.job&&HS.logs.find(l=>!l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep);
+
+  let nextAction, nextColor, nextText;
+  if(!HS.job){
+    nextAction='📐 도면 QR을 스캔하세요';
+    nextColor='rgba(255,255,255,.2)';
+    nextText='var(--tx3)';
+  } else if(running){
+    const elapsed=Math.round((Date.now()-new Date(runLog.started_at))/60000);
+    nextAction='■ 스캔하면 → 완료 ('+elapsed+'분 경과)';
+    nextColor='rgba(13,171,106,.2)';
+    nextText='var(--green)';
+  } else {
+    nextAction='▶ 스캔하면 → 시작';
+    nextColor='rgba(23,85,244,.2)';
+    nextText='var(--blue)';
+  }
+
+  el.innerHTML=`<div style="background:${step.color}15;border:1.5px solid ${step.color}55;border-radius:var(--r);padding:12px 14px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:22px">${step.icon}</span>
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;text-transform:uppercase;letter-spacing:.08em">선택된 공정</div>
+        <div style="font-size:18px;font-weight:700;color:${step.color}">${step.id}</div>
+      </div>
     </div>
-    <div style="margin-left:auto;font-size:11px;color:rgba(255,255,255,.4)">${running?'▶ 진행중':'대기중'}</div>
+    <div style="background:${nextColor};border-radius:5px;padding:8px 12px;font-size:13px;font-weight:700;color:${nextText};text-align:center">${nextAction}</div>
   </div>`;
 }
 
@@ -1012,9 +1054,10 @@ function renderScanActions(){
   const running=HS.job&&HS.selStep&&HS.logs.some(l=>!l.ended_at&&l.process===HS.selStep&&l.dwg_no===HS.job.dwg_no);
   const canStart=!!HS.job&&!!HS.selStep&&!running;
   const canEnd=!!HS.job&&!!HS.selStep&&running;
+  // 현재 상태에서 다음 스캔 시 어떤 동작인지 강조
   el.innerHTML=
-    `<button class="sc-btn sc-btn-start" onclick="workerStart(false)"${canStart?'':' disabled'}>▶ ${HS.selStep||'공정 선택'} 시작</button>`+
-    `<button class="sc-btn sc-btn-end" onclick="workerEnd(false)"${canEnd?'':' disabled'}>■ 종료</button>`;
+    `<button class="sc-btn sc-btn-start" onclick="workerStart(false)"${canStart?'':' disabled'} style="${canStart?'box-shadow:0 0 0 3px rgba(23,85,244,.3)':''}">▶ ${HS.selStep||'공정 선택'} 시작</button>`+
+    `<button class="sc-btn sc-btn-end" onclick="workerEnd(false)"${canEnd?'':' disabled'} style="${canEnd?'box-shadow:0 0 0 3px rgba(13,171,106,.3)':''}">■ 완료</button>`;
 }
 
 function renderScanLog(){
