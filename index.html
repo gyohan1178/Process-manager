@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v2.2</title>
+<title>하네스 공정관리 v2.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -526,7 +526,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.2 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.3 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.35)">⟳ 연결중</div>
       </div>
       <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
@@ -612,21 +612,21 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             </div>
           </div>
           <div class="csv-panel" id="csvPanel">
-            <div class="csv-panel-left">
-              <div class="fl" style="font-size:11px;font-weight:700;color:var(--tx2)">📋 납품정보 CSV <span style="font-size:10px;font-weight:400;color:var(--tx3)">(선택사항)</span></div>
-              <label class="csv-upload-btn" id="csvUploadBtn">
+            <div class="csv-panel-label">📋 납품정보 CSV</div>
+            <div class="csv-action-group">
+              <label class="csv-btn csv-btn-upload" title="CSV 파일 업로드">
                 <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVUpload(this)">
-                <span id="csvBtnTxt">CSV 파일 선택</span>
+                ⬆ 업로드
               </label>
-              <span style="font-size:11px;color:var(--tx3)" id="csvStatus">미업로드</span>
+              <button class="csv-btn csv-btn-tmpl" onclick="downloadCSVTemplate()" title="양식 다운로드">⬇ 양식 다운로드</button>
             </div>
-            <div class="csv-panel-right" id="csvInfo" style="display:none">
-              <div style="font-size:11px;color:var(--tx2)">컬럼 매핑 확인 <span style="font-size:10px;color:var(--tx3)" id="csvColInfo"></span></div>
-              <div style="display:flex;gap:6px;margin-top:4px">
-                <label class="csv-check"><input type="checkbox" id="csvUseTop" checked> 상단 (납품처·발주번호·Order·Del)</label>
-                <label class="csv-check"><input type="checkbox" id="csvUseBot" checked> 하단 (납기·수량·불출일)</label>
-              </div>
-              <button class="mb" style="margin-top:4px" onclick="clearCSV()">CSV 초기화</button>
+            <div class="csv-sep"></div>
+            <div id="csvStatus2" class="csv-status-chip csv-status-none">○ 미업로드</div>
+            <div class="csv-info-box" id="csvInfo" style="display:none">
+              <span class="csv-col-badge" id="csvColInfo"></span>
+              <label class="csv-check"><input type="checkbox" id="csvUseTop" checked> 상단</label>
+              <label class="csv-check"><input type="checkbox" id="csvUseBot" checked> 하단</label>
+              <button class="csv-btn csv-btn-clear" onclick="clearCSV()">✕ 초기화</button>
             </div>
           </div>
           <div class="sbar">
@@ -1266,8 +1266,10 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v2.2';
+const APP_VER='v2.3';
 const VER_LOG=[
+  {v:'v2.3',d:'2026-05',
+   t:'CSV 패널 리디자인 — 양식 다운로드·업로드·초기화 버튼, 상태 배지, 체크박스 스타일 개선'},
   {v:'v2.2',d:'2026-05',
    t:'현황판 이모티콘→텍스트 라벨 변경 (출도/재단/압착/조립/검사/포장)
 CSV 납품정보 위치: 도면 상단/하단 여백에 페이지 비율(4.5%)로 배치'},
@@ -1933,8 +1935,8 @@ function handleCSVUpload(input){
         _csvData[dwgNo].push(row);
       }
       var cnt=Object.keys(_csvData).length;
-      var el=document.getElementById('csvStatus');if(el)el.textContent=cnt+'개 도면번호';
-      var btn=document.getElementById('csvBtnTxt');if(btn)btn.textContent=file.name;
+      var chip=document.getElementById('csvStatus2');
+      if(chip){chip.textContent='✓ '+cnt+'개 도면';chip.className='csv-status-chip csv-status-ok';}
       var info=document.getElementById('csvInfo');if(info)info.style.display='flex';
       // 감지된 컬럼 표시
       var found=Object.entries(cols).filter(function(e){return e[1]>=0;}).map(function(e){return e[0];});
@@ -1957,10 +1959,27 @@ function parseCSVLine(line){
   return result;
 }
 
+function downloadCSVTemplate(){
+  var headers=['도면번호','납품처','발주번호','Order line','Del line','납기','수량','불출일'];
+  var rows=[
+    ['1600791_M_00','Axcelis Technologies','PO-2026-001','10','1','2026-06-30','2','2026-05-20'],
+    ['1600791_M_00','Axcelis Technologies','PO-2026-002','20','1','2026-07-15','1','2026-05-25'],
+    ['1600792_M_00','Edwards Korea','PO-2026-003','10','1','2026-06-20','3','2026-05-18'],
+  ];
+  var csv=[headers].concat(rows).map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='납품정보_CSV양식.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},3000);
+  toast('CSV 양식 다운로드 완료','ok');
+}
+
 function clearCSV(){
   _csvData={};_csvCols={};
-  var el=document.getElementById('csvStatus');if(el)el.textContent='미업로드';
-  var btn=document.getElementById('csvBtnTxt');if(btn)btn.textContent='CSV 파일 선택';
+  var chip=document.getElementById('csvStatus2');
+  if(chip){chip.textContent='○ 미업로드';chip.className='csv-status-chip csv-status-none';}
   var info=document.getElementById('csvInfo');if(info)info.style.display='none';
   var fi=document.getElementById('csvFileInput');if(fi)fi.value='';
   toast('CSV 초기화','ok');
