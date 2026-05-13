@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v2.9</title>
+<title>하네스 공정관리 v3.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -96,6 +96,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .step-col{text-align:center;min-width:68px}
 .step-cell{display:inline-flex;flex-direction:column;align-items:center;gap:3px}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.del-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:1px 7px;border-radius:10px;background:var(--blue-lt);border:1px solid var(--blue-lt2);color:var(--tx2);white-space:nowrap}
+.del-chip b{color:var(--tx);font-weight:700}
+.del-date{background:var(--amber-lt);border-color:rgba(217,119,6,.2);color:var(--amber)}
+.del-date b{color:var(--amber)}
 
 /* ═══ QR스탬프 PAGE ═══ */
 .stamp-layout{display:flex;flex:1;overflow:hidden}
@@ -192,10 +196,12 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .viewer::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 .cv-wrap{position:relative;display:inline-block;box-shadow:var(--sh2);flex-shrink:0}
 #pdfCanvas{display:block}
-.qr-stamp{position:absolute;cursor:grab;user-select:none;border:2px solid var(--blue);border-radius:3px;background:#fff;overflow:hidden;box-shadow:0 0 0 1px rgba(37,99,235,.25)}
+.qr-stamp{position:absolute;cursor:grab;user-select:none;border:2px solid var(--blue);border-radius:3px;background:#fff;overflow:visible;box-shadow:0 0 0 1px rgba(37,99,235,.25)}
 .qr-stamp:hover{box-shadow:0 0 0 3px var(--blue-lt2)}
 .qr-stamp.drag{cursor:grabbing;border-color:var(--green);box-shadow:0 0 0 3px var(--green-lt)}
-.qr-stamp img{display:block;width:100%;height:100%;pointer-events:none}
+.qr-stamp img{display:block;width:100%;height:100%;pointer-events:none;border-radius:1px}
+.qr-resize-handle{position:absolute;bottom:-5px;right:-5px;width:14px;height:14px;background:var(--blue);border:2px solid #fff;border-radius:3px;cursor:se-resize;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.qr-resize-handle:hover{background:var(--blue2);transform:scale(1.2)}
 .drag-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(37,99,235,.85);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;pointer-events:none;white-space:nowrap;opacity:0;transition:opacity .15s}
 .qr-stamp:hover .drag-label{opacity:1}
 .qr-stamp.drag .drag-label{opacity:0}
@@ -503,7 +509,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.9 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v3.1 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -635,7 +641,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             </div>
             <div class="cv-wrap hidden" id="cvWrap">
               <canvas id="pdfCanvas"></canvas>
-              <div class="qr-stamp hidden" id="qrStamp"><img id="qrSImg" src="" alt="QR"><div class="drag-label">드래그</div><div class="size-badge" id="sizeBadge">30mm</div></div>
+              <div class="qr-stamp hidden" id="qrStamp"><img id="qrSImg" src="" alt="QR"><div class="drag-label">드래그</div><div class="size-badge" id="sizeBadge">30mm</div><div class="qr-resize-handle" id="qrResizeHandle" title="드래그로 크기 조정"></div></div>
             </div>
           </div>
           <div class="pg-nav">
@@ -929,6 +935,14 @@ async function hsLoad(){
     localStorage.setItem('hs_orders',JSON.stringify(HS.orders));
     localStorage.setItem('hs_logs',JSON.stringify(HS.logs));
     setBadge('ok');
+    // CSV 납품정보 복원
+    try{var cd=localStorage.getItem('hs_csv_data');var cc=localStorage.getItem('hs_csv_cols');
+      if(cd){_csvData=JSON.parse(cd);_csvCols=JSON.parse(cc||'{}');
+        var cnt2=Object.keys(_csvData).length;
+        var chip=document.getElementById('csvStatus2');
+        if(chip){chip.textContent='✓ '+cnt2+'개 도면';chip.className='csv-status-chip csv-status-ok';}
+        var info=document.getElementById('csvInfo');if(info)info.style.display='flex';
+      }}catch(ex){}
     renderStatus();
   }catch(e){
     console.warn('Supabase load failed:',e.message||e);
@@ -1029,11 +1043,17 @@ function renderStatus(){
   var q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
   var fCust=(document.getElementById('flt-cust')||{}).value||'';
   var fProj=(document.getElementById('flt-proj')||{}).value||'';
+  // 검색 × 버튼 표시/숨김
+  var clearBtn=document.getElementById('sp-search-clear');
+  if(clearBtn) clearBtn.style.display=q?'block':'none';
   var orders=[...HS.orders];
   if(fCust) orders=orders.filter(function(o){return (o.customer||'')===fCust;});
   if(fProj) orders=orders.filter(function(o){return (o.project||'')===fProj;});
   if(q) orders=orders.filter(function(o){
-    return (o.dwg_no||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)||(o.project||'').toLowerCase().includes(q);
+    return (o.dwg_no||'').toLowerCase().includes(q)
+      ||(o.customer||'').toLowerCase().includes(q)
+      ||(o.project||'').toLowerCase().includes(q)
+      ||(o.unit||'').toLowerCase().includes(q);
   });
   if(_showMode==='active') orders=orders.filter(function(o){return !isOrderDone(o.dwg_no);});
   else if(_showMode==='done') orders=orders.filter(function(o){return isOrderDone(o.dwg_no);});
@@ -1074,8 +1094,30 @@ function renderStatus(){
     var done=isOrderDone(o.dwg_no);
     var dt=new Date(o.created_at);
     var dtStr=(dt.getMonth()+1)+'/'+(dt.getDate());
-    var rowStyle=done?'opacity:.6':'';
-    return '<tr style="'+rowStyle+'">'
+    var rowStyle=done?'opacity:.55':'';
+    // 납품정보 CSV 매칭
+    var delivRows=findCsvRows(o.dwg_no);
+    var c=_csvCols;
+    var delivHtml='';
+    if(delivRows.length>0){
+      var lines=delivRows.map(function(r){
+        var parts=[];
+        if(c.dest>=0&&r[c.dest])parts.push('<span class="del-chip">납품처 <b>'+r[c.dest]+'</b></span>');
+        if(c.po>=0&&r[c.po])parts.push('<span class="del-chip">발주 <b>'+r[c.po]+'</b></span>');
+        if(c.ordln>=0&&r[c.ordln])parts.push('<span class="del-chip">OrdLn <b>'+r[c.ordln]+'</b></span>');
+        if(c.delln>=0&&r[c.delln])parts.push('<span class="del-chip">DelLn <b>'+r[c.delln]+'</b></span>');
+        if(c.duedt>=0&&r[c.duedt])parts.push('<span class="del-chip del-date">납기 <b>'+r[c.duedt]+'</b></span>');
+        if(c.qty>=0&&r[c.qty])parts.push('<span class="del-chip">수량 <b>'+r[c.qty]+'</b></span>');
+        if(c.issdt>=0&&r[c.issdt])parts.push('<span class="del-chip del-date">불출 <b>'+r[c.issdt]+'</b></span>');
+        return '<div style="display:flex;flex-wrap:wrap;gap:3px">'+parts.join('')+'</div>';
+      }).join('<div style="height:2px"></div>');
+      delivHtml='<tr style="'+rowStyle+'">'
+        +'<td colspan="8" style="padding:3px 12px 8px 32px;background:var(--bg2)">'
+        +'<div style="display:flex;align-items:flex-start;gap:6px">'
+        +'<span style="font-size:9px;font-weight:700;color:var(--tx3);white-space:nowrap;padding-top:2px;min-width:44px">📋 납품정보</span>'
+        +'<div>'+lines+'</div></div></td></tr>';
+    }
+    var mainRow='<tr style="'+rowStyle+'">'
       +'<td style="font-weight:600;font-size:13px">'+(o.customer||'—')+'</td>'
       +'<td style="font-size:12px;color:var(--tx2)">'+(o.project||'—')+'</td>'
       +'<td><div class="dwg-no">'+(o.dwg_no||'—')+'</div></td>'
@@ -1087,8 +1129,9 @@ function renderStatus(){
         +'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
         +(done?'✅완료':prog>0?(prog+'/'+H_STEPS.length):'대기')+'</span>'
       +'</div></td>'
-      +'<td><button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(211,59,59,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button></td>'
-    +'</tr>';
+      +'<td><button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(220,38,38,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button></td>'
+      +'</tr>';
+    return mainRow+delivHtml;
   }).join('');
   board.innerHTML='<div class="grp-card"><div style="overflow-x:auto">'
     +'<table class="dwg-table"><thead><tr>'
@@ -1354,9 +1397,9 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v2.9';
+const APP_VER='v3.1';
 const VER_LOG=[
-  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
+  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
   {v:'v2.7',d:'2026-05',
    t:'CSV 납품정보: 도면 축소(scaleContent) 후 여백 생성, 40pt 폰트 중앙정렬 삽입'},
@@ -1527,6 +1570,7 @@ const $=id=>document.getElementById(id);
 const D={
   fileInput:$('fileInput'),dropZ:$('dropZ'),fileList:$('fileList'),cntPill:$('cntPill'),
   emptyV:$('emptyV'),cvWrap:$('cvWrap'),pdfCanvas:$('pdfCanvas'),
+  qrResizeHandle:$('qrResizeHandle'),
   qrStamp:$('qrStamp'),qrSImg:$('qrSImg'),qrBox:$('qrBox'),sizeBadge:$('sizeBadge'),
   inpCust:$('inpCust'),inpProj:$('inpProj'),inpUnit:$('inpUnit'),inpDno:$('inpDno'),inpQty:$('inpQty'),
   szBtn20:$('szBtn20'),szBtn30:$('szBtn30'),szBtn40:$('szBtn40'),szCustom:$('szCustom'),
@@ -1692,7 +1736,7 @@ function buildContent(e){
   return fields.join(' | ');
 }
 function makeQRPng(text,px=400){
-  const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();
+  const qr=qrcode(0,'H');qr.addData(text,'Byte');qr.make();
   const mc=qr.getModuleCount(),mg=2,cell=Math.floor(px/(mc+mg*2)),sz=(mc+mg*2)*cell;
   const cv=document.createElement('canvas');cv.width=cv.height=sz;
   const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sz,sz);ctx.fillStyle='#000';
@@ -1753,9 +1797,49 @@ function applyStampPos(entry){
   entry.pos.y=(top /ph)*100;
 }
 const clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
-D.qrStamp.addEventListener('mousedown',e=>{dragging=true;const r=D.qrStamp.getBoundingClientRect();dox=e.clientX-r.left;doy=e.clientY-r.top;D.qrStamp.classList.add('drag');e.preventDefault();});
-document.addEventListener('mousemove',e=>{if(!dragging)return;const wr=D.cvWrap.getBoundingClientRect(),st=D.qrStamp;st.style.left=clamp(e.clientX-wr.left-dox,0,wr.width-st.offsetWidth)+'px';st.style.top=clamp(e.clientY-wr.top-doy,0,wr.height-st.offsetHeight)+'px';});
-document.addEventListener('mouseup',()=>{if(!dragging)return;dragging=false;D.qrStamp.classList.remove('drag');if(S.idx<0)return;const e=S.files[S.idx],cv=D.pdfCanvas;e.pos.x=(parseFloat(D.qrStamp.style.left)/cv.offsetWidth)*100;e.pos.y=(parseFloat(D.qrStamp.style.top)/cv.offsetHeight)*100;});
+D.qrStamp.addEventListener('mousedown',e=>{
+  if(e.target===D.qrResizeHandle)return; // 리사이즈 핸들은 별도 처리
+  dragging=true;const r=D.qrStamp.getBoundingClientRect();dox=e.clientX-r.left;doy=e.clientY-r.top;D.qrStamp.classList.add('drag');e.preventDefault();
+});
+// ─ 리사이즈 핸들 ─
+let resizing=false,resizeStartX=0,resizeStartSize=0;
+D.qrResizeHandle&&D.qrResizeHandle.addEventListener('mousedown',e=>{
+  e.stopPropagation();e.preventDefault();
+  if(S.idx<0)return;
+  resizing=true;resizeStartX=e.clientX;resizeStartSize=S.files[S.idx].qrSize;
+  document.body.style.cursor='se-resize';
+});
+document.addEventListener('mousemove',e=>{
+  if(resizing&&S.idx>=0){
+    const cv=D.pdfCanvas;
+    const ppm=S.files[S.idx].pagePxPerMm||(cv.offsetWidth/(S.files[S.idx].pageWidthMm||210));
+    const dx=e.clientX-resizeStartX;
+    const newMm=Math.round(Math.min(Math.max(resizeStartSize+dx/ppm,10),150));
+    if(newMm!==S.files[S.idx].qrSize){
+      S.files[S.idx].qrSize=newMm;
+      setSizeBtn(newMm);
+      applyStampPos(S.files[S.idx]);
+    }
+    return;
+  }
+  // 드래그 이동
+  if(!dragging)return;
+  const wr=D.cvWrap.getBoundingClientRect(),st=D.qrStamp;
+  st.style.left=clamp(e.clientX-wr.left-dox,0,wr.width-st.offsetWidth)+'px';
+  st.style.top=clamp(e.clientY-wr.top-doy,0,wr.height-st.offsetHeight)+'px';
+});
+document.addEventListener('mouseup',()=>{
+  if(resizing){
+    resizing=false;document.body.style.cursor='';
+    return;
+  }
+  if(!dragging)return;
+  dragging=false;D.qrStamp.classList.remove('drag');
+  if(S.idx<0)return;
+  const e2=S.files[S.idx],cv=D.pdfCanvas;
+  e2.pos.x=(parseFloat(D.qrStamp.style.left)/cv.offsetWidth)*100;
+  e2.pos.y=(parseFloat(D.qrStamp.style.top)/cv.offsetHeight)*100;
+});
 
 [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty].forEach(inp=>inp.addEventListener('input',debounce(()=>{
   if(S.idx<0)return;[D.inpCust,D.inpProj,D.inpUnit].forEach(i=>i.classList.remove('bulk-applied'));
@@ -1961,7 +2045,16 @@ function toggleCamera(){
     _camScanner=new Html5Qrcode('cam-reader');
     _camScanner.start(
       {facingMode:'environment'},
-      {fps:12,qrbox:{width:240,height:240}},
+      {
+        fps:20,
+        qrbox:{width:280,height:280},
+        aspectRatio:1.0,
+        videoConstraints:{
+          facingMode:{exact:'environment'},
+          width:{ideal:1280,min:640},
+          height:{ideal:720,min:480}
+        }
+      },
       (text)=>{
         const now=Date.now();
         if(text===_lastScan&&now-_lastScanTime<1500)return;
@@ -1975,6 +2068,31 @@ function toggleCamera(){
     ).then(()=>{
       if(btn){btn.textContent='⏹ 카메라 중지';btn.classList.add('active');}
     }).catch(err=>{
+      // ★ exact facingMode 실패 시 일반 environment로 폴백
+      const msg2=err&&err.message||String(err);
+      if(msg2.includes('OverconstrainedError')||msg2.includes('Overconstrained')||msg2.includes('constraint')){
+        console.warn('후면 카메라 exact 실패, 폴백...');
+        _camScanner=new Html5Qrcode('cam-reader');
+        _camScanner.start(
+          {facingMode:'environment'},
+          {fps:15,qrbox:{width:260,height:260}},
+          (text)=>{
+            const now2=Date.now();
+            if(text===_lastScan&&now2-_lastScanTime<1500)return;
+            _lastScan=text;_lastScanTime=now2;
+            handleQRInput(text);if(navigator.vibrate)navigator.vibrate(60);stopCamera();
+          },
+          ()=>{}
+        ).then(()=>{
+          if(btn){btn.textContent='⏹ 카메라 중지';btn.classList.add('active');}
+        }).catch(()=>{
+          if(reader)reader.style.display='none';
+          if(btn){btn.textContent='📷 카메라로 스캔';btn.classList.remove('active');}
+          _camScanner=null;
+          showCamError('카메라를 시작할 수 없습니다. 브라우저 권한을 확인하세요.');
+        });
+        return;
+      }
       if(reader)reader.style.display='none';
       if(btn){btn.textContent='📷 카메라로 스캔';btn.classList.remove('active');}
       _camScanner=null;
@@ -2101,6 +2219,9 @@ function handleCSVUpload(input){
       var chip=document.getElementById('csvStatus2');
       if(chip){chip.textContent='✓ '+cnt+'개 도면';chip.className='csv-status-chip csv-status-ok';}
       var info=document.getElementById('csvInfo');if(info)info.style.display='flex';
+      // ★ localStorage에 저장 → 공정현황 탭에서도 참조 가능
+      try{ localStorage.setItem('hs_csv_data',JSON.stringify(_csvData));
+           localStorage.setItem('hs_csv_cols',JSON.stringify(_csvCols)); }catch(ex){}
       // 감지된 컬럼 표시
       var found=Object.entries(cols).filter(function(e){return e[1]>=0;}).map(function(e){return e[0];});
       var ci=document.getElementById('csvColInfo');if(ci)ci.textContent='('+found.join(', ')+')';
@@ -2145,6 +2266,7 @@ function clearCSV(){
   if(chip){chip.textContent='○ 미업로드';chip.className='csv-status-chip csv-status-none';}
   var info=document.getElementById('csvInfo');if(info)info.style.display='none';
   var fi=document.getElementById('csvFileInput');if(fi)fi.value='';
+  try{localStorage.removeItem('hs_csv_data');localStorage.removeItem('hs_csv_cols');}catch(ex){}
   toast('CSV 초기화','ok');
 }
 
