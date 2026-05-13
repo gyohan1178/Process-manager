@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v3.2</title>
+<title>하네스 공정관리 v3.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -509,7 +509,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v3.2 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v3.3 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -597,6 +597,12 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
                 <div class="qr-cfg">
                   <div class="cr"><span class="cl">QR 크기</span><div class="sz-btns"><button class="sz-btn" data-mm="20" id="szBtn20" disabled>20mm</button><button class="sz-btn on" data-mm="30" id="szBtn30" disabled>30mm</button><button class="sz-btn" data-mm="40" id="szBtn40" disabled>40mm</button><input type="number" id="szCustom" min="10" max="100" placeholder="직접" disabled style="width:56px;text-align:center;font-family:var(--mono);font-size:13px;font-weight:700;padding:6px 4px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg2);color:var(--tx);outline:none" title="직접 입력 (mm)"></div></div>
                   <div class="cr"><span class="cl">범위</span><div class="tg-grp"><button class="tg on" id="btnAll">전체</button><button class="tg" id="btnFirst">첫장</button></div></div>
+                  <div class="cr" style="gap:6px;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);cursor:pointer;padding:4px 8px;border-radius:6px;border:1.5px solid var(--border);background:var(--white);transition:all .15s" title="납품정보 QR 포함 시 QR이 복잡해져 인식률 저하 가능">
+                      <input type="checkbox" id="chk-deliv-in-qr" onchange="if(S.idx>=0){genQR(S.files[S.idx]);}">
+                      <span>납품정보 QR 포함</span>
+                    </label>
+                  </div>
                   <div class="cr" style="gap:6px"><button class="mb" id="btnReset" disabled>위치초기화</button><button class="mb" id="btnQrGen" disabled>QR재생성</button></div>
                 </div>
               </div>
@@ -1095,64 +1101,40 @@ function renderStatus(){
     var dt=new Date(o.created_at);
     var dtStr=(dt.getMonth()+1)+'/'+(dt.getDate());
     var rowStyle=done?'opacity:.55':'';
-    // 납품정보: order에 저장된 값 우선, 없으면 CSV에서 참조
-    var delivHtml='';
-    function makeDelivChips(dest,po,ord,del,due,dqty,iss){
-      var p=[];
-      if(dest) p.push('<span class="del-chip">납품처 <b>'+dest+'</b></span>');
-      if(po)   p.push('<span class="del-chip">발주 <b>'+po+'</b></span>');
-      if(ord)  p.push('<span class="del-chip">OrdLn <b>'+ord+'</b></span>');
-      if(del)  p.push('<span class="del-chip">DelLn <b>'+del+'</b></span>');
-      if(due)  p.push('<span class="del-chip del-date">납기 <b>'+due+'</b></span>');
-      if(dqty) p.push('<span class="del-chip">수량 <b>'+dqty+'</b></span>');
-      if(iss)  p.push('<span class="del-chip del-date">불출 <b>'+iss+'</b></span>');
-      return p.join('');
-    }
-    var chips='';
-    if(o.po||o.dest||o.due){
-      // order에 직접 저장된 납품정보 (QR 스캔 시 파싱)
-      chips=makeDelivChips(o.dest,o.po,o.ord_ln,o.del_ln,o.due,o.dqty,o.iss);
-    } else {
-      // CSV에서 실시간 참조
-      var delivRows=findCsvRows(o.dwg_no);
-      var c=_csvCols;
-      if(delivRows.length>0){
-        chips=delivRows.map(function(r){
-          return makeDelivChips(
-            c.dest>=0?r[c.dest]:'', c.po>=0?r[c.po]:'', c.ordln>=0?r[c.ordln]:'',
-            c.delln>=0?r[c.delln]:'', c.duedt>=0?r[c.duedt]:'',
-            c.qty>=0?r[c.qty]:'', c.issdt>=0?r[c.issdt]:''
-          );
-        }).join('<span style="display:block;height:3px"></span>');
+    // PO·OL·DL: order 저장값 우선, 없으면 CSV 참조
+    var po=o.po||'', ol=o.ord_ln||'', dl=o.del_ln||'';
+    if(!po&&!ol&&!dl){
+      var dRows=findCsvRows(o.dwg_no);
+      if(dRows.length>0){
+        var c=_csvCols, r=dRows[0];
+        po=c.po>=0?r[c.po]||'':'';
+        ol=c.ordln>=0?r[c.ordln]||'':'';
+        dl=c.delln>=0?r[c.delln]||'':'';
       }
     }
-    if(chips){
-      delivHtml='<tr style="'+rowStyle+'">'
-        +'<td colspan="8" style="padding:3px 12px 8px 32px;background:var(--bg2)">'
-        +'<div style="display:flex;align-items:flex-start;gap:6px">'
-        +'<span style="font-size:9px;font-weight:700;color:var(--tx3);white-space:nowrap;padding-top:2px;min-width:44px">📋 납품</span>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:3px">'+chips+'</div></div></td></tr>';
-    }
-    var mainRow='<tr style="'+rowStyle+'">'
-      +'<td style="font-weight:600;font-size:13px">'+(o.customer||'—')+'</td>'
+    return '<tr style="'+rowStyle+'">'
+      +'<td style="font-weight:600;font-size:12px">'+(o.customer||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--blue)">'+(po||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(ol||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(dl||'—')+'</td>'
       +'<td style="font-size:12px;color:var(--tx2)">'+(o.project||'—')+'</td>'
       +'<td><div class="dwg-no">'+(o.dwg_no||'—')+'</div></td>'
-      +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
-      +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+dtStr+'</td>'
-      +'<td><div style="display:flex;align-items:center;gap:8px">'
+      +'<td><div style="display:flex;align-items:center;gap:7px">'
         +miniProgress(o.dwg_no)
         +'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
         +(done?'✅완료':prog>0?(prog+'/'+H_STEPS.length):'대기')+'</span>'
       +'</div></td>'
       +'<td><button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(220,38,38,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button></td>'
       +'</tr>';
-    return mainRow+delivHtml;
   }).join('');
   board.innerHTML='<div class="grp-card"><div style="overflow-x:auto">'
     +'<table class="dwg-table"><thead><tr>'
-    +'<th>고객사</th><th>프로젝트</th><th>도면번호</th>'
-    +'<th style="text-align:center">호기</th><th style="text-align:center">수량</th>'
+    +'<th>고객사</th>'
+    +'<th>PO No</th>'
+    +'<th style="text-align:center">Order Line</th>'
+    +'<th style="text-align:center">Del Line</th>'
+    +'<th>프로젝트</th><th>도면번호</th>'
     +'<th>등록일</th><th>현황판</th><th></th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'</div></div>';
@@ -1244,15 +1226,11 @@ function autoAction(){
       if(exists){
         toast('⚠️ 이미 등록된 도면입니다: '+HS.job.dwg_no,'warn');
       } else {
-        // ★ QR에서 파싱된 납품정보도 함께 저장
+        // ★ QR에서 파싱된 PO·OL·DL 저장
         const newOrder={id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,created_at:new Date().toISOString()};
-        if(HS.job.dest)   newOrder.dest=HS.job.dest;
         if(HS.job.po)     newOrder.po=HS.job.po;
         if(HS.job.ord_ln) newOrder.ord_ln=HS.job.ord_ln;
         if(HS.job.del_ln) newOrder.del_ln=HS.job.del_ln;
-        if(HS.job.due)    newOrder.due=HS.job.due;
-        if(HS.job.dqty)   newOrder.dqty=HS.job.dqty;
-        if(HS.job.iss)    newOrder.iss=HS.job.iss;
         HS.orders.unshift(newOrder);
         hsSaveOrders();
         toast('✅ PO 등록: '+HS.job.dwg_no,'ok');
@@ -1422,9 +1400,9 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v3.2';
+const APP_VER='v3.3';
 const VER_LOG=[
-  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
+  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
   {v:'v2.7',d:'2026-05',
    t:'CSV 납품정보: 도면 축소(scaleContent) 후 여백 생성, 40pt 폰트 중앙정렬 삽입'},
@@ -1758,24 +1736,21 @@ function buildContent(e, delivRowIdx){
   if(e.unit)      fields.push('UNIT:'+e.unit);
   if(e.drawingNo) fields.push('DWG:'+e.drawingNo);
   fields.push('QTY:'+(e.qty||1));
-  // ★ 납품정보: CSV 매칭된 행 포함
+  // ★ QR에는 발주번호·Order line·Del line만 포함 (간결)
+  var inclDeliv=document.getElementById('chk-deliv-in-qr')&&document.getElementById('chk-deliv-in-qr').checked;
   var dRows=findCsvRows(e.drawingNo||'');
   var ri=typeof delivRowIdx==='number'?delivRowIdx:0;
-  if(dRows.length>0){
+  if(inclDeliv&&dRows.length>0){
     var r=dRows[ri]||dRows[0];
     var c=_csvCols;
-    if(c.dest>=0&&r[c.dest])  fields.push('DEST:'+r[c.dest]);
     if(c.po>=0&&r[c.po])      fields.push('PO:'+r[c.po]);
-    if(c.ordln>=0&&r[c.ordln])fields.push('ORD:'+r[c.ordln]);
-    if(c.delln>=0&&r[c.delln])fields.push('DEL:'+r[c.delln]);
-    if(c.duedt>=0&&r[c.duedt])fields.push('DUE:'+r[c.duedt]);
-    if(c.qty>=0&&r[c.qty])    fields.push('DQTY:'+r[c.qty]);
-    if(c.issdt>=0&&r[c.issdt])fields.push('ISS:'+r[c.issdt]);
+    if(c.ordln>=0&&r[c.ordln])fields.push('OL:'+r[c.ordln]);
+    if(c.delln>=0&&r[c.delln])fields.push('DL:'+r[c.delln]);
   }
   return fields.join(' | ');
 }
 function makeQRPng(text,px=400){
-  const qr=qrcode(0,'H');qr.addData(text,'Byte');qr.make();
+  const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();
   const mc=qr.getModuleCount(),mg=2,cell=Math.floor(px/(mc+mg*2)),sz=(mc+mg*2)*cell;
   const cv=document.createElement('canvas');cv.width=cv.height=sz;
   const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sz,sz);ctx.fillStyle='#000';
