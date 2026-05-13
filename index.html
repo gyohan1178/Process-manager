@@ -446,6 +446,50 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   </div>
 </div>
 
+<!-- 공정 설정 모달 -->
+<div id="step-settings-ovl" class="po-ovl hidden" onclick="if(event.target===this)closeStepSettings()">
+  <div class="po-box" style="max-width:560px">
+    <div class="po-hd">
+      <div class="po-hd-title">⚙ 공정 설정</div>
+      <button class="po-hd-x" onclick="closeStepSettings()">×</button>
+    </div>
+    <div class="po-body" style="padding:0">
+      <!-- 공정 목록 -->
+      <div id="step-list" style="max-height:340px;overflow-y:auto"></div>
+      <!-- 추가 폼 -->
+      <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg)">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:10px">+ 공정 추가</div>
+        <div style="display:grid;grid-template-columns:60px 1fr 90px 1fr;gap:8px;align-items:end">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div>
+            <input class="po-inp" id="new-step-icon" placeholder="📦" maxlength="2" style="text-align:center;font-size:18px">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">공정명 <span style="color:var(--red)">*</span></div>
+            <input class="po-inp" id="new-step-id" placeholder="예: 검수">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">색상</div>
+            <input type="color" id="new-step-color" value="#1755f4" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">설명</div>
+            <input class="po-inp" id="new-step-desc" placeholder="간단한 설명">
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;justify-content:flex-end">
+          <button class="btn btn-pr btn-sm" onclick="addStep()">+ 추가</button>
+        </div>
+      </div>
+    </div>
+    <div class="po-ft">
+      <div style="font-size:11px;color:var(--tx3);flex:1">첫 번째 공정(출도)은 PO 자동등록에 사용됩니다</div>
+      <button class="btn btn-outline" onclick="closeStepSettings()">닫기</button>
+      <button class="btn btn-pr" onclick="saveSteps()">저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <!-- ══ SIDEBAR ══ -->
   <aside class="sidebar">
@@ -459,11 +503,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
     </div>
       <div class="sb-ver">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.4 <span style="opacity:.5;font-size:9px">이력</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v2.5 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
-      <div class="sb-ver-date" style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">2026-05</div>
+      <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
+        <span>⚙</span> 공정 설정
+      </button>
     </div>
   </aside>
 
@@ -665,9 +711,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // ════════════════════════════════════════
-// 공정 정의 (6단계)
+// 공정 정의 (동적 — localStorage 저장)
 // ════════════════════════════════════════
-const H_STEPS=[
+const H_STEPS_DEFAULT=[
   {id:'출도', icon:'📋', color:'#6d28d9', desc:'도면 출도 · PO 자동등록'},
   {id:'재단', icon:'✂️',  color:'#1755f4', desc:'케이블 재단'},
   {id:'압착', icon:'🔧', color:'#0dab6a', desc:'터미널 압착'},
@@ -675,6 +721,95 @@ const H_STEPS=[
   {id:'검사', icon:'🔍', color:'#7c3aed', desc:'전기 검사'},
   {id:'포장', icon:'📦', color:'#d43b3b', desc:'포장 출하'},
 ];
+let H_STEPS=JSON.parse(localStorage.getItem('hs_steps')||'null')||H_STEPS_DEFAULT.map(function(s){return Object.assign({},s);});
+function saveHSteps(){localStorage.setItem('hs_steps',JSON.stringify(H_STEPS));}
+
+// ════════════════════════════════════════
+// 공정 설정 모달
+// ════════════════════════════════════════
+let _editSteps=[]; // 모달 내 임시 편집용
+
+function openStepSettings(){
+  _editSteps=H_STEPS.map(function(s){return Object.assign({},s);});
+  renderStepList();
+  document.getElementById('step-settings-ovl').classList.remove('hidden');
+}
+function closeStepSettings(){
+  document.getElementById('step-settings-ovl').classList.add('hidden');
+}
+
+function renderStepList(){
+  var el=document.getElementById('step-list');if(!el)return;
+  if(!_editSteps.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;font-size:13px;color:var(--tx3)">공정이 없습니다</div>';
+    return;
+  }
+  el.innerHTML=_editSteps.map(function(s,i){
+    var isFirst=i===0;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'">'
+      // 순서 이동
+      +'<div style="display:flex;flex-direction:column;gap:1px">'
+        +'<button onclick="moveStep('+i+',-1)" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1;border-radius:3px;transition:all .15s" '+(i===0?'disabled style="opacity:.25;cursor:default"':'')+' title="위로">▲</button>'
+        +'<button onclick="moveStep('+i+',1)"  style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1;border-radius:3px;transition:all .15s" '+(i===_editSteps.length-1?'disabled style="opacity:.25;cursor:default"':'')+' title="아래로">▼</button>'
+      +'</div>'
+      // 아이콘
+      +'<div style="width:32px;height:32px;border-radius:7px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+s.icon+'</div>'
+      // 이름/설명 인라인 편집
+      +'<div style="flex:1;min-width:0">'
+        +'<input data-sidx="'+i+'" data-field="id" value="'+s.id+'" onchange="updateEditStep(this)" style="font-size:13px;font-weight:700;color:var(--tx);border:none;background:transparent;outline:none;width:100%;padding:1px 0;border-bottom:1.5px solid transparent;transition:border-color .15s" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" '+(isFirst?'readonly title="첫 번째 공정(출도)은 이름 변경 불가"':'')+'>'
+        +'<input data-sidx="'+i+'" data-field="desc" value="'+s.desc+'" onchange="updateEditStep(this)" style="font-size:11px;color:var(--tx3);border:none;background:transparent;outline:none;width:100%;padding:1px 0;margin-top:1px;border-bottom:1.5px solid transparent;transition:border-color .15s" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" placeholder="설명">'
+      +'</div>'
+      // 색상
+      +'<input type="color" value="'+s.color+'" data-sidx="'+i+'" data-field="color" onchange="updateEditStep(this)" style="width:30px;height:30px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:1px;flex-shrink:0" title="색상 변경">'
+      // 삭제
+      +'<button onclick="removeStep('+i+')" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:17px;padding:4px 6px;border-radius:5px;transition:all .15s;flex-shrink:0" '+(isFirst?'disabled title="출도 공정은 삭제 불가"':'')+' onmouseover="if(!this.disabled)this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--tx3)\'">✕</button>'
+    +'</div>';
+  }).join('');
+}
+
+function updateEditStep(inp){
+  var i=parseInt(inp.dataset.sidx);
+  var field=inp.dataset.field;
+  if(i>=0&&i<_editSteps.length) _editSteps[i][field]=inp.value;
+}
+function moveStep(i,dir){
+  var j=i+dir;
+  if(j<0||j>=_editSteps.length)return;
+  var tmp=_editSteps[i];_editSteps[i]=_editSteps[j];_editSteps[j]=tmp;
+  renderStepList();
+}
+function removeStep(i){
+  if(i===0){toast('첫 번째 공정(출도)은 삭제할 수 없습니다','err');return;}
+  if(!confirm('['+_editSteps[i].id+'] 공정을 삭제할까요?\n이미 기록된 이력은 유지됩니다.'))return;
+  _editSteps.splice(i,1);
+  renderStepList();
+}
+function addStep(){
+  var id=(document.getElementById('new-step-id').value||'').trim();
+  var icon=(document.getElementById('new-step-icon').value||'📦').trim()||'📦';
+  var color=document.getElementById('new-step-color').value||'#1755f4';
+  var desc=(document.getElementById('new-step-desc').value||'').trim();
+  if(!id){toast('공정명을 입력하세요','err');return;}
+  if(_editSteps.some(function(s){return s.id===id;})){toast('이미 같은 이름의 공정이 있습니다','err');return;}
+  _editSteps.push({id,icon,color,desc});
+  document.getElementById('new-step-id').value='';
+  document.getElementById('new-step-icon').value='';
+  document.getElementById('new-step-desc').value='';
+  renderStepList();
+  toast(id+' 공정 추가됨','ok');
+}
+function saveSteps(){
+  // 이름 없는 항목 체크
+  var invalid=_editSteps.filter(function(s){return !s.id.trim();});
+  if(invalid.length){toast('공정명이 비어있는 항목이 있습니다','err');return;}
+  H_STEPS=_editSteps.map(function(s){return Object.assign({},s);});
+  saveHSteps();
+  closeStepSettings();
+  // UI 갱신
+  renderStatus();
+  renderScanSteps&&renderScanSteps();
+  toast('공정 설정 저장됨 ('+H_STEPS.length+'개)','ok');
+}
 const QR_PREFIX='HSTEP:';
 
 // ════════════════════════════════════════
@@ -1200,15 +1335,16 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v2.4';
+const APP_VER='v2.5';
 const VER_LOG=[
+  {v:'v2.5',d:'2026-05',
+   t:'사이드바 공정 설정 — 공정 추가/삭제/수정/순서변경, localStorage 저장'},
   {v:'v2.4',d:'2026-05',
    t:'전체 디자인 리뉴얼 — 라이트 테마, 화이트 사이드바, 카드형 레이아웃 (pm-portal 디자인 통일)'},
   {v:'v2.3',d:'2026-05',
    t:'CSV 패널 리디자인 — 양식 다운로드·업로드·초기화 버튼, 상태 배지, 체크박스 스타일 개선'},
   {v:'v2.2',d:'2026-05',
-   t:'현황판 이모티콘→텍스트 라벨 변경 (출도/재단/압착/조립/검사/포장)
-CSV 납품정보 위치: 도면 상단/하단 여백에 페이지 비율(4.5%)로 배치'},
+   t:'현황판 이모티콘→텍스트 라벨 변경 (출도/재단/압착/조립/검사/포장)\nCSV 납품정보 위치: 도면 상단/하단 여백에 페이지 비율(4.5%)로 배치'},
   {v:'v2.1',d:'2026-05',
    t:'CSV 도면번호 매칭 강화 — 1600791만 있어도 1600791_M_00 매칭, 경계 체크로 오매칭 방지'},
   {v:'v2.0',d:'2026-05',
