@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v3.8</title>
+<title>하네스 공정관리 v3.9</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -512,7 +512,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v3.8 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v3.9 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1144,12 +1144,8 @@ function renderStatus(){
       +'<td><div class="dwg-no">'+(o.dwg_no||'—')+'</div></td>'
       +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
       +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px">'
-        +'<input type="date" data-oid="'+o.id+'" value="'+(due||'')+'" onchange="saveDue(this)" '
-        +'style="border:none;background:transparent;font-family:var(--mono);font-size:11px;color:'+(due?'var(--amber)':'var(--tx3)')+';cursor:pointer;width:100%;outline:none;padding:0" '
-        +'onfocus="this.style.background=\'var(--amber-lt)\';this.style.borderRadius=\'4px\'" '
-        +'onblur="this.style.background=\'transparent\'" '
-        +'title="클릭하여 납기 수정">'
+      +'<td style="font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap" onclick="editDueInline(event,\''+o.id+'\',\''+( due||'')+'\')" title="클릭하여 납기 수정">'
+        +(due?'<span style="color:var(--amber)">'+fmtYYMMDD(due)+'</span>':'<span style="color:var(--tx3);font-size:10px">—</span>')
       +'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+dtStr+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'
@@ -1157,16 +1153,21 @@ function renderStatus(){
         +'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
         +(done?'✅완료':prog>0?(prog+'/'+H_STEPS.length):'대기')+'</span>'
       +'</div></td>'
+      +'<td style="text-align:center">'
+        +'<input type="checkbox" '+(o.manually_done?'checked':'')+' data-oid="'+o.id+'" onchange="toggleManualDone(this)" '
+        +'style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)" title="완료 처리">'
+      +'</td>'
       +'<td><button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(220,38,38,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button></td>'
       +'</tr>';
   }).join('');
   // 저장된 컬럼 폭 불러오기 (localStorage)
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
-  var defCols=[120,120,80,70,110,150,60,55,90,60,200,60]; // 기본 폭(px)
+  var defCols=[120,120,80,70,110,150,60,55,90,60,200,46,60]; // 기본 폭(px)
   // 컬럼 수 변경 시 기본값으로 리셋
+  // 컬럼 수 변경 시 리셋
   var colW=(savedCols&&savedCols.length===defCols.length)?savedCols:defCols;
   var colgroup='<colgroup>'+colW.map(function(w){return '<col style="width:'+w+'px">';}).join('')+'</colgroup>';
-  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','현황판',''];
+  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','현황판','완료',''];
   var thead='<thead><tr>'+headers.map(function(h,i){
     var align=(i===2||i===3||i===6||i===7)?'text-align:center;':'';
     return '<th style="position:relative;'+align+'user-select:none;overflow:hidden;white-space:nowrap">'+h
@@ -1198,6 +1199,25 @@ function editDueInline(e, id, curVal){
     +'data-oid="'+id+'" onchange="saveDueVal(this)" onblur="renderStatus()" />';
   var inp=td.querySelector('input');
   if(inp){inp.focus();}
+}
+
+async function toggleManualDone(cb){
+  var id=cb.dataset.oid;
+  var val=cb.checked;
+  var order=HS.orders.find(function(o){return o.id===id;});
+  if(!order)return;
+  order.manually_done=val;
+  localStorage.setItem('hs_orders',JSON.stringify(HS.orders));
+  var sb=getSB();
+  if(sb){
+    try{
+      await sb.from('harness_orders').update({manually_done:val}).eq('id',id);
+      toast(val?'완료 처리됨':'완료 취소됨','ok');
+    }catch(e){toast('저장 실패','err');}
+  } else {
+    toast(val?'완료 처리 (로컬)':'완료 취소 (로컬)','ok');
+  }
+  renderStatus();
 }
 
 async function saveDueVal(input){
@@ -1480,9 +1500,9 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v3.8';
+const APP_VER='v3.9';
 const VER_LOG=[
-  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
+  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
   {v:'v2.7',d:'2026-05',
    t:'CSV 납품정보: 도면 축소(scaleContent) 후 여백 생성, 40pt 폰트 중앙정렬 삽입'},
