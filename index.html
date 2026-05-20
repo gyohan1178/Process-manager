@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v4.3</title>
+<title>하네스 공정관리 v4.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -456,42 +456,44 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
 <!-- 공정 설정 모달 -->
 <div id="step-settings-ovl" class="po-ovl hidden" onclick="if(event.target===this)closeStepSettings()">
-  <div class="po-box" style="max-width:560px">
+  <div class="po-box" style="max-width:640px">
     <div class="po-hd">
       <div class="po-hd-title">⚙ 공정 설정</div>
       <button class="po-hd-x" onclick="closeStepSettings()">×</button>
     </div>
-    <div class="po-body" style="padding:0">
-      <!-- 공정 목록 -->
-      <div id="step-list" style="max-height:340px;overflow-y:auto"></div>
-      <!-- 추가 폼 -->
+    <!-- 탭 -->
+    <div style="display:flex;border-bottom:2px solid var(--border);background:var(--bg)">
+      <button id="stab-steps" onclick="setStab('steps')" style="padding:9px 20px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;cursor:pointer;transition:all .15s">📋 공정 단계</button>
+      <button id="stab-types" onclick="setStab('types')" style="padding:9px 20px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .15s">🏷 공정 구분 (A/B/C형)</button>
+    </div>
+    <!-- 공정 단계 패널 -->
+    <div id="stab-panel-steps" style="padding:0">
+      <div id="step-list" style="max-height:260px;overflow-y:auto"></div>
       <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg)">
         <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:10px">+ 공정 추가</div>
         <div style="display:grid;grid-template-columns:60px 1fr 90px 1fr;gap:8px;align-items:end">
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div>
-            <input class="po-inp" id="new-step-icon" placeholder="📦" maxlength="2" style="text-align:center;font-size:18px">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">공정명 <span style="color:var(--red)">*</span></div>
-            <input class="po-inp" id="new-step-id" placeholder="예: 검수">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">색상</div>
-            <input type="color" id="new-step-color" value="#1755f4" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">설명</div>
-            <input class="po-inp" id="new-step-desc" placeholder="간단한 설명">
-          </div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div><input class="po-inp" id="new-step-icon" placeholder="📦" maxlength="2" style="text-align:center;font-size:18px"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">공정명 <span style="color:var(--red)">*</span></div><input class="po-inp" id="new-step-id" placeholder="예: 검수"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">색상</div><input type="color" id="new-step-color" value="#1755f4" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">설명</div><input class="po-inp" id="new-step-desc" placeholder="간단한 설명"></div>
         </div>
-        <div style="margin-top:10px;display:flex;justify-content:flex-end">
-          <button class="btn btn-pr btn-sm" onclick="addStep()">+ 추가</button>
-        </div>
+        <div style="margin-top:10px;display:flex;justify-content:flex-end"><button class="btn btn-pr btn-sm" onclick="addStep()">+ 추가</button></div>
+      </div>
+    </div>
+    <!-- 공정 구분 패널 -->
+    <div id="stab-panel-types" style="display:none">
+      <div style="padding:9px 16px;font-size:11px;color:var(--tx3);background:var(--bg2);border-bottom:1px solid var(--border)">
+        A형은 기본 공정 단계를 그대로 사용합니다. B·C형은 별도 공정 단계를 체크박스로 선택하세요.
+      </div>
+      <div id="type-list" style="max-height:320px;overflow-y:auto;padding:8px 0"></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--bg);display:flex;gap:7px;align-items:center">
+        <input class="po-inp" id="new-type-code" placeholder="코드 (B, C...)" style="width:80px;text-transform:uppercase" maxlength="4">
+        <input class="po-inp" id="new-type-name" placeholder="이름 (예: B형 특수조립)" style="flex:1">
+        <button class="btn btn-pr btn-sm" onclick="addStepType()">+ 추가</button>
       </div>
     </div>
     <div class="po-ft">
-      <div style="font-size:11px;color:var(--tx3);flex:1">첫 번째 공정(출도)은 PO 자동등록에 사용됩니다</div>
+      <div style="font-size:11px;color:var(--tx3);flex:1">첫 번째 공정(출도)은 삭제/이름변경 불가</div>
       <button class="btn btn-outline" onclick="closeStepSettings()">닫기</button>
       <button class="btn btn-pr" onclick="saveSteps()">저장</button>
     </div>
@@ -512,7 +514,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v4.3 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v4.5 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -548,6 +550,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
+          <button class="btn btn-pr btn-sm" onclick="triggerOrderExcel()" title="Excel로 PO 일괄 등록">📤 Excel 업로드</button>
+          <input type="file" id="orderExcelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleOrderExcel(this)">
+          <button class="btn btn-outline btn-sm" onclick="downloadOrderTemplate()" title="양식 다운로드">⬇ 양식</button>
           <button class="btn btn-outline btn-sm" onclick="refreshSpTab()">↻</button>
         </div>
       </div>
@@ -753,9 +758,107 @@ function saveHSteps(){
 }
 
 // ════════════════════════════════════════
+// 공정 구분 (A형=기본, B/C형=커스텀 공정)
+// ════════════════════════════════════════
+// step_type: 'A' = H_STEPS 그대로, 'B'/'C' = 별도 공정 배열
+let H_STEP_TYPES=JSON.parse(localStorage.getItem('hs_step_types')||'null')||[{code:'A',name:'기본 (A형)',steps:null}];
+
+function getStepsForType(typeCode){
+  if(!typeCode||typeCode==='A') return H_STEPS;
+  var t=H_STEP_TYPES.find(function(t){return t.code===typeCode;});
+  if(!t||!t.steps||!t.steps.length) return H_STEPS;
+  return t.steps;
+}
+
+function saveHStepTypes(){
+  localStorage.setItem('hs_step_types',JSON.stringify(H_STEP_TYPES));
+  var sb=getSB();
+  if(sb){
+    sb.from('harness_settings').upsert({key:'h_step_types',value:JSON.stringify(H_STEP_TYPES)})
+      .then(function(){}).catch(function(e){console.warn('step_types sync err',e);});
+  }
+}
+
+// ════════════════════════════════════════
 // 공정 설정 모달
 // ════════════════════════════════════════
 let _editSteps=[]; // 모달 내 임시 편집용
+
+// ── 공정 설정 탭 전환 ──
+function setStab(tab){
+  document.getElementById('stab-panel-steps').style.display=tab==='steps'?'':'none';
+  document.getElementById('stab-panel-types').style.display=tab==='types'?'':'none';
+  var sBtn=document.getElementById('stab-steps');
+  var tBtn=document.getElementById('stab-types');
+  if(sBtn){sBtn.style.color=tab==='steps'?'var(--blue)':'var(--tx2)';sBtn.style.borderBottomColor=tab==='steps'?'var(--blue)':'transparent';}
+  if(tBtn){tBtn.style.color=tab==='types'?'var(--blue)':'var(--tx2)';tBtn.style.borderBottomColor=tab==='types'?'var(--blue)':'transparent';}
+  if(tab==='types') renderTypeList();
+}
+
+function renderTypeList(){
+  var el=document.getElementById('type-list');if(!el)return;
+  el.innerHTML=H_STEP_TYPES.map(function(t,ti){
+    var isA=t.code==='A';
+    var stepsForType=isA?H_STEPS:(t.steps||H_STEPS);
+    var checkboxes=H_STEPS.map(function(s){
+      var checked=isA||stepsForType.some(function(ts){return ts.id===s.id;});
+      return '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:5px;background:'+(checked?s.color+'18':'var(--bg)')+';border:1.5px solid '+(checked?s.color+'44':'var(--border)')+';cursor:'+(isA?'default':'pointer')+';margin:2px">'
+        +'<input type="checkbox" '+(checked?'checked':'')+' '+(isA?'disabled':'')+' data-tidx="'+ti+'" data-sid="'+s.id+'" onchange="toggleTypeStep(this)" style="accent-color:'+s.color+'"> '
+        +s.icon+' '+s.id
+        +'</label>';
+    }).join('');
+    return '<div style="padding:10px 16px;border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+        +'<span style="font-size:13px;font-weight:700;font-family:var(--mono);background:var(--blue);color:#fff;padding:2px 10px;border-radius:4px">'+t.code+'</span>'
+        +'<span style="font-size:13px;font-weight:600;color:var(--tx)">'+t.name+'</span>'
+        +(isA?'<span style="font-size:10px;color:var(--tx3);margin-left:4px">(기본 공정 고정)</span>':'')
+        +(!isA?'<button onclick="removeStepType('+ti+')" style="margin-left:auto;border:none;background:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--tx3)\'">✕</button>':'')
+      +'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:3px">'+checkboxes+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function toggleTypeStep(cb){
+  var ti=parseInt(cb.dataset.tidx);
+  var sid=cb.dataset.sid;
+  var t=H_STEP_TYPES[ti];
+  if(!t||t.code==='A')return;
+  if(!t.steps) t.steps=H_STEPS.map(function(s){return Object.assign({},s);});
+  if(cb.checked){
+    if(!t.steps.some(function(s){return s.id===sid;})){
+      var orig=H_STEPS.find(function(s){return s.id===sid;});
+      if(orig) t.steps.push(Object.assign({},orig));
+    }
+  } else {
+    t.steps=t.steps.filter(function(s){return s.id!==sid;});
+  }
+  // 순서를 H_STEPS 순서로 정렬
+  t.steps.sort(function(a,b){
+    return H_STEPS.findIndex(function(s){return s.id===a.id;}) - H_STEPS.findIndex(function(s){return s.id===b.id;});
+  });
+  renderTypeList();
+}
+
+function addStepType(){
+  var codeEl=document.getElementById('new-type-code');
+  var nameEl=document.getElementById('new-type-name');
+  var code=(codeEl.value||'').trim().toUpperCase();
+  var name=(nameEl.value||'').trim();
+  if(!code){toast('코드를 입력하세요 (예: B, C)','err');return;}
+  if(H_STEP_TYPES.some(function(t){return t.code===code;})){toast('이미 존재하는 코드입니다: '+code,'err');return;}
+  H_STEP_TYPES.push({code:code,name:name||(code+'형'),steps:H_STEPS.map(function(s){return Object.assign({},s);})});
+  codeEl.value='';nameEl.value='';
+  renderTypeList();
+  toast(code+'형 추가됨','ok');
+}
+
+function removeStepType(ti){
+  if(!confirm('['+H_STEP_TYPES[ti].name+'] 구분을 삭제할까요?'))return;
+  H_STEP_TYPES.splice(ti,1);
+  renderTypeList();
+  toast('삭제됨','ok');
+}
 
 function openStepSettings(){
   _editSteps=H_STEPS.map(function(s){return Object.assign({},s);});
@@ -827,13 +930,12 @@ function addStep(){
   toast(id+' 공정 추가됨','ok');
 }
 function saveSteps(){
-  // 이름 없는 항목 체크
   var invalid=_editSteps.filter(function(s){return !s.id.trim();});
   if(invalid.length){toast('공정명이 비어있는 항목이 있습니다','err');return;}
   H_STEPS=_editSteps.map(function(s){return Object.assign({},s);});
   saveHSteps();
+  saveHStepTypes(); // 구분별 공정도 동기화
   closeStepSettings();
-  // UI 갱신
   renderStatus();
   renderScanSteps&&renderScanSteps();
   toast('공정 설정 저장됨 ('+H_STEPS.length+'개)','ok');
@@ -897,7 +999,9 @@ async function hsSaveOrders(){
     // upsert 방식: id가 같으면 업데이트
     await sb.from('harness_orders').upsert(HS.orders.map(function(o){
       return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
-              unit:o.unit||null,qty:o.qty||1,created_at:o.created_at};
+              unit:o.unit||null,qty:o.qty||1,created_at:o.created_at,
+              po:o.po||null,ord_ln:o.ord_ln||null,del_ln:o.del_ln||null,
+              due:o.due||null,step_type:o.step_type||null,manually_done:o.manually_done||false};
     }));
   }catch(e){console.warn('orders sync err',e);}
 }
@@ -962,6 +1066,16 @@ async function hsLoad(){
         }
       }
     }catch(ex){}
+    try{
+      var sRes2=await sb.from('harness_settings').select('value').eq('key','h_step_types').single();
+      if(sRes2.data&&sRes2.data.value){
+        var remoteTypes=JSON.parse(sRes2.data.value);
+        if(Array.isArray(remoteTypes)&&remoteTypes.length>0){
+          H_STEP_TYPES=remoteTypes;
+          localStorage.setItem('hs_step_types',JSON.stringify(H_STEP_TYPES));
+        }
+      }
+    }catch(ex2){}
     setBadge('ok');
     // CSV 납품정보 복원
     try{var cd=localStorage.getItem('hs_csv_data');var cc=localStorage.getItem('hs_csv_cols');
@@ -1047,16 +1161,17 @@ function setShowMode(m){
   renderStatus();
 }
 function isOrderDone(dwg_no){
-  // 수동 완료 체크
   var order=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
   if(order&&order.manually_done) return true;
-  // 마지막 공정 완료 체크
-  var lastStep=H_STEPS[H_STEPS.length-1];
+  var steps=getStepsForType(order&&order.step_type);
+  var lastStep=steps[steps.length-1];
   return HS.logs.some(function(l){return l.dwg_no===dwg_no&&l.process===lastStep.id&&l.ended_at;});
 }
 function getOrderProgress(dwg_no){
+  var order=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
+  var steps=getStepsForType(order&&order.step_type);
   var done=0;
-  H_STEPS.forEach(function(s){
+  steps.forEach(function(s){
     if(HS.logs.some(function(l){return l.dwg_no===dwg_no&&l.process===s.id&&l.ended_at;})) done++;
   });
   return done;
@@ -1109,8 +1224,10 @@ function renderStatus(){
     return new Date(b.created_at)-new Date(a.created_at);
   });
   function miniProgress(dwg_no){
+    var mOrder=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
+    var mSteps=getStepsForType(mOrder&&mOrder.step_type);
     return '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
-      +H_STEPS.map(function(s){
+      +mSteps.map(function(s){
         var st=getStepSt(dwg_no,s.id);
         var isDone=st.s==='done', isRun=st.s==='run';
         var bg=isDone?s.color:isRun?s.color:'var(--border2)';
@@ -1141,7 +1258,10 @@ function renderStatus(){
       }
     }
     return '<tr style="'+rowStyle+'">'
-      +'<td style="font-weight:600;font-size:12px">'+(o.customer||'—')+'</td>'
+      +'<td style="font-weight:600;font-size:12px">'
+        +(o.step_type&&o.step_type!=='A'?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(124,58,237,.15);color:#7c3aed;border:1px solid rgba(124,58,237,.25);margin-right:4px">'+o.step_type+'형</span>':'')
+        +(o.customer||'—')
+      +'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--blue)">'+(po||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(ol||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(dl||'—')+'</td>'
@@ -1156,7 +1276,7 @@ function renderStatus(){
       +'<td><div style="display:flex;align-items:center;gap:7px">'
         +miniProgress(o.dwg_no)
         +'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
-        +(done?'✅완료':prog>0?(prog+'/'+H_STEPS.length):'대기')+'</span>'
+        +(done?'✅완료':prog>0?(prog+'/'+getStepsForType(o.step_type).length):'대기')+'</span>'
       +'</div></td>'
       +'<td style="text-align:center">'
         +'<input type="checkbox" '+(o.manually_done?'checked':'')+' data-oid="'+o.id+'" onchange="toggleManualDone(this)" '
@@ -1544,9 +1664,9 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v4.3';
+const APP_VER='v4.5';
 const VER_LOG=[
-  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
+  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
   {v:'v2.7',d:'2026-05',
    t:'CSV 납품정보: 도면 축소(scaleContent) 후 여백 생성, 40pt 폰트 중앙정렬 삽입'},
@@ -2639,6 +2759,140 @@ document.addEventListener('mouseup',function(e){
   var widths=cols.map(function(c){return parseInt(c.style.width)||60;});
   localStorage.setItem('hs_col_widths',JSON.stringify(widths));
 });
+
+// ════════════════════════════════════════
+// Excel PO 일괄 업로드 + 공정구분
+// ════════════════════════════════════════
+function triggerOrderExcel(){ document.getElementById('orderExcelInput').click(); }
+
+function loadXLSX(cb){
+  if(window.XLSX){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=function(){cb();};
+  s.onerror=function(){toast('Excel 라이브러리 로드 실패','err');};
+  document.head.appendChild(s);
+}
+
+function downloadOrderTemplate(){
+  loadXLSX(function(){
+    var typeOpts=H_STEP_TYPES.map(function(t){return t.code;}).join('/');
+    var stepOpts=H_STEPS.map(function(s){return s.id;}).join(', ');
+    var wb=XLSX.utils.book_new();
+    var headers=[['고객사','프로젝트','도면번호','호기','수량','PO No','Order Line','Del Line','납기(YYMMDD)','공정구분','현재공정']];
+    var note=[['','','','','','','','','','('+typeOpts+')','('+stepOpts+')']];
+    var sample=[
+      ['Axcelis','CXE Ultra','1600791_M_00','#1',2,'PO-2026-001','10','1','260630','A','재단'],
+      ['Edwards Korea','DF Project','1614190_E_00','2',1,'PO-2026-002','20','1','260715','B',''],
+    ];
+    var ws=XLSX.utils.aoa_to_sheet([...headers,...note,...sample]);
+    ws['!cols']=[{wch:12},{wch:14},{wch:18},{wch:6},{wch:6},{wch:14},{wch:10},{wch:8},{wch:12},{wch:8},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,'PO등록양식');
+    XLSX.writeFile(wb,'하네스_PO등록양식.xlsx');
+    toast('양식 다운로드 완료','ok');
+  });
+}
+
+async function handleOrderExcel(input){
+  var file=input.files[0];if(!file)return;
+  input.value='';
+  loadXLSX(async function(){
+    try{
+      var reader=new FileReader();
+      reader.onload=async function(ev){
+        try{
+          var data=new Uint8Array(ev.target.result);
+          var wb=XLSX.read(data,{type:'array'});
+          var ws=wb.Sheets[wb.SheetNames[0]];
+          var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+          if(rows.length<2){toast('데이터가 없습니다','err');return;}
+          var hdr=rows[0].map(function(h){return String(h).trim().toLowerCase();});
+          var col=function(keys){for(var k of keys){var i=hdr.findIndex(function(h){return h.includes(k);});if(i>=0)return i;}return -1;};
+          var cCust=col(['고객사','customer']);
+          var cProj=col(['프로젝트','project']);
+          var cDwg =col(['도면번호','dwg','drawing']);
+          var cUnit=col(['호기','unit']);
+          var cQty =col(['수량','qty','quantity']);
+          var cPo  =col(['po no','po','발주번호']);
+          var cOl  =col(['order line','ord line','ol']);
+          var cDl  =col(['del line','dl']);
+          var cDue =col(['납기','due','duedate']);
+          var cType=col(['공정구분','공정타입','type','step type']);
+          var cStep=col(['현재공정','공정','process','step']);
+          if(cDwg<0){toast('도면번호 컬럼을 찾을 수 없습니다','err');return;}
+
+          var added=0,skipped=0,stepLog=0;
+          for(var ri=1;ri<rows.length;ri++){
+            var r=rows[ri];
+            var dwgNo=String(r[cDwg]||'').trim();
+            if(!dwgNo)continue;
+            var poVal=cPo>=0?String(r[cPo]||'').trim():'';
+            // 중복: 도면번호+PO No 동일하면 유지
+            var existing=HS.orders.find(function(o){return o.dwg_no===dwgNo&&(o.po===poVal||(poVal===''&&!o.po));});
+            var dueRaw=cDue>=0?String(r[cDue]||'').trim().replace(/\//g,''):'';
+            var dueISO='';
+            if(dueRaw.length===6)dueISO='20'+dueRaw.slice(0,2)+'-'+dueRaw.slice(2,4)+'-'+dueRaw.slice(4,6);
+            else if(dueRaw.length===8)dueISO=dueRaw.slice(0,4)+'-'+dueRaw.slice(4,6)+'-'+dueRaw.slice(6,8);
+            // 공정구분
+            var typeVal=cType>=0?String(r[cType]||'').trim().toUpperCase():'A';
+            if(!typeVal||!H_STEP_TYPES.find(function(t){return t.code===typeVal;}))typeVal='A';
+            var stepVal=cStep>=0?String(r[cStep]||'').trim():'';
+
+            if(existing){
+              if(dueISO&&!existing.due)existing.due=dueISO;
+              skipped++;
+            } else {
+              var newOrder={
+                id:hsGenId(),dwg_no:dwgNo,
+                customer:cCust>=0?String(r[cCust]||'').trim():'',
+                project:cProj>=0?String(r[cProj]||'').trim():'',
+                unit:cUnit>=0?String(r[cUnit]||'').trim():'',
+                qty:cQty>=0?parseInt(r[cQty])||1:1,
+                po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',
+                del_ln:cDl>=0?String(r[cDl]||'').trim():'',
+                due:dueISO,step_type:typeVal,manually_done:false,
+                created_at:new Date().toISOString(),
+              };
+              HS.orders.push(newOrder);added++;
+              // 현재공정까지 완료 로그
+              if(stepVal){
+                var typeSteps=getStepsForType(typeVal);
+                var stepIdx=typeSteps.findIndex(function(s){return s.id===stepVal;});
+                if(stepIdx>=0){
+                  for(var si=0;si<=stepIdx;si++){
+                    var alreadyLogged=HS.logs.some(function(l){return l.dwg_no===dwgNo&&l.process===typeSteps[si].id&&l.ended_at;});
+                    if(!alreadyLogged){
+                      var ts=new Date().toISOString();
+                      HS.logs.push({id:hsGenId(),dwg_no:dwgNo,customer:newOrder.customer,
+                        project:newOrder.project,unit:newOrder.unit,qty:newOrder.qty,
+                        worker:'(Excel)',process:typeSteps[si].id,started_at:ts,ended_at:ts,duration_min:0});
+                    }
+                  }
+                  stepLog++;
+                }
+              }
+            }
+          }
+          hsSaveOrders();hsSaveLogs();
+          // Supabase 업로드
+          var sb=getSB();
+          if(sb){
+            var newOrders=HS.orders.filter(function(o){return !o._synced;});
+            if(newOrders.length)sb.from('harness_orders').upsert(newOrders).then(function(){}).catch(function(){});
+            var excelLogs=HS.logs.filter(function(l){return l.worker==='(Excel)';});
+            if(excelLogs.length)sb.from('harness_logs').upsert(excelLogs).then(function(){}).catch(function(){});
+          }
+          renderStatus();
+          var msg='신규 '+added+'건 등록';
+          if(skipped>0)msg+=', '+skipped+'건 중복 유지';
+          if(stepLog>0)msg+=', '+stepLog+'건 공정 반영';
+          toast(msg,'ok');
+        }catch(ex){toast('파일 처리 오류: '+ex.message,'err');console.error(ex);}
+      };
+      reader.readAsArrayBuffer(file);
+    }catch(ex){toast('파일 읽기 오류','err');}
+  });
+}
 
 // ════════════════════════════════════════
 // INIT
