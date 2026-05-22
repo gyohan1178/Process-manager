@@ -1806,7 +1806,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v4.8.1';
+const APP_VER='v4.9';
 const VER_LOG=[
   {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -2485,7 +2485,7 @@ async function processFile(entry,notify,returnBytes=false){
     } else {
       // ─ 캔버스 경로: 렌더링 → QR/순번/회전/CSV 합성 ─
       if(notify)D.ovlS.textContent='페이지 렌더 중...';
-      const FONT_PT=40;const RSCALE=2;
+      const RSCALE=2;
       const pdfDoc=await PDFDocument.load(entry.bytes);
       const pages=pdfDoc.getPages();
       const renderDoc=await pdfjsLib.getDocument({data:entry.bytes.slice(0)}).promise;
@@ -2542,10 +2542,12 @@ async function processFile(entry,notify,returnBytes=false){
           // ④ 최종 PDF 페이지 크기 (회전 고려)
           const newPw=(rotation===90||rotation===270)?origPh:origPw;
           const newPh=(rotation===90||rotation===270)?origPw:origPh;
+          // ★ 폰트/마진 크기: 페이지 폭 비례 자동 산출 (A4 landscape 841.9pt 기준 20pt)
+          const FONT_PT=Math.max(8,Math.min(28,Math.round(newPw*0.024)));
+          const marginPt=Math.round(FONT_PT*1.8);
 
           if(hasCSV){
             // CSV 오버레이: 상하 여백 확보 후 도면 축소
-            const marginPt=Math.round(FONT_PT*1.6);
             const topMarg=useTop?marginPt:0;const botMarg=useBot?marginPt:0;
             const drawH=newPh-topMarg-botMarg;const scaleF=drawH/newPh;
             const drawW=newPw*scaleF;const drawX=(newPw-drawW)/2;
@@ -2918,7 +2920,7 @@ function renderInfoToBytes(rows, pageWpt, marginPt, isTop, fontPt, dwgNo, fileId
     }
     // 파일 순번은 캔버스 내용 영역에 직접 표기 (여기서는 제외)
   } else {
-    // 하단: 납기/수량/불출일
+    // 하단: 납기/수량/불출일 (중앙 정렬)
     if(rows.length>0){
       rows.forEach(function(row){
         var fields=[];
@@ -2934,12 +2936,9 @@ function renderInfoToBytes(rows, pageWpt, marginPt, isTop, fontPt, dwgNo, fileId
         if(fields.length)lines.push(fields.join(GAP));
       });
     }
-    // 도면 생성일 + 등록자
-    var now=new Date();
-    var dateStr=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0');
-    var worker=typeof HS!=='undefined'?HS.worker||'':'';;
-    lines.push('작성일: '+dateStr+(worker?'     등록자: '+worker:''));
+    // 작성일/등록자 → lines에 포함하지 않음 (아래에서 우측하단 별도 처리)
   }
+  // ── 중앙 정렬 lines 렌더링 ──
   var totalLines=lines.length;
   lines.forEach(function(line,li){
     if(!line)return;
@@ -2949,6 +2948,20 @@ function renderInfoToBytes(rows, pageWpt, marginPt, isTop, fontPt, dwgNo, fileId
     var y=Math.round(cvH*(li+1)/(totalLines+1))+fPx*0.35;
     ctx.fillText(line,x,y);
   });
+  // ── 작성일/등록자: 우측 하단 (하단 스트립에만) ──
+  if(!isTop){
+    var now=new Date();
+    var dateStr=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0');
+    var workerTxt=typeof HS!=='undefined'&&HS.worker?HS.worker:'';
+    var dtLine='작성일: '+dateStr+(workerTxt?'   등록자: '+workerTxt:'');
+    var dtFpx=Math.round(fPx*0.78); // 본문보다 약간 작게
+    ctx.font='500 '+dtFpx+'px "Noto Sans KR","Arial",sans-serif';
+    ctx.fillStyle='#444';
+    var dtW=ctx.measureText(dtLine).width;
+    var padR=Math.round(dtFpx*0.5); // 우측 여백
+    var padB=Math.round(dtFpx*0.25); // 하단 여백
+    ctx.fillText(dtLine,Math.max(0,cvW-dtW-padR),cvH-padB);
+  }
   return{
     bytes:dataURLtoBytes(cv.toDataURL('image/png')),
     widthPt:pageWpt,
