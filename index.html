@@ -446,6 +446,25 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
   </div>
 </div>
+<!-- 발주 선택 모달 -->
+<div id="order-picker-ovl" class="po-ovl hidden" onclick="if(event.target===this)closeOrderPicker()">
+  <div class="po-box" style="max-width:700px;max-height:85vh;display:flex;flex-direction:column">
+    <div class="po-hd">
+      <div class="po-hd-title">🔍 발주 선택 — 공정현황 연결</div>
+      <button class="po-hd-x" onclick="closeOrderPicker()">×</button>
+    </div>
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">
+      <input id="orderPickerSearch" class="po-inp" placeholder="도면번호 / 고객사 / 프로젝트 검색..." style="flex:1" oninput="renderOrderPicker()">
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="orderPickerUnprintedOnly" checked onchange="renderOrderPicker()">
+        <span>미출력만</span>
+      </label>
+    </div>
+    <div id="orderPickerList" style="flex:1;overflow-y:auto;padding:6px 0"></div>
+    <div class="po-ft"><button class="btn btn-outline" onclick="closeOrderPicker()">닫기</button></div>
+  </div>
+</div>
+
 <!-- 사용자 매뉴얼 모달 -->
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
@@ -592,19 +611,12 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div class="file-list" id="fileList"></div>
         </aside>
         <div class="stamp-main">
-          <div class="bulk-bar hidden" id="bulkBar">
-            <div class="bulk-badge"><span class="bulk-badge-icon">⚡</span><div class="bulk-badge-text"><div class="bulk-badge-main">일괄 입력</div><div class="bulk-badge-sub"><span id="bulkFileCount">0</span>개 파일</div></div></div>
-            <div class="bulk-sep"></div>
-            <div class="bulk-fields">
-              <div class="bulk-field"><div class="bulk-lbl">고객사</div><input class="bulk-inp" id="bCust" placeholder="예: Axcelis"></div>
-              <div class="bulk-field"><div class="bulk-lbl">프로젝트</div><input class="bulk-inp" id="bProj" placeholder="예: CXE Ultra"></div>
-              <div class="bulk-field"><div class="bulk-lbl">호기</div><input class="bulk-inp" id="bUnit" placeholder="예: #1"></div>
-              <div class="bulk-field" style="max-width:70px"><div class="bulk-lbl">수량</div><input class="bulk-inp" id="bQty" type="number" min="1" placeholder="1" style="text-align:center"></div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:5px">
-              <button class="btn-bulk-apply" id="btnBulkApply">✓ 전체 적용</button>
-              <div class="bulk-note">도면번호는 파일별</div>
-            </div>
+          <!-- 발주 연결 바 (공정현황 발주와 연결) -->
+          <div id="orderLinkBar" style="display:none;background:var(--blue2);border-bottom:2px solid var(--blue);padding:8px 14px;flex-shrink:0;align-items:center;gap:10px">
+            <span style="font-size:11px;font-weight:700;color:#fff;white-space:nowrap">🔗 발주 연결</span>
+            <div id="orderLinkInfo" style="flex:1;font-size:11px;color:rgba(255,255,255,.85);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+            <button onclick="openOrderPicker()" style="flex-shrink:0;padding:4px 10px;border-radius:5px;border:1.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;font-size:11px;font-weight:600;cursor:pointer">🔍 발주 선택</button>
+            <button onclick="unlinkOrder()" style="flex-shrink:0;padding:4px 8px;border-radius:5px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.6);font-size:11px;cursor:pointer" title="연결 해제">✕</button>
           </div>
           <div class="meta-panel">
             <div class="mp-inner">
@@ -1094,7 +1106,8 @@ async function hsSaveOrders(){
       return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
               unit:o.unit||null,qty:o.qty||1,created_at:o.created_at,
               po:o.po||null,ord_ln:o.ord_ln||null,del_ln:o.del_ln||null,
-              due:o.due||null,step_type:o.step_type||null,manually_done:o.manually_done||false};
+              due:o.due||null,step_type:o.step_type||null,manually_done:o.manually_done||false,
+              qr_printed:o.qr_printed||false,qr_printed_at:o.qr_printed_at||null};
     }));
     if(res.error){
       console.warn('orders sync err',res.error);
@@ -1384,6 +1397,14 @@ function renderStatus(){
         +(done?'✅완료':prog>0?(prog+'/'+getStepsForType(o.step_type).length):'대기')+'</span>'
       +'</div></td>'
       +'<td style="text-align:center">'
+        +(o.qr_printed
+          ?'<div title="'+fmtQRDate(o.qr_printed_at)+'" style="display:flex;flex-direction:column;align-items:center;gap:2px">'
+            +'<span style="font-size:14px">✅</span>'
+            +'<span style="font-size:9px;color:var(--tx3);font-family:var(--mono)">'+fmtQRDate(o.qr_printed_at)+'</span>'
+          +'</div>'
+          :'<span style="font-size:16px;color:var(--tx3)" title="미출력">○</span>')
+      +'</td>'
+      +'<td style="text-align:center">'
         +'<input type="checkbox" '+(o.manually_done?'checked':'')+' data-oid="'+o.id+'" onchange="toggleManualDone(this)" '
         +'style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)" title="완료 처리">'
       +'</td>'
@@ -1392,12 +1413,12 @@ function renderStatus(){
   }).join('');
   // 저장된 컬럼 폭 불러오기 (localStorage)
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
-  var defCols=[120,120,80,70,110,150,60,55,90,60,200,46,60]; // 기본 폭(px)
+  var defCols=[120,120,80,70,110,150,60,55,90,60,200,60,46,60]; // 기본 폭(px)
   // 컬럼 수 변경 시 기본값으로 리셋
   // 컬럼 수 변경 시 리셋
   var colW=(savedCols&&savedCols.length===defCols.length)?savedCols:defCols;
   var colgroup='<colgroup>'+colW.map(function(w){return '<col style="width:'+w+'px">';}).join('')+'</colgroup>';
-  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','현황판','완료',''];
+  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','현황판','QR 출력','완료',''];
   var thead='<thead><tr>'+headers.map(function(h,i){
     var align=(i===2||i===3||i===6||i===7)?'text-align:center;':'';
     return '<th style="position:relative;'+align+'user-select:none;overflow:hidden;white-space:nowrap">'+h
@@ -1806,7 +1827,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v4.9';
+const APP_VER='v5.0';
 const VER_LOG=[
   {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -2080,10 +2101,12 @@ async function addFiles(files){
       const dno=file.name.replace(/\.pdf$/i,'');
       const bCust=D.bCust.value.trim(),bProj=D.bProj.value.trim(),bUnit=D.bUnit.value.trim();
       const bQtyV=document.getElementById('bQty');const bQty=bQtyV?parseInt(bQtyV.value)||1:1;
-      S.files.push({file,bytes,pdfDoc,totalPages:pdfDoc.numPages,
+      const newEntry={file,bytes,pdfDoc,totalPages:pdfDoc.numPages,
         customer:bCust,project:bProj,unit:bUnit,drawingNo:dno,qty:bQty||1,
         qrSize:30,pos:{x:5,y:5},posSet:false,rotation:0,applyAll:false,qrURL:null,saved:false,
-        bulkApplied:!!(bCust||bProj||bUnit),pageWidthMm:210,pagePxPerMm:null});
+        orderId:null,pageWidthMm:210,pagePxPerMm:null};
+      autoMatchOrder(newEntry);
+      S.files.push(newEntry);
     }catch(err){console.error(err);toast('로딩 실패: '+file.name,'err');}
   }
   hideOvl();renderList();updateBadge();
@@ -2098,7 +2121,7 @@ function readBytes(file){return new Promise((res,rej)=>{const r=new FileReader()
 function updateBadge(){
   const n=S.files.length;D.cntPill.textContent=n;D.mergeCount.textContent=n;
   const multi=n>1;
-  D.bulkBar.classList.toggle('hidden',!multi);
+  // bulkBar 제거됨 (발주 연결로 대체)
   if(multi)D.bulkFileCount.textContent=n;
   D.btnSaveAll.classList.toggle('hidden',!multi);
   D.btnMergeNav.classList.toggle('hidden',!multi);
@@ -2106,7 +2129,7 @@ function updateBadge(){
 
 D.btnBulkApply.addEventListener('click',()=>applyBulk(true));
 [D.bCust,D.bProj,D.bUnit].forEach(inp=>inp.addEventListener('input',debounce(()=>applyBulk(false),700)));
-var bQtyEl=document.getElementById('bQty');if(bQtyEl)bQtyEl.addEventListener('input',debounce(()=>applyBulk(false),700));
+// bulkBar listeners 제거됨
 function applyBulk(showMsg){
   const customer=D.bCust.value.trim(),project=D.bProj.value.trim(),unit=D.bUnit.value.trim();
   const qtyEl=document.getElementById('bQty');const qty=qtyEl?parseInt(qtyEl.value)||0:0;
@@ -2163,6 +2186,7 @@ function selectFile(i){
   setSizeBtn(e.qrSize);setApplyMode(e.applyAll,false);
   [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty,D.szCustom,D.btnReset,D.btnQrGen].forEach(el=>el.disabled=false);
   var rvEl=document.getElementById('rotateVal');if(rvEl)rvEl.textContent=(e.rotation||0)+'°';
+  updateOrderLinkBar(e);
   SZ_BTNS.forEach(b=>b.disabled=false);D.szCustom.disabled=false;
   [D.inpCust,D.inpProj,D.inpUnit].forEach(inp=>inp.classList.toggle('bulk-applied',!!e.bulkApplied));
   D.emptyV.classList.add('hidden');D.cvWrap.classList.remove('hidden');
@@ -2584,7 +2608,10 @@ async function processFile(entry,notify,returnBytes=false){
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),6000);
     entry.saved=true;renderList();
-    if(S.idx>=0&&S.files[S.idx]===entry)updateStatus2(entry);
+    // QR 출력 이력 기록
+    if(entry.orderId)await markOrderQRPrinted(entry.orderId);
+    if(S.idx>=0&&S.files[S.idx]===entry){updateStatus2(entry);updateOrderLinkBar(entry);}
+    renderStatus();
     if(notify){hideOvl();toast(a.download+' 저장','ok');}
   }catch(err){console.error(err);if(notify)hideOvl();if(!returnBytes)toast('저장 오류: '+err.message,'err');}
 }
@@ -3010,6 +3037,153 @@ document.addEventListener('mouseup',function(e){
   var widths=cols.map(function(c){return parseInt(c.style.width)||60;});
   localStorage.setItem('hs_col_widths',JSON.stringify(widths));
 });
+
+// ════════════════════════════════════════
+// 발주 연결 + QR 출력 이력
+// ════════════════════════════════════════
+
+// 날짜 포맷 (qr_printed_at → YY/MM/DD)
+function fmtQRDate(val){
+  if(!val)return '';
+  try{
+    var d=new Date(val);
+    if(isNaN(d))return val.slice(0,10)||'';
+    return (d.getFullYear()+'').slice(2)+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
+  }catch(e){return '';}
+}
+
+// 파일명으로 발주 자동 매칭
+function autoMatchOrder(entry){
+  if(!HS.orders.length)return;
+  var base=entry.file.name.replace(/\.pdf$/i,'').trim();
+  var normBase=normDwg(base);
+  var match=HS.orders.find(function(o){
+    if(!o.dwg_no)return false;
+    var normO=normDwg(o.dwg_no);
+    return normO===normBase||normBase.indexOf(normO)>=0||normO.indexOf(normBase)>=0;
+  });
+  if(match){
+    entry.orderId=match.id;
+    if(match.customer)entry.customer=match.customer;
+    if(match.project)entry.project=match.project;
+    if(match.unit)entry.unit=match.unit;
+    if(match.dwg_no)entry.drawingNo=match.dwg_no;
+    if(match.qty)entry.qty=match.qty;
+    if(match.po)entry.po=match.po;
+  }
+}
+
+// 발주 연결 바 갱신
+function updateOrderLinkBar(entry){
+  var bar=document.getElementById('orderLinkBar');
+  var info=document.getElementById('orderLinkInfo');
+  if(!bar||!info)return;
+  if(!entry){bar.style.display='none';return;}
+  bar.style.display='flex';
+  if(entry.orderId){
+    var o=HS.orders.find(function(x){return x.id===entry.orderId;});
+    if(o){
+      info.innerHTML='<span style="color:#7dd3fc;font-weight:700">'+(o.dwg_no||'—')+'</span>'
+        +'  <span style="color:rgba(255,255,255,.6)">'+[o.customer,o.project,o.po?'PO:'+o.po:''].filter(Boolean).join(' · ')+'</span>'
+        +(o.qr_printed?'  <span style="font-size:10px;background:rgba(13,171,106,.3);color:#6ee7b7;padding:1px 6px;border-radius:3px;margin-left:4px">출력완료 '+fmtQRDate(o.qr_printed_at)+'</span>':'');
+    } else {info.textContent='연결된 발주 (ID: '+entry.orderId+')';}
+  } else {
+    info.innerHTML='<span style="color:rgba(255,255,255,.5)">미연결 — 발주 선택 버튼으로 공정현황과 연결하세요</span>';
+  }
+}
+
+// 연결 해제
+function unlinkOrder(){
+  if(S.idx<0)return;
+  S.files[S.idx].orderId=null;
+  updateOrderLinkBar(S.files[S.idx]);
+  renderList();
+  toast('발주 연결 해제됨','ok');
+}
+
+// 발주 선택 모달 열기
+function openOrderPicker(){
+  document.getElementById('order-picker-ovl').classList.remove('hidden');
+  renderOrderPicker();
+  setTimeout(function(){var el=document.getElementById('orderPickerSearch');if(el)el.focus();},100);
+}
+function closeOrderPicker(){
+  document.getElementById('order-picker-ovl').classList.add('hidden');
+}
+
+// 발주 선택 모달 목록 렌더링
+function renderOrderPicker(){
+  var el=document.getElementById('orderPickerList');if(!el)return;
+  var q=(document.getElementById('orderPickerSearch').value||'').toLowerCase().trim();
+  var unprintedOnly=document.getElementById('orderPickerUnprintedOnly').checked;
+  var list=HS.orders.filter(function(o){
+    if(unprintedOnly&&o.qr_printed)return false;
+    if(!q)return true;
+    return (o.dwg_no||'').toLowerCase().includes(q)
+      ||(o.customer||'').toLowerCase().includes(q)
+      ||(o.project||'').toLowerCase().includes(q)
+      ||(o.po||'').toLowerCase().includes(q);
+  });
+  if(!list.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px">'+(unprintedOnly?'미출력 발주가 없습니다':'검색 결과 없음')+'</div>';return;}
+  el.innerHTML=list.map(function(o){
+    var printed=o.qr_printed;
+    return '<div onclick="selectOrderForFile(\''+o.id+'\')" style="padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:10px" '
+      +'onmouseover="this.style.background=\'var(--blue-lt)\'" onmouseout="this.style.background=\'\'">'
+      +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+          +'<span style="font-family:var(--mono);font-weight:700;font-size:12px;color:var(--tx)">'+o.dwg_no+'</span>'
+          +(o.po?'<span style="font-size:10px;font-family:var(--mono);color:var(--blue)">'+o.po+'</span>':'')
+          +(printed?'<span style="font-size:9px;background:rgba(13,171,106,.15);color:var(--green);padding:1px 6px;border-radius:3px;border:1px solid rgba(13,171,106,.2)">✅ 출력완료</span>':'')
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--tx2)">'+[o.customer,o.project,o.unit?'호기 '+o.unit:'',o.qty?o.qty+'개':''].filter(Boolean).join(' · ')+'</div>'
+      +'</div>'
+      +'<span style="font-size:11px;color:var(--blue);font-weight:600">선택 →</span>'
+    +'</div>';
+  }).join('');
+}
+
+// 발주 선택 → 현재 파일에 연결
+function selectOrderForFile(orderId){
+  if(S.idx<0)return;
+  var entry=S.files[S.idx];
+  var o=HS.orders.find(function(x){return x.id===orderId;});
+  if(!o)return;
+  entry.orderId=orderId;
+  // 발주 데이터로 파일 메타 자동입력
+  entry.customer=o.customer||entry.customer;
+  entry.project=o.project||entry.project;
+  entry.unit=o.unit||entry.unit;
+  entry.drawingNo=o.dwg_no||entry.drawingNo;
+  entry.qty=o.qty||entry.qty;
+  entry.po=o.po;
+  // 화면 갱신
+  if(D.inpCust)D.inpCust.value=entry.customer;
+  if(D.inpProj)D.inpProj.value=entry.project;
+  if(D.inpUnit)D.inpUnit.value=entry.unit;
+  if(D.inpDno)D.inpDno.value=entry.drawingNo;
+  if(D.inpQty)D.inpQty.value=entry.qty||1;
+  if(entry.customer||entry.project||entry.drawingNo){
+    var c=buildContent(entry);if(c.trim()){entry.qrURL=makeQRPng(c);updateQRBox(entry.qrURL);showStamp(entry);}
+  }
+  updateOrderLinkBar(entry);
+  renderList();
+  closeOrderPicker();
+  toast('발주 연결됨: '+o.dwg_no,'ok');
+}
+
+// QR 출력 완료 처리 (processFile 저장 후 호출)
+async function markOrderQRPrinted(orderId){
+  if(!orderId)return;
+  var o=HS.orders.find(function(x){return x.id===orderId;});
+  if(!o)return;
+  o.qr_printed=true;
+  o.qr_printed_at=new Date().toISOString();
+  hsSaveOrders();
+  var sb=getSB();
+  if(sb){
+    await sb.from('harness_orders').update({qr_printed:true,qr_printed_at:o.qr_printed_at}).eq('id',orderId).catch(function(){});
+  }
+}
 
 // ════════════════════════════════════════
 // Excel PO 일괄 업로드 + 공정구분
