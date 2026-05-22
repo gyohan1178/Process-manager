@@ -421,6 +421,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </div>
 <div id="toast" class="toast hide"><span class="t-ic" id="tIc">✓</span><span class="t-tx" id="tTx"></span></div>
 <input type="file" id="fileInput" accept=".pdf" multiple>
+<input type="file" id="folderInput" accept=".pdf" webkitdirectory style="display:none">
 <!-- Print area for process QRs -->
 <div id="print-area"><div class="pqr-print-grid" id="print-grid"></div></div>
 
@@ -603,10 +604,30 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div class="stamp-layout">
         <aside class="stamp-side">
           <div class="ssd-hd"><div class="ssd-lbl">도면 파일</div><span class="cnt-pill" id="cntPill">0</span></div>
-          <div class="drop-z" id="dropZ" onclick="document.getElementById('fileInput').click()">
-            <span class="dz-ic">📂</span>
-            <div class="dz-main">PDF 추가</div>
-            <div class="dz-sub">클릭 또는 드래그<br>여러 파일 동시 가능</div>
+          <!-- 추가 버튼 그룹 -->
+          <div style="display:flex;gap:5px;padding:8px 10px 4px;flex-shrink:0">
+            <button onclick="document.getElementById('folderInput').click()"
+              style="flex:1;padding:8px 6px;border-radius:7px;border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s"
+              onmouseover="this.style.background='var(--blue)';this.style.color='#fff'"
+              onmouseout="this.style.background='var(--blue-lt)';this.style.color='var(--blue)'"
+              title="폴더 선택 (최상위 PDF만 스캔)">
+              📁 폴더 선택
+            </button>
+            <button onclick="document.getElementById('fileInput').click()"
+              style="flex:1;padding:8px 6px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s"
+              onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)'"
+              title="개별 파일 추가">
+              📄 파일 추가
+            </button>
+          </div>
+          <!-- 폴더 스캔 결과 요약 -->
+          <div id="folderScanInfo" style="display:none;padding:5px 10px;font-size:10px;background:var(--bg2);border-bottom:1px solid var(--border)"></div>
+          <!-- 드래그앤드롭 영역 (소형) -->
+          <div class="drop-z" id="dropZ" style="padding:8px;min-height:44px;flex-direction:row;gap:6px"
+            onclick="document.getElementById('fileInput').click()">
+            <span class="dz-ic" style="font-size:16px">+</span>
+            <div class="dz-sub" style="font-size:10px">드래그하여 파일 추가</div>
           </div>
           <div class="file-list" id="fileList"></div>
         </aside>
@@ -1827,7 +1848,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-const APP_VER='v5.0';
+const APP_VER='v5.1';
 const VER_LOG=[
   {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -2064,7 +2085,7 @@ const S={files:[],idx:-1,page:1,applyAll:false,pxPerMm:3.78};
 let dragging=false,dox=0,doy=0;
 const $=id=>document.getElementById(id);
 const D={
-  fileInput:$('fileInput'),dropZ:$('dropZ'),fileList:$('fileList'),cntPill:$('cntPill'),
+  fileInput:$('fileInput'),folderInput:$('folderInput'),dropZ:$('dropZ'),fileList:$('fileList'),cntPill:$('cntPill'),
   emptyV:$('emptyV'),cvWrap:$('cvWrap'),pdfCanvas:$('pdfCanvas'),
   qrResizeHandle:$('qrResizeHandle'),
   qrStamp:$('qrStamp'),qrSImg:$('qrSImg'),qrBox:$('qrBox'),sizeBadge:$('sizeBadge'),
@@ -2084,6 +2105,8 @@ const SZ_BTNS=[D.szBtn20,D.szBtn30,D.szBtn40];
 const SZ_VALS=[20,30,40];
 
 D.fileInput.addEventListener('change',e=>{addFiles(Array.from(e.target.files));e.target.value='';});
+var folderInputEl=document.getElementById('folderInput');
+if(folderInputEl)folderInputEl.addEventListener('change',function(e){handleFolderSelect(e.target);});
 D.dropZ.addEventListener('dragover',e=>{e.preventDefault();D.dropZ.classList.add('dov');});
 D.dropZ.addEventListener('dragleave',()=>D.dropZ.classList.remove('dov'));
 D.dropZ.addEventListener('drop',e=>{e.preventDefault();D.dropZ.classList.remove('dov');pickPdfs(e.dataTransfer.files);});
@@ -2157,8 +2180,13 @@ function renderList(){
     const d=document.createElement('div');d.className='fi'+(i===S.idx?' active':'');
     const pc=e.saved?'spill sp-d':e.qrURL?'spill sp-r':'spill sp-w';
     const pt=e.saved?'✓ 저장완료':e.qrURL?'◉ QR완료':'○ 대기';
+    // 발주 연결 상태 표시
+    var matchedOrd=e.orderId?HS.orders.find(function(x){return x.id===e.orderId;}):null;
+    var matchBadge=matchedOrd
+      ?'<div style="font-size:9px;color:var(--green);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 0">🔗 '+(matchedOrd.dwg_no||'')+'</div>'
+      :'<div style="font-size:9px;color:var(--amber);padding:1px 0">⚠ 미연결</div>';
     d.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">'
-      +'<div class="fi-name" title="'+e.file.name+'" style="flex:1">'+e.file.name+'</div>'
+      +'<div style="flex:1;overflow:hidden"><div class="fi-name" title="'+e.file.name+'" style="">'+e.file.name+'</div>'+matchBadge+'</div>'
       +'<button data-idx="'+i+'" onclick="removeFile(parseInt(this.dataset.idx),event)" style="background:rgba(220,38,38,.2);border:1px solid rgba(220,38,38,.4);color:#ff9999;cursor:pointer;font-size:12px;font-weight:700;line-height:1;padding:2px 7px;flex-shrink:0;border-radius:4px;transition:all .15s" onmouseover="this.style.background=\'rgba(220,38,38,.45)\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'rgba(220,38,38,.2)\';this.style.color=\'#ff9999\'" title="삭제">✕</button>'
       +'</div>'
       +'<div class="fi-row"><span class="'+pc+'">'+pt+'</span><span class="fi-pg">'+e.totalPages+'p</span></div>';
@@ -3037,6 +3065,125 @@ document.addEventListener('mouseup',function(e){
   var widths=cols.map(function(c){return parseInt(c.style.width)||60;});
   localStorage.setItem('hs_col_widths',JSON.stringify(widths));
 });
+
+// ════════════════════════════════════════
+// 폴더 선택 + 도번 매칭
+// ════════════════════════════════════════
+
+// 도번 후보 추출 (파일명에서 리비전 제거)
+// 예: 1600791_M_00_REL → [1600791_M_00_REL, 1600791_M_00, 1600791_M]
+function extractDwgCandidates(filename){
+  var base=filename.replace(/\.[^.]+$/,'').trim();
+  var candidates=[base];
+
+  // 1) _REL, _RELEASE 접미사 제거
+  var b=base.replace(/_REL(EASE)?$/i,'').trim();
+  if(b!==base){candidates.push(b);base=b;}
+
+  // 2) 마지막 _XX 또는 _N (리비전 숫자) 제거
+  var m=base.match(/^(.+)_([0-9]{1,3})$/);
+  if(m){candidates.push(m[1]);base=m[1];}
+
+  // 3) 마지막 _L 또는 -L (단일 알파벳 리비전) 제거
+  var m2=base.match(/^(.+)[_\-]([A-Za-z]{1,2})$/);
+  if(m2){candidates.push(m2[1]);}
+
+  return [...new Set(candidates)];
+}
+
+// 도번 후보로 발주 매칭
+function findOrderByCandidates(candidates){
+  for(var ci=0;ci<candidates.length;ci++){
+    var norm=normDwg(candidates[ci]);
+    var found=HS.orders.find(function(o){
+      if(!o.dwg_no)return false;
+      var on=normDwg(o.dwg_no);
+      return on===norm||on.indexOf(norm)===0||norm.indexOf(on)===0;
+    });
+    if(found)return found;
+  }
+  return null;
+}
+
+// autoMatchOrder 개선 (후보 기반)
+function autoMatchOrder(entry){
+  if(!HS.orders.length)return;
+  var candidates=extractDwgCandidates(entry.file.name);
+  var match=findOrderByCandidates(candidates);
+  if(match){
+    entry.orderId=match.id;
+    if(match.customer)entry.customer=match.customer;
+    if(match.project)entry.project=match.project;
+    if(match.unit)entry.unit=match.unit;
+    if(match.dwg_no)entry.drawingNo=match.dwg_no;
+    if(match.qty)entry.qty=match.qty;
+    if(match.po)entry.po=match.po;
+  }
+}
+
+// 폴더 선택 핸들러 (최상위 파일만)
+async function handleFolderSelect(input){
+  var all=Array.from(input.files);
+  input.value='';
+  if(!all.length)return;
+
+  // ★ 최상위 폴더 파일만 (depth=2: "폴더명/파일명")
+  var topPdfs=all.filter(function(f){
+    if(!/\.pdf$/i.test(f.name))return false;
+    var parts=(f.webkitRelativePath||f.name).split('/');
+    return parts.length<=2; // 최상위 = 폴더명/파일명
+  });
+
+  if(!topPdfs.length){
+    toast('선택한 폴더에 PDF가 없습니다','err');
+    return;
+  }
+
+  var folderName=(topPdfs[0].webkitRelativePath||'').split('/')[0]||'선택된 폴더';
+  showOvl('폴더 스캔 중...',folderName);
+  setProgress(0,'');
+
+  var matched=0,unmatched=0;
+  for(var i=0;i<topPdfs.length;i++){
+    setProgress(Math.round((i+1)/topPdfs.length*100),(i+1)+'/'+topPdfs.length);
+    await sleep(5); // UI 반응성
+    var f=topPdfs[i];
+    // 이미 추가된 파일 스킵
+    if(S.files.some(function(e){return e.file.name===f.name;}))continue;
+    try{
+      var bytes=await f.arrayBuffer();
+      var uint=new Uint8Array(bytes);
+      var{PDFDocument}=PDFLib;
+      var pdfDoc=await PDFDocument.load(uint,{ignoreEncryption:true});
+      var candidates=extractDwgCandidates(f.name);
+      var dno=candidates[candidates.length-1]||f.name.replace(/\.pdf$/i,'');
+      var newEntry={file:f,bytes:uint,pdfDoc,totalPages:pdfDoc.numPages,
+        customer:'',project:'',unit:'',drawingNo:dno,qty:1,
+        qrSize:30,pos:{x:5,y:5},posSet:false,rotation:0,applyAll:false,
+        qrURL:null,saved:false,orderId:null,pageWidthMm:210,pagePxPerMm:null};
+      autoMatchOrder(newEntry);
+      var c=buildContent(newEntry);
+      if(c.trim())newEntry.qrURL=makeQRPng(c);
+      if(newEntry.orderId)matched++;else unmatched++;
+      S.files.push(newEntry);
+    }catch(ex){console.warn('skip',f.name,ex.message);}
+  }
+
+  hideOvl();
+  // 결과 요약 표시
+  var info=document.getElementById('folderScanInfo');
+  if(info){
+    info.style.display='block';
+    info.innerHTML='<span style="color:var(--green);font-weight:700">✅ '+matched+'개 자동 매칭</span>'
+      +(unmatched?'&nbsp;&nbsp;<span style="color:var(--amber);font-weight:700">🟡 '+unmatched+'개 미매칭</span>':'')
+      +'&nbsp;&nbsp;<span style="color:var(--tx3)">폴더: '+folderName+'</span>'
+      +'&nbsp;&nbsp;<button onclick="document.getElementById(\'folderScanInfo\').style.display=\'none\'" style="font-size:10px;border:none;background:none;cursor:pointer;color:var(--tx3)">✕</button>';
+  }
+  if(S.files.length>0&&S.idx<0)selectFile(0);
+  else renderList();
+  var total=matched+unmatched;
+  toast('📁 '+total+'개 로드 — 매칭 '+matched+'개'+(unmatched?' / 미매칭 '+unmatched+'개 (발주 선택 필요)':''),'ok');
+}
 
 // ════════════════════════════════════════
 // 발주 연결 + QR 출력 이력
