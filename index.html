@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.26</title>
+<title>하네스 공정관리 v5.27</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.26</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.27</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.26 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.27 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -796,83 +796,94 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
 
 <!-- PAGE: 단건 QR 스탬프 -->
-<div id="pg-stamp-single" class="page hidden" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
-  <!-- 상단 툴바 -->
-  <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1.5px solid var(--border);background:var(--bg);flex-shrink:0;flex-wrap:wrap">
-    <span style="font-size:13px;font-weight:700;color:var(--tx)">⚡ 단건 QR 스탬프</span>
-    <div style="width:1px;height:18px;background:var(--border)"></div>
-    <!-- 공통 정보 입력 -->
-    <input id="ss-cust" class="po-inp" placeholder="고객사" style="width:110px;font-size:11px;padding:4px 8px">
-    <input id="ss-proj" class="po-inp" placeholder="프로젝트" style="width:110px;font-size:11px;padding:4px 8px">
-    <input id="ss-unit" class="po-inp" placeholder="호기" style="width:60px;font-size:11px;padding:4px 8px">
-    <input id="ss-po" class="po-inp" placeholder="PO No" style="width:110px;font-size:11px;padding:4px 8px">
-    <input id="ss-qty" class="po-inp" type="number" min="1" placeholder="수량" value="1" style="width:60px;font-size:11px;padding:4px 8px;text-align:center">
-    <button onclick="ssApplyInfo()" style="padding:4px 12px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:600;cursor:pointer">전체 적용</button>
-    <div style="flex:1"></div>
-    <!-- QR 크기 -->
-    <span style="font-size:10px;color:var(--tx3)">QR</span>
-    <div style="display:flex;gap:3px">
-      <button class="zoom-btn" onclick="setSS_Size(20)" id="ss-sz20">20mm</button>
-      <button class="zoom-btn on" onclick="setSS_Size(30)" id="ss-sz30">30mm</button>
-      <button class="zoom-btn" onclick="setSS_Size(40)" id="ss-sz40">40mm</button>
+<div id="pg-stamp-single" class="page hidden" style="display:flex;height:100%;overflow:hidden">
+  <!-- 좌측 패널 (QR 스탬프와 동일 구조) -->
+  <aside class="stamp-side">
+    <div class="ssd-hd">
+      <div class="ssd-lbl">⚡ 단건 QR 스탬프</div>
+      <span class="cnt-pill" id="ssCntPill">0</span>
     </div>
-    <!-- 범위 -->
-    <button class="tg" id="ss-all" onclick="setSSApply(true)">전체</button>
-    <button class="tg on" id="ss-first" onclick="setSSApply(false)">첫장</button>
-    <div style="width:1px;height:18px;background:var(--border)"></div>
-    <button id="ss-btn-save" class="btn btn-pr btn-sm" onclick="ssSaveCurrent()" disabled>⬇ 해당도면 저장</button>
-    <button id="ss-btn-merge" class="btn btn-gr btn-sm hidden" onclick="ssSaveMerge()">🗂 전체병합저장</button>
-  </div>
+    <!-- 파일 추가 버튼 (폴더 아닌 파일 직접 선택) -->
+    <div style="padding:8px 10px 4px;flex-shrink:0;display:flex;gap:5px">
+      <button onclick="document.getElementById('ss-file-input').click()"
+        style="flex:1;padding:8px 6px;border-radius:7px;border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s"
+        onmouseover="this.style.background='var(--blue)';this.style.color='#fff'"
+        onmouseout="this.style.background='var(--blue-lt)';this.style.color='var(--blue)'"
+        title="PDF 파일 선택 (여러 개 선택 가능)">
+        📄 파일 추가
+      </button>
+    </div>
+    <input type="file" id="ss-file-input" accept=".pdf" multiple style="display:none" onchange="ssAddFiles(this.files);this.value=''">
+    <!-- 파일 목록 -->
+    <div id="ss-file-list" style="flex:1;overflow-y:auto"></div>
+  </aside>
 
-  <!-- 본문 레이아웃 -->
-  <div style="display:flex;flex:1;overflow:hidden">
-    <!-- 좌측: 파일 목록 -->
-    <div style="width:220px;flex-shrink:0;border-right:1.5px solid var(--border);display:flex;flex-direction:column;background:var(--bg2)">
-      <!-- 드롭존 -->
-      <div id="ss-dropz" onclick="document.getElementById('ss-file-input').click()"
-        style="margin:8px;border:2px dashed var(--border2);border-radius:var(--r2);padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg)"
-        ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
-        ondragleave="this.style.borderColor=''"
-        ondrop="event.preventDefault();this.style.borderColor='';ssAddFiles(event.dataTransfer.files)">
-        <span style="font-size:20px;display:block;margin-bottom:4px">📂</span>
-        <div style="font-size:11px;font-weight:600;color:var(--tx2)">PDF 추가</div>
-        <div style="font-size:9px;color:var(--tx3);margin-top:2px">클릭 또는 드래그</div>
+  <!-- 우측 메인 -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <!-- 상단 툴바 -->
+    <div class="stamp-topbar" style="flex-wrap:wrap;gap:6px;padding:7px 12px">
+      <!-- PO 정보 입력 (PO등록양식 컬럼 순서) -->
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1">
+        <input id="ss-cust" class="po-inp" placeholder="고객사 *" style="width:100px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
+        <input id="ss-proj" class="po-inp" placeholder="프로젝트" style="width:100px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
+        <input id="ss-dwg" class="po-inp" placeholder="도면번호 *" style="width:140px;font-size:11px;padding:4px 8px;font-family:var(--mono)" oninput="ssUpdateCurrent()">
+        <input id="ss-unit" class="po-inp" placeholder="호기" style="width:55px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
+        <input id="ss-qty" class="po-inp" type="number" min="1" placeholder="수량" value="1" style="width:55px;font-size:11px;padding:4px 8px;text-align:center" oninput="ssUpdateCurrent()">
+        <input id="ss-po" class="po-inp" placeholder="PO No" style="width:110px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
+        <input id="ss-ol" class="po-inp" placeholder="OL" style="width:40px;font-size:11px;padding:4px 8px;text-align:center" oninput="ssUpdateCurrent()">
+        <input id="ss-dl" class="po-inp" placeholder="DL" style="width:40px;font-size:11px;padding:4px 8px;text-align:center" oninput="ssUpdateCurrent()">
+        <input id="ss-due" class="po-inp" placeholder="납기 YY/MM/DD" style="width:100px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
+        <button onclick="ssApplyInfo()" style="padding:4px 10px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">전체 적용</button>
       </div>
-      <input type="file" id="ss-file-input" accept=".pdf" multiple style="display:none" onchange="ssAddFiles(this.files);this.value=''">
-      <!-- 파일 목록 -->
-      <div id="ss-file-list" style="flex:1;overflow-y:auto"></div>
+      <!-- QR 크기 / 범위 / 저장 버튼 -->
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+        <span style="font-size:10px;color:var(--tx3)">QR</span>
+        <div style="display:flex;gap:2px">
+          <button class="zoom-btn" onclick="setSS_Size(20)" id="ss-sz20">20mm</button>
+          <button class="zoom-btn on" onclick="setSS_Size(30)" id="ss-sz30">30mm</button>
+          <button class="zoom-btn" onclick="setSS_Size(40)" id="ss-sz40">40mm</button>
+        </div>
+        <div style="width:1px;height:16px;background:var(--border)"></div>
+        <button class="tg" id="ss-all" onclick="setSSApply(true)">전체</button>
+        <button class="tg on" id="ss-first" onclick="setSSApply(false)">첫장</button>
+        <div style="width:1px;height:16px;background:var(--border)"></div>
+        <button onclick="ssRotate()" class="zoom-btn" style="width:44px">↻90°</button>
+        <button onclick="ssPosReset()" class="zoom-btn">위치초기화</button>
+        <div style="width:1px;height:16px;background:var(--border)"></div>
+        <button id="ss-btn-status" onclick="ssSaveToOrdersManual()" class="btn btn-outline btn-sm" title="공정현황에 등록 (QR 저장 없이)">📊 공정현황 반영</button>
+        <button id="ss-btn-save" onclick="ssSaveCurrent()" class="btn btn-pr btn-sm" disabled>⬇ 해당도면 저장</button>
+        <button id="ss-btn-merge" onclick="ssSaveMerge()" class="btn btn-gr btn-sm hidden">🗂 전체병합저장</button>
+      </div>
     </div>
 
-    <!-- 우측: PDF 뷰어 (기존 stamp 뷰어 공유) -->
-    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-      <!-- 도면번호 + 상태 -->
-      <div style="padding:5px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:11px">
-        <input id="ss-dwg" class="po-inp" placeholder="도면번호 (파일명 자동)" style="width:200px;font-size:11px;padding:4px 8px;font-family:var(--mono)" oninput="ssUpdateCurrent()">
-        <span id="ss-page-info" style="color:var(--tx3);font-size:10px"></span>
-        <div style="flex:1"></div>
-        <span style="font-size:10px;color:var(--tx3)">QR 위치: 스탬프를 드래그</span>
-        <button class="zoom-btn" onclick="ssRotate()" style="width:44px;font-size:10px">↻90°</button>
-        <button class="zoom-btn" onclick="ssPosReset()" style="font-size:10px">위치초기화</button>
+    <!-- PDF 뷰어 -->
+    <div id="ss-viewer" style="flex:1;overflow:auto;position:relative;background:#e5e7eb;display:flex;align-items:flex-start;justify-content:center;padding:16px"
+      ondragover="event.preventDefault();document.getElementById('ss-viewer').style.outline='3px dashed var(--blue)'"
+      ondragleave="document.getElementById('ss-viewer').style.outline=''"
+      ondrop="event.preventDefault();document.getElementById('ss-viewer').style.outline='';ssAddFiles(event.dataTransfer.files)">
+      <div id="ss-empty" style="margin:auto;text-align:center;color:var(--tx3)">
+        <div style="font-size:40px;margin-bottom:10px">📄</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px">PDF를 추가하세요</div>
+        <div style="font-size:11px">좌측 파일 추가 버튼 또는 여기에 드래그</div>
       </div>
-      <!-- PDF 캔버스 영역 -->
-      <div id="ss-viewer" style="flex:1;overflow:auto;position:relative;background:#e5e7eb;display:flex;align-items:flex-start;justify-content:center;padding:16px">
-        <div id="ss-empty" style="margin:auto;text-align:center;color:var(--tx3)">
-          <div style="font-size:36px;margin-bottom:8px">📄</div>
-          <div style="font-size:13px;font-weight:600">PDF를 추가하세요</div>
-          <div style="font-size:11px;margin-top:4px">드래그하거나 파일 목록에서 클릭</div>
-        </div>
-        <div id="ss-canvas-wrap" style="display:none;position:relative">
-          <canvas id="ss-canvas"></canvas>
-          <!-- QR 스탬프 -->
-          <div id="ss-stamp" style="position:absolute;top:10%;left:70%;cursor:grab;user-select:none;display:none">
-            <img id="ss-stamp-img" style="display:block;border:2px solid rgba(23,85,244,.4);border-radius:4px">
-            <div id="ss-stamp-size" style="background:var(--blue);color:#fff;font-size:9px;font-weight:700;text-align:center;padding:1px 4px;border-radius:0 0 4px 4px;cursor:default"></div>
-            <div id="ss-stamp-handle" style="position:absolute;bottom:-6px;right:-6px;width:14px;height:14px;background:var(--blue);border-radius:50%;cursor:se-resize;border:2px solid #fff"></div>
-          </div>
+      <div id="ss-canvas-wrap" style="display:none;position:relative">
+        <canvas id="ss-canvas"></canvas>
+        <div id="ss-stamp" style="position:absolute;top:10%;left:68%;cursor:grab;user-select:none;display:none">
+          <img id="ss-stamp-img" style="display:block;border:2px solid rgba(23,85,244,.4);border-radius:4px">
+          <div id="ss-stamp-size" style="background:var(--blue);color:#fff;font-size:9px;font-weight:700;text-align:center;padding:1px 4px;border-radius:0 0 4px 4px;cursor:default"></div>
+          <div id="ss-stamp-handle" style="position:absolute;bottom:-6px;right:-6px;width:14px;height:14px;background:var(--blue);border-radius:50%;cursor:se-resize;border:2px solid #fff"></div>
         </div>
       </div>
     </div>
+
+    <!-- 페이지 네비게이션 -->
+    <div id="ss-page-nav" style="display:none;align-items:center;justify-content:center;gap:8px;padding:6px;border-top:1px solid var(--border);flex-shrink:0;font-size:11px;background:var(--bg)">
+      <button onclick="ssPageNav(-1)" class="zoom-btn">‹</button>
+      <span id="ss-page-info" style="color:var(--tx2)">1 / 1</span>
+      <button onclick="ssPageNav(1)" class="zoom-btn">›</button>
+    </div>
   </div>
+</div>
 </div>
 
 <div id="pg-qrhist" class="page hidden" style="padding:20px;overflow-y:auto">
@@ -2063,7 +2074,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.26';
+var APP_VER='v5.27';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -3728,24 +3739,22 @@ function autoMatchOrder(entry){
   }
 }
 
-// 폴더 선택 핸들러 (최상위 파일만)
 // ════════════════════════════════════════
 // 단건 QR 스탬프 (pg-stamp-single)
 // ════════════════════════════════════════
-var SS={files:[],idx:-1,qrSize:30,applyAll:false,zoom:1};
+var SS={files:[],idx:-1,qrSize:30,applyAll:false,curPage:1};
+
+function ssField(id){var el=document.getElementById(id);return el?(el.value||'').trim():'';}
 
 function ssAddFiles(fileList){
   Array.from(fileList).filter(function(f){return /\.pdf$/i.test(f.name);}).forEach(function(f){
     if(SS.files.some(function(e){return e.name===f.name;}))return;
     var dno=extractDwgCandidates(f.name)[0]||f.name.replace(/\.pdf$/i,'');
-    var cust=(document.getElementById('ss-cust')||{value:''}).value.trim();
-    var proj=(document.getElementById('ss-proj')||{value:''}).value.trim();
-    var unit=(document.getElementById('ss-unit')||{value:''}).value.trim();
-    var po=(document.getElementById('ss-po')||{value:''}).value.trim();
-    var qty=parseInt((document.getElementById('ss-qty')||{value:'1'}).value)||1;
     SS.files.push({file:f,bytes:null,pdjsDoc:null,pdfDoc:null,totalPages:1,rotation:0,
-      drawingNo:dno,customer:cust,project:proj,unit:unit,po:po,qty:qty,
-      pos:{x:68,y:8},posSet:false,qrURL:null,saved:false});
+      drawingNo:dno,customer:ssField('ss-cust'),project:ssField('ss-proj'),
+      unit:ssField('ss-unit'),po:ssField('ss-po'),qty:parseInt(ssField('ss-qty'))||1,
+      ol:ssField('ss-ol'),dl:ssField('ss-dl'),due:ssField('ss-due'),
+      pos:{x:68,y:8},posSet:false,qrURL:null,saved:false,qrSize:SS.qrSize});
   });
   ssRenderList();
   if(SS.files.length>0&&SS.idx<0)ssSelectFile(0);
@@ -3754,160 +3763,150 @@ function ssAddFiles(fileList){
 
 function ssRenderList(){
   var el=document.getElementById('ss-file-list');if(!el)return;
-  if(!SS.files.length){el.innerHTML='<div style="padding:12px;text-align:center;font-size:10px;color:var(--tx3)">파일 없음</div>';return;}
+  if(!SS.files.length){el.innerHTML='<div style="padding:20px;text-align:center;font-size:10px;color:var(--tx3)">파일 없음<br>📄 파일 추가 버튼 또는<br>우측 뷰어에 드래그</div>';return;}
   el.innerHTML=SS.files.map(function(e,i){
     var sel=SS.idx===i;
     return '<div onclick="ssSelectFile('+i+')" style="padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;position:relative;padding-right:28px;'+(sel?'background:var(--blue-lt);border-left:3px solid var(--blue)':'')
-      +'" onmouseover="if(SS.idx!=='+i+')this.style.background=\'var(--bg)\'" onmouseout="if(SS.idx!=='+i+')this.style.background=\'\'">'
-      +'<div style="font-size:10px;font-weight:700;color:'+(sel?'var(--blue)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.file.name+'</div>'
-      +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+(e.drawingNo||'—')+(e.qrURL?'  ✅':'')+''+(e.saved?' 💾':'')+'</div>'
-      +'<button onclick="event.stopPropagation();ssRemoveFile('+i+')" style="position:absolute;top:6px;right:4px;border:1px solid rgba(220,38,38,.35);background:rgba(220,38,38,.12);color:#ff9999;font-size:10px;font-weight:700;padding:0 5px;border-radius:3px;cursor:pointer">✕</button>'
-    +'</div>';
+      +'" onmouseover="if(SS.idx!=='+i+')this.style.background=\'var(--bg)\'" onmouseout="if(SS.idx!=='+i+')this.style.background=\'\'"><div style="font-size:10px;font-weight:700;color:'+(sel?'var(--blue)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.drawingNo||e.file.name)+'</div><div style="font-size:9px;color:var(--tx3);margin-top:1px">'+(e.customer||'고객사 미입력')+(e.po?' · '+e.po:'')+(e.qrURL?' ✅':'')+(e.saved?' 💾':'')+'</div><button onclick="event.stopPropagation();ssRemoveFile('+i+')" style="position:absolute;top:6px;right:4px;border:1px solid rgba(220,38,38,.35);background:rgba(220,38,38,.12);color:#ff9999;font-size:10px;font-weight:700;padding:0 5px;border-radius:3px;cursor:pointer">✕</button></div>';
   }).join('');
+  var pill=document.getElementById('ssCntPill');if(pill)pill.textContent=SS.files.length;
 }
 
 function ssRemoveFile(i){
-  SS.files.splice(i,1);
-  if(SS.idx>=i)SS.idx=Math.max(-1,SS.idx-1);
+  SS.files.splice(i,1);if(SS.idx>=i)SS.idx=Math.max(-1,SS.idx-1);
   ssRenderList();
-  if(SS.files.length>0&&SS.idx>=0)ssSelectFile(SS.idx);
-  else if(SS.files.length>0)ssSelectFile(0);
-  else{document.getElementById('ss-canvas-wrap').style.display='none';document.getElementById('ss-empty').style.display='';}
+  if(SS.files.length>0)ssSelectFile(Math.max(0,SS.idx));
+  else{
+    var cw=document.getElementById('ss-canvas-wrap');if(cw)cw.style.display='none';
+    var em=document.getElementById('ss-empty');if(em)em.style.display='';
+    var pn=document.getElementById('ss-page-nav');if(pn)pn.style.display='none';
+  }
   ssBadge();
+}
+
+function ssFillFields(e){
+  var m={'ss-dwg':e.drawingNo,'ss-cust':e.customer,'ss-proj':e.project,'ss-unit':e.unit,'ss-qty':e.qty,'ss-po':e.po,'ss-ol':e.ol,'ss-dl':e.dl,'ss-due':e.due};
+  Object.keys(m).forEach(function(id){var el=document.getElementById(id);if(el&&m[id]!==undefined)el.value=m[id];});
 }
 
 async function ssSelectFile(i){
   if(i<0||i>=SS.files.length)return;
-  SS.idx=i;
-  var e=SS.files[i];
-  // DOM 필드 채우기
-  var dEl=document.getElementById('ss-dwg');if(dEl)dEl.value=e.drawingNo||'';
-  ssRenderList();
-  // PDF 로드
+  SS.idx=i;SS.curPage=1;var e=SS.files[i];
+  ssFillFields(e);ssRenderList();
   if(!e.pdjsDoc){
     try{
-      var arr=await e.file.arrayBuffer();
-      e.bytes=new Uint8Array(arr);
+      var arr=await e.file.arrayBuffer();e.bytes=new Uint8Array(arr);
       e.pdjsDoc=await pdfjsLib.getDocument({data:e.bytes.slice(0)}).promise;
       var{PDFDocument}=PDFLib;
       e.pdfDoc=await PDFDocument.load(e.bytes,{ignoreEncryption:true});
       e.totalPages=e.pdjsDoc.numPages;
     }catch(ex){toast('PDF 로드 실패: '+e.file.name,'err');return;}
   }
-  // 렌더
-  await ssRenderPage(e,1);
-  // QR 생성
-  ssGenQR(e);
-  // 페이지 정보
-  var pi=document.getElementById('ss-page-info');if(pi)pi.textContent=e.totalPages+'페이지';
-  ssBadge();
+  await ssRenderPage(e,1);ssGenQR(e);ssBadge();
 }
 
 async function ssRenderPage(entry,pageNum){
-  var cv=document.getElementById('ss-canvas');
-  var wrap=document.getElementById('ss-canvas-wrap');
-  var empty=document.getElementById('ss-empty');
+  var cv=document.getElementById('ss-canvas'),wrap=document.getElementById('ss-canvas-wrap'),
+    empty=document.getElementById('ss-empty'),nav=document.getElementById('ss-page-nav'),pi=document.getElementById('ss-page-info');
   if(!cv||!wrap)return;
   var pg=await entry.pdjsDoc.getPage(pageNum);
   var vp1=pg.getViewport({scale:1});
-  var vw=document.getElementById('ss-viewer').clientWidth-60;
-  var sc=Math.min(vw/vp1.width,1.5)*SS.zoom;
+  var viewer=document.getElementById('ss-viewer');
+  var sc=Math.min(((viewer?viewer.clientWidth:900)-60)/vp1.width,1.8);
   var vp=pg.getViewport({scale:sc,rotation:entry.rotation||0});
   cv.width=vp.width;cv.height=vp.height;
-  var ctx=cv.getContext('2d');
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
   await pg.render({canvasContext:ctx,viewport:vp}).promise;
-  wrap.style.display='block';
-  if(empty)empty.style.display='none';
-  // QR 스탬프 표시
+  wrap.style.display='block';if(empty)empty.style.display='none';
+  if(nav){nav.style.display=entry.totalPages>1?'flex':'none';if(pi)pi.textContent=pageNum+' / '+entry.totalPages;}
   ssShowStamp(entry);
 }
 
+function ssPageNav(dir){
+  if(SS.idx<0)return;var e=SS.files[SS.idx];
+  SS.curPage=Math.max(1,Math.min(e.totalPages,SS.curPage+dir));
+  ssRenderPage(e,SS.curPage);
+}
+
 function ssGenQR(entry){
-  var content='CUST:'+entry.customer+'|PROJ:'+entry.project+'|UNIT:'+entry.unit+'|DWG:'+entry.drawingNo+'|QTY:'+entry.qty;
-  if(entry.po)content+='|PO:'+entry.po;
-  entry.qrURL=makeQRPng(content.trim());
-  ssShowStamp(entry);
-  ssRenderList();
+  var parts=['DWG:'+entry.drawingNo];
+  if(entry.customer)parts.push('CUST:'+entry.customer);if(entry.project)parts.push('PROJ:'+entry.project);
+  if(entry.unit)parts.push('UNIT:'+entry.unit);parts.push('QTY:'+(entry.qty||1));
+  if(entry.po)parts.push('PO:'+entry.po);if(entry.ol)parts.push('OL:'+entry.ol);
+  if(entry.dl)parts.push('DL:'+entry.dl);if(entry.due)parts.push('DUE:'+entry.due);
+  entry.qrURL=makeQRPng(parts.join('|'));
+  ssShowStamp(entry);ssRenderList();
   var btn=document.getElementById('ss-btn-save');if(btn)btn.disabled=!entry.qrURL;
 }
 
 function ssShowStamp(entry){
-  var stamp=document.getElementById('ss-stamp');
-  var img=document.getElementById('ss-stamp-img');
-  var szLbl=document.getElementById('ss-stamp-size');
-  var cv=document.getElementById('ss-canvas');
-  if(!stamp||!img||!cv)return;
-  if(!entry.qrURL){stamp.style.display='none';return;}
+  var stamp=document.getElementById('ss-stamp'),img=document.getElementById('ss-stamp-img'),
+    szLbl=document.getElementById('ss-stamp-size'),cv=document.getElementById('ss-canvas');
+  if(!stamp||!img||!cv||!entry.qrURL){if(stamp)stamp.style.display='none';return;}
   img.src=entry.qrURL;
-  var ptPx=cv.width/((cv.width/72)*25.4);
-  var qrPx=Math.round(entry.qrSize*ptPx);
+  var qrPx=Math.round((entry.qrSize||SS.qrSize||30)*72/25.4*(cv.width/(cv.offsetWidth||cv.width||842)));
   img.style.width=img.style.height=qrPx+'px';
-  if(szLbl)szLbl.textContent=entry.qrSize+'mm';
-  stamp.style.left=(entry.pos.x/100*cv.offsetWidth)+'px';
-  stamp.style.top=(entry.pos.y/100*cv.offsetHeight)+'px';
+  if(szLbl)szLbl.textContent=(entry.qrSize||SS.qrSize||30)+'mm';
+  stamp.style.left=(entry.pos.x/100*(cv.offsetWidth||842))+'px';
+  stamp.style.top=(entry.pos.y/100*(cv.offsetHeight||595))+'px';
   stamp.style.display='block';
 }
 
 function ssUpdateCurrent(){
-  if(SS.idx<0)return;
-  var e=SS.files[SS.idx];
-  var dEl=document.getElementById('ss-dwg');
-  if(dEl)e.drawingNo=dEl.value.trim();
+  if(SS.idx<0)return;var e=SS.files[SS.idx];
+  e.drawingNo=ssField('ss-dwg');e.customer=ssField('ss-cust');e.project=ssField('ss-proj');
+  e.unit=ssField('ss-unit');e.po=ssField('ss-po');e.ol=ssField('ss-ol');
+  e.dl=ssField('ss-dl');e.due=ssField('ss-due');e.qty=parseInt(ssField('ss-qty'))||1;
   ssGenQR(e);
 }
 
 function ssApplyInfo(){
-  var cust=(document.getElementById('ss-cust')||{value:''}).value.trim();
-  var proj=(document.getElementById('ss-proj')||{value:''}).value.trim();
-  var unit=(document.getElementById('ss-unit')||{value:''}).value.trim();
-  var po=(document.getElementById('ss-po')||{value:''}).value.trim();
-  var qty=parseInt((document.getElementById('ss-qty')||{value:'1'}).value)||1;
-  SS.files.forEach(function(e){
-    if(cust)e.customer=cust;if(proj)e.project=proj;
-    if(unit)e.unit=unit;if(po)e.po=po;if(qty)e.qty=qty;
-    ssGenQR(e);
-  });
-  toast('전체 적용 완료','ok');
+  var vals={customer:ssField('ss-cust'),project:ssField('ss-proj'),unit:ssField('ss-unit'),
+    po:ssField('ss-po'),qty:parseInt(ssField('ss-qty'))||1,ol:ssField('ss-ol'),dl:ssField('ss-dl'),due:ssField('ss-due')};
+  SS.files.forEach(function(e){Object.assign(e,vals);ssGenQR(e);});
+  toast('전체 파일에 적용됨 ('+SS.files.length+'개)','ok');ssRenderList();
 }
 
 function setSS_Size(mm){
-  SS.qrSize=mm;
-  SS.files.forEach(function(e){e.qrSize=mm;});
+  SS.qrSize=mm;SS.files.forEach(function(e){e.qrSize=mm;});
   ['20','30','40'].forEach(function(s){var b=document.getElementById('ss-sz'+s);if(b)b.classList.toggle('on',parseInt(s)===mm);});
   if(SS.idx>=0)ssShowStamp(SS.files[SS.idx]);
 }
 
 function setSSApply(all){
   SS.applyAll=all;
-  ['all','first'].forEach(function(k){var b=document.getElementById('ss-'+k);if(b)b.classList.toggle('on',k==='all'?all:!all);});
+  var ba=document.getElementById('ss-all');if(ba)ba.classList.toggle('on',all);
+  var bf=document.getElementById('ss-first');if(bf)bf.classList.toggle('on',!all);
 }
 
 function ssRotate(){
-  if(SS.idx<0)return;
-  var e=SS.files[SS.idx];
-  e.rotation=((e.rotation||0)+90)%360;
-  ssRenderPage(e,1);
+  if(SS.idx<0)return;var e=SS.files[SS.idx];
+  e.rotation=((e.rotation||0)+90)%360;ssRenderPage(e,SS.curPage||1);
 }
 
 function ssPosReset(){
-  if(SS.idx<0)return;
-  var e=SS.files[SS.idx];
-  e.pos={x:68,y:8};e.posSet=false;
-  ssShowStamp(e);
+  if(SS.idx<0)return;SS.files[SS.idx].pos={x:68,y:8};SS.files[SS.idx].posSet=false;
+  ssShowStamp(SS.files[SS.idx]);
 }
 
 function ssBadge(){
-  var btn=document.getElementById('ss-btn-merge');
-  if(btn)btn.classList.toggle('hidden',SS.files.length<2);
-  var save=document.getElementById('ss-btn-save');
-  if(save)save.disabled=!(SS.idx>=0&&SS.files[SS.idx]&&SS.files[SS.idx].qrURL);
+  var merge=document.getElementById('ss-btn-merge');if(merge)merge.classList.toggle('hidden',SS.files.length<2);
+  var save=document.getElementById('ss-btn-save');if(save)save.disabled=!(SS.idx>=0&&SS.files[SS.idx]&&SS.files[SS.idx].qrURL);
 }
 
-async function ssSaveCurrent(){
-  if(SS.idx<0||!SS.files[SS.idx])return;
-  await ssSaveFile(SS.files[SS.idx],true);
+function ssSaveToOrdersManual(){
+  if(SS.files.length===0){toast('파일을 먼저 추가하세요','err');return;}
+  var targets=SS.idx>=0?[SS.files[SS.idx]]:SS.files;
+  var added=0;
+  targets.forEach(function(e){
+    if(!e.drawingNo){toast('도면번호를 입력하세요','warn');return;}
+    if(HS.orders.some(function(o){return normDwg(o.dwg_no)===normDwg(e.drawingNo);})){toast(e.drawingNo+' 이미 등록됨','warn');return;}
+    ssSaveToOrders(e);added++;
+  });
+  if(added>0){renderStatus();toast('공정현황 등록 완료 ('+added+'건)','ok');}
 }
+
+async function ssSaveCurrent(){if(SS.idx<0||!SS.files[SS.idx])return;await ssSaveFile(SS.files[SS.idx],true);}
 
 async function ssSaveMerge(){
   var targets=SS.files.filter(function(e){return e.qrURL&&e.pdfDoc;});
@@ -3928,62 +3927,51 @@ async function ssSaveMerge(){
     a.href=url;a.download='단건QR_병합_'+new Date().toISOString().slice(0,10)+'.pdf';
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(function(){URL.revokeObjectURL(url);},5000);
-    // 공정현황 등록
-    targets.forEach(function(e){ssSaveToOrders(e);e.saved=true;});
-    ssRenderList();hideOvl();toast('병합 저장 완료 + 공정현황 등록됨','ok');
+    targets.forEach(function(e){ssSaveToOrders(e);e.saved=true;addQRHistoryEntry(e,e.drawingNo+'_QR.pdf');});
+    ssRenderList();hideOvl();renderStatus();
+    toast('병합 저장 완료 ('+targets.length+'개) + 공정현황 등록','ok');
   }catch(ex){hideOvl();toast('저장 오류: '+ex.message,'err');}
 }
 
 async function ssSaveFile(entry,notify){
   if(!entry.pdfDoc||!entry.qrURL){if(notify)toast('PDF 또는 QR이 없습니다','err');return;}
   try{
+    var fname=(entry.drawingNo||entry.file.name.replace(/\.pdf$/i,''))+'_QR.pdf';
     var bytes=await ssBuildPdfBytes(entry);
     var blob=new Blob([bytes],{type:'application/pdf'});
     var url=URL.createObjectURL(blob);var a=document.createElement('a');
-    a.href=url;a.download=(entry.drawingNo||entry.file.name.replace(/\.pdf$/i,''))+'_QR.pdf';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    a.href=url;a.download=fname;document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(function(){URL.revokeObjectURL(url);},5000);
-    entry.saved=true;
-    ssSaveToOrders(entry);
-    addQRHistoryEntry(entry,a.download);
-    ssRenderList();ssBadge();
-    if(notify)toast(a.download+' 저장 완료 + 공정현황 등록됨','ok');
+    entry.saved=true;ssSaveToOrders(entry);addQRHistoryEntry(entry,fname);
+    ssRenderList();ssBadge();renderStatus();
+    if(notify)toast(fname+' 저장 완료 + 공정현황 등록','ok');
   }catch(ex){if(notify)toast('저장 오류: '+ex.message,'err');}
 }
 
 async function ssBuildPdfBytes(entry){
-  // 캔버스 렌더 후 QR 합성
-  var{PDFDocument}=PDFLib;
-  var finalDoc=await PDFDocument.create();
+  var{PDFDocument}=PDFLib;var finalDoc=await PDFDocument.create();
   var origDoc=await PDFDocument.load(entry.bytes,{ignoreEncryption:true});
   var origPages=origDoc.getPages();
-  var renderDoc=entry.pdjsDoc||await pdfjsLib.getDocument({data:entry.bytes.slice(0)}).promise;
-  var RSCALE=2;
+  var renderDoc=entry.pdjsDoc;
   var qrImg=await new Promise(function(res){var img=new Image();img.onload=function(){res(img);};img.onerror=function(){res(null);};img.src=entry.qrURL;});
-  var target=SS.applyAll?origPages:[origPages[0]];
-  var pageIndices=SS.applyAll?origPages.map(function(_,i){return i;}):[0];
-  for(var pi=0;pi<pageIndices.length;pi++){
-    var pgIdx=pageIndices[pi];var origPg=origPages[pgIdx];
+  var pageIdxs=SS.applyAll?origPages.map(function(_,i){return i;}):[0];
+  for(var pi=0;pi<pageIdxs.length;pi++){
+    var pgIdx=pageIdxs[pi];var origPg=origPages[pgIdx];
     var{width:ow,height:oh}=origPg.getSize();
     var rPg=await renderDoc.getPage(pgIdx+1);
-    var vp=rPg.getViewport({scale:RSCALE,rotation:entry.rotation||0});
+    var vp=rPg.getViewport({scale:2,rotation:entry.rotation||0});
     var cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
     var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
     await rPg.render({canvasContext:ctx,viewport:vp}).promise;
     if(qrImg){
-      var ptToPx=cv.width/ow;
-      var qrPx=Math.round((entry.qrSize||30)*72/25.4*ptToPx);
-      var qrX=Math.round((entry.pos.x||0)/100*cv.width);
-      var qrY=Math.round((entry.pos.y||0)/100*cv.height);
-      ctx.drawImage(qrImg,qrX,qrY,qrPx,qrPx);
+      var qrPx=Math.round((entry.qrSize||30)*72/25.4*(cv.width/ow));
+      ctx.drawImage(qrImg,Math.round(entry.pos.x/100*cv.width),Math.round(entry.pos.y/100*cv.height),qrPx,qrPx);
     }
     var newW=(entry.rotation===90||entry.rotation===270)?oh:ow;
     var newH=(entry.rotation===90||entry.rotation===270)?ow:oh;
     var pngImg=await finalDoc.embedPng(dataURLtoBytes(cv.toDataURL('image/png')));
-    var np=finalDoc.addPage([newW,newH]);
-    np.drawImage(pngImg,{x:0,y:0,width:newW,height:newH});
+    var np=finalDoc.addPage([newW,newH]);np.drawImage(pngImg,{x:0,y:0,width:newW,height:newH});
   }
-  // 나머지 페이지 복사 (applyAll=false 이면서 다 페이지)
   if(!SS.applyAll&&origPages.length>1){
     var rest=await finalDoc.copyPages(origDoc,origPages.slice(1).map(function(_,i){return i+1;}));
     rest.forEach(function(p){finalDoc.addPage(p);});
@@ -3992,50 +3980,40 @@ async function ssBuildPdfBytes(entry){
 }
 
 function ssSaveToOrders(entry){
-  // 공정현황 자동 등록 (중복 체크)
   if(!entry.drawingNo)return;
   if(HS.orders.some(function(o){return normDwg(o.dwg_no)===normDwg(entry.drawingNo);}))return;
-  var worker=HS.worker||'단건QR';
   var now=new Date().toISOString();
-  var newOrd={id:hsGenId(),dwg_no:entry.drawingNo,customer:entry.customer||'',
+  HS.orders.unshift({id:hsGenId(),dwg_no:entry.drawingNo,customer:entry.customer||'',
     project:entry.project||'',unit:entry.unit||'',qty:entry.qty||1,
-    po:entry.po||'',ord_ln:'',del_ln:'',due:'',step_type:'A',
-    manually_done:false,qr_printed:true,qr_printed_at:now,created_at:now};
-  HS.orders.unshift(newOrd);
-  // 출도 공정 완료 처리
-  if(H_STEPS.length>0){
-    HS.logs.unshift({id:hsGenId(),dwg_no:entry.drawingNo,customer:entry.customer||'',
-      project:entry.project||'',unit:entry.unit||'',qty:entry.qty||1,
-      worker:worker,process:H_STEPS[0].id,started_at:now,ended_at:now,duration_min:0});
-  }
+    po:entry.po||'',ord_ln:entry.ol||'',del_ln:entry.dl||'',due:entry.due||'',
+    step_type:'A',manually_done:false,qr_printed:true,qr_printed_at:now,created_at:now});
+  if(H_STEPS.length>0){HS.logs.unshift({id:hsGenId(),dwg_no:entry.drawingNo,customer:entry.customer||'',
+    project:entry.project||'',unit:entry.unit||'',qty:entry.qty||1,
+    worker:HS.worker||'단건QR',process:H_STEPS[0].id,started_at:now,ended_at:now,duration_min:0});}
   hsSaveOrders();hsSaveLogs();
 }
 
-// 단건 스탬프 드래그
+// SS 드래그
 (function(){
   var drag=false,ox=0,oy=0;
   document.addEventListener('mousedown',function(e){
-    var stamp=document.getElementById('ss-stamp');
-    var handle=document.getElementById('ss-stamp-handle');
+    var stamp=document.getElementById('ss-stamp'),handle=document.getElementById('ss-stamp-handle');
     if(!stamp||!stamp.contains(e.target)||e.target===handle)return;
-    if(SS.idx<0)return;
     drag=true;ox=e.clientX-parseFloat(stamp.style.left||0);oy=e.clientY-parseFloat(stamp.style.top||0);
     stamp.style.cursor='grabbing';e.preventDefault();
   });
   document.addEventListener('mousemove',function(e){
-    if(!drag)return;
-    var stamp=document.getElementById('ss-stamp');var cv=document.getElementById('ss-canvas');
+    if(!drag)return;var stamp=document.getElementById('ss-stamp'),cv=document.getElementById('ss-canvas');
     if(!stamp||!cv)return;
-    var nx=e.clientX-ox,ny=e.clientY-oy;
-    stamp.style.left=Math.max(0,Math.min(nx,cv.offsetWidth-stamp.offsetWidth))+'px';
-    stamp.style.top=Math.max(0,Math.min(ny,cv.offsetHeight-stamp.offsetHeight))+'px';
+    stamp.style.left=Math.max(0,Math.min(e.clientX-ox,cv.offsetWidth-stamp.offsetWidth))+'px';
+    stamp.style.top=Math.max(0,Math.min(e.clientY-oy,cv.offsetHeight-stamp.offsetHeight))+'px';
   });
   document.addEventListener('mouseup',function(){
     if(!drag)return;drag=false;
-    var stamp=document.getElementById('ss-stamp');var cv=document.getElementById('ss-canvas');
+    var stamp=document.getElementById('ss-stamp'),cv=document.getElementById('ss-canvas');
     if(stamp&&cv&&SS.idx>=0){
-      SS.files[SS.idx].pos.x=parseFloat(stamp.style.left)/cv.offsetWidth*100;
-      SS.files[SS.idx].pos.y=parseFloat(stamp.style.top)/cv.offsetHeight*100;
+      SS.files[SS.idx].pos.x=parseFloat(stamp.style.left)/(cv.offsetWidth||1)*100;
+      SS.files[SS.idx].pos.y=parseFloat(stamp.style.top)/(cv.offsetHeight||1)*100;
       SS.files[SS.idx].posSet=true;
     }
     if(stamp)stamp.style.cursor='grab';
