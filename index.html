@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.23</title>
+<title>하네스 공정관리 v5.24.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.23</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.24.1</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -555,7 +555,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.23 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.24.1 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -694,9 +694,17 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             <div id="csvStatus2" class="csv-status-chip csv-status-none">○ 미업로드</div>
             <div class="csv-info-box" id="csvInfo" style="display:none">
               <span class="csv-col-badge" id="csvColInfo"></span>
-              <label class="csv-check"><input type="checkbox" id="csvUseTop" checked> 상단</label>
-              <label class="csv-check"><input type="checkbox" id="csvUseBot" checked> 하단</label>
+              <label class="csv-check"><input type="checkbox" id="csvUseTop" checked onchange="updateOverlayPreview()"> 상단</label>
+              <label class="csv-check"><input type="checkbox" id="csvUseBot" checked onchange="updateOverlayPreview()"> 하단</label>
               <button class="csv-btn csv-btn-clear" onclick="clearCSV()">✕ 초기화</button>
+            </div>
+            <!-- 오버레이 미리보기 -->
+            <div id="overlayPreview" style="display:none;margin-top:6px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);font-size:9px;overflow:hidden">
+              <div id="overlayPreviewTop" style="padding:4px 8px;border-bottom:1px solid var(--border);color:var(--tx2);line-height:1.6"></div>
+              <div style="height:20px;background:rgba(23,85,244,.05);display:flex;align-items:center;justify-content:center">
+                <span style="font-size:8px;color:var(--tx3)">↑ 도면 ↓</span>
+              </div>
+              <div id="overlayPreviewBot" style="padding:4px 8px;border-top:1px solid var(--border);color:var(--tx2);line-height:1.6"></div>
             </div>
           </div>
           <div class="sbar">
@@ -757,6 +765,17 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           </div>
           <div id="cam-reader" style="display:none;width:100%;margin-top:4px"></div>
           <div id="sc-job-area"></div>
+          <!-- 단건 직접 등록 -->
+          <div id="singleRegBox" style="margin-top:8px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);padding:10px">
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.1em">⚡ 단건 직접 등록</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
+              <input id="sr-dwg" class="sc-inp" placeholder="도면번호" style="font-size:11px;padding:6px 8px">
+              <input id="sr-cust" class="sc-inp" placeholder="고객사" style="font-size:11px;padding:6px 8px">
+              <input id="sr-po" class="sc-inp" placeholder="PO No (선택)" style="font-size:11px;padding:6px 8px">
+              <input id="sr-qty" class="sc-inp" placeholder="수량" type="number" min="1" value="1" style="font-size:11px;padding:6px 8px">
+            </div>
+            <button onclick="singleRegister()" style="width:100%;padding:7px;border-radius:var(--r);border:none;background:var(--blue);color:#fff;font-size:11px;font-weight:700;cursor:pointer">공정현황 등록 + 출도 완료</button>
+          </div>
           <div>
             <div class="sc-worker-lbl">👷 작업자</div>
             <input id="sc-worker" class="sc-worker-inp" placeholder="이름 입력 (기억됨)"
@@ -1954,7 +1973,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.23';
+var APP_VER='v5.24.1';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -2327,6 +2346,7 @@ function selectFile(i){
   [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty,D.szCustom,D.btnReset,D.btnQrGen].forEach(el=>el.disabled=false);
   var rvEl=document.getElementById('rotateVal');if(rvEl)rvEl.textContent=(e.rotation||0)+'°';
   updateOrderLinkBar(e);
+  setTimeout(updateOverlayPreview,100); // 파일 선택 시 미리보기 갱신
   SZ_BTNS.forEach(b=>b.disabled=false);D.szCustom.disabled=false;
   [D.inpCust,D.inpProj,D.inpUnit].forEach(inp=>inp.classList.toggle('bulk-applied',!!e.bulkApplied));
   D.emptyV.classList.add('hidden');D.cvWrap.classList.remove('hidden');
@@ -2353,7 +2373,7 @@ SZ_BTNS.forEach((btn,idx)=>{
   });
 });
 // 직접 입력
-D.szCustom.addEventListener('change',()=>{
+if(D.szCustom)D.szCustom.addEventListener('change',()=>{
   if(S.idx<0)return;
   const mm=Math.min(Math.max(parseInt(D.szCustom.value)||30,10),100);
   D.szCustom.value=mm;
@@ -2836,7 +2856,7 @@ function applyStampPos(entry){
   entry.pos.y=(top /ph)*100;
 }
 var clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
-D.qrStamp.addEventListener('mousedown',e=>{
+if(D.qrStamp)D.qrStamp.addEventListener('mousedown',e=>{
   if(e.target===D.qrResizeHandle)return; // 리사이즈 핸들은 별도 처리
   dragging=true;const r=D.qrStamp.getBoundingClientRect();dox=e.clientX-r.left;doy=e.clientY-r.top;D.qrStamp.classList.add('drag');e.preventDefault();
 });
@@ -2885,7 +2905,7 @@ document.addEventListener('mouseup',()=>{
   if(S.idx<0)return;[D.inpCust,D.inpProj,D.inpUnit].forEach(i=>i.classList.remove('bulk-applied'));
   saveMeta();genQR(S.files[S.idx]);
 },550)));
-D.btnAll.addEventListener('click',()=>setApplyMode(true));D.btnFirst.addEventListener('click',()=>setApplyMode(false));
+if(D.btnAll)D.btnAll.addEventListener('click',()=>setApplyMode(true));if(D.btnFirst)D.btnFirst.addEventListener('click',()=>setApplyMode(false));
 function setApplyMode(all,save=true){S.applyAll=all;if(save&&S.idx>=0)S.files[S.idx].applyAll=all;D.btnAll.classList.toggle('on',all);D.btnFirst.classList.toggle('on',!all);D.stApply.textContent=all?'전체 적용':'첫장만';}
 D.btnReset.addEventListener('click',()=>{if(S.idx<0)return;S.files[S.idx].pos={x:5,y:5};if(S.files[S.idx].qrURL)applyStampPos(S.files[S.idx]);});
 D.btnQrGen.addEventListener('click',()=>{if(S.idx<0)return;saveMeta();if(!buildContent(S.files[S.idx]).trim()){toast('메타데이터를 입력하세요','err');return;}genQR(S.files[S.idx]);toast('QR 생성 완료','ok');});
@@ -2894,7 +2914,7 @@ D.btnNext.addEventListener('click',()=>{if(S.idx>=0&&S.page<S.files[S.idx].total
 async function goPage(p){S.page=p;updatePageNav();await renderPage(p);if(S.idx>=0&&S.files[S.idx].qrURL)showStamp(S.files[S.idx]);}
 function updatePageNav(){if(S.idx<0)return;const tot=S.files[S.idx].totalPages;D.pgCur.textContent=S.page;D.pgTot.textContent=tot;D.btnPrev.disabled=S.page<=1;D.btnNext.disabled=S.page>=tot;}
 D.btnSave.addEventListener('click',async()=>{if(S.idx<0)return;saveMeta();await processFile(S.files[S.idx],true);});
-D.btnSaveAll.addEventListener('click',async()=>{
+if(D.btnSaveAll)D.btnSaveAll.addEventListener('click',async()=>{
   prepAllQR();const targets=S.files.filter(e=>e.qrURL);
   if(!targets.length){toast('저장할 파일이 없습니다','err');return;}
   // 위치 동기화: 명시적으로 설정되지 않은 파일에 현재 파일 위치 적용
@@ -2930,7 +2950,7 @@ async function doMergeSave(){
     hideOvl();renderList();toast(done+'개 병합 완료','ok');
   }catch(err){console.error(err);hideOvl();toast('병합 오류: '+err.message,'err');}
 }
-D.btnMergeNav.addEventListener('click',doMergeSave);
+if(D.btnMergeNav)D.btnMergeNav.addEventListener('click',doMergeSave);
 function prepAllQR(){S.files.forEach(e=>{if(!e.qrURL){const c=buildContent(e);if(c.trim())e.qrURL=makeQRPng(c);}});}
 
 // ─────────────────────────────────────
@@ -3378,6 +3398,7 @@ function handleCSVUpload(input){
         var ci=document.getElementById('csvColInfo');if(ci)ci.textContent='('+found.join(', ')+')';
       }catch(ex2){}
       renderOrderStampList(); // 발주 목록 갱신
+      updateOverlayPreview(); // 오버레이 미리보기 갱신
       toast('CSV 로드 완료 — '+cnt+'개 도면번호, '+(lines.length-1)+'행 (구분자: '+(delim==='\t'?'탭':'콤마')+')','ok');
     }catch(ex){toast('CSV 파싱 오류: '+ex.message,'err');console.error(ex);}
   };
@@ -3614,11 +3635,94 @@ function autoMatchOrder(entry){
 }
 
 // 폴더 선택 핸들러 (최상위 파일만)
+// ── 단건 직접 등록 ──
+function singleRegister(){
+  var dwg=(document.getElementById('sr-dwg')||{value:''}).value.trim();
+  var cust=(document.getElementById('sr-cust')||{value:''}).value.trim();
+  var po=(document.getElementById('sr-po')||{value:''}).value.trim();
+  var qty=parseInt((document.getElementById('sr-qty')||{value:'1'}).value)||1;
+  if(!dwg){toast('도면번호를 입력하세요','err');return;}
+  // 중복 확인
+  if(HS.orders.some(function(o){return normDwg(o.dwg_no)===normDwg(dwg);})){
+    toast('이미 등록된 도면번호입니다: '+dwg,'warn');return;
+  }
+  var worker=(HS.worker||'').trim()||'단건등록';
+  var now=new Date().toISOString();
+  var newOrder={id:hsGenId(),dwg_no:dwg,customer:cust,project:'',unit:'',qty:qty,
+    po:po,ord_ln:'',del_ln:'',due:'',step_type:'A',manually_done:false,
+    qr_printed:false,qr_printed_at:null,created_at:now};
+  HS.orders.unshift(newOrder);
+  // 출도 공정 즉시 완료
+  var firstStep=H_STEPS[0];
+  if(firstStep){
+    HS.logs.unshift({id:hsGenId(),dwg_no:dwg,customer:cust,project:'',unit:'',qty:qty,
+      worker:worker,process:firstStep.id,started_at:now,ended_at:now,duration_min:0});
+  }
+  hsSaveOrders();hsSaveLogs();
+  renderStatus();
+  // 입력 초기화
+  ['sr-dwg','sr-cust','sr-po'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('sr-qty')&&(document.getElementById('sr-qty').value='1');
+  toast('✅ '+dwg+' 등록 완료 (출도 처리)','ok');
+}
+
+// ── 오버레이 미리보기 ──
+function updateOverlayPreview(){
+  var entry=S.idx>=0?S.files[S.idx]:null;
+  var pv=document.getElementById('overlayPreview');
+  var pvTop=document.getElementById('overlayPreviewTop');
+  var pvBot=document.getElementById('overlayPreviewBot');
+  if(!pv||!pvTop||!pvBot)return;
+  var useTop=document.getElementById('csvUseTop')&&document.getElementById('csvUseTop').checked;
+  var useBot=document.getElementById('csvUseBot')&&document.getElementById('csvUseBot').checked;
+  if(!useTop&&!useBot){pv.style.display='none';return;}
+  var dwgNo=entry?entry.drawingNo:'';
+  var rows=dwgNo?findCsvRows(dwgNo):[];
+  var c=_csvCols;
+  var GAP='  ';
+  // 상단
+  if(useTop){
+    var topLines=[];
+    if(rows.length>0){
+      var row=rows[0];
+      var fields=[];
+      if(c.dest>=0&&row[c.dest])fields.push('납품처: '+row[c.dest]);
+      if(c.po>=0&&row[c.po])fields.push('발주: '+row[c.po]);
+      if(c.ordln>=0&&row[c.ordln])fields.push('OL: '+row[c.ordln]);
+      if(c.delln>=0&&row[c.delln])fields.push('DL: '+row[c.delln]);
+      if(fields.length)topLines.push(fields.join(GAP));
+    }
+    pvTop.style.display=useTop?'':'none';
+    pvTop.innerHTML=topLines.length?'<b>상단:</b> '+topLines.join('<br>'):'<span style="color:var(--tx3)">상단: (데이터 없음)</span>';
+  } else {pvTop.style.display='none';}
+  // 하단
+  if(useBot){
+    var botFields=[];
+    if(rows.length>0){
+      var row2=rows[0];
+      if(c.duedt>=0&&row2[c.duedt])botFields.push('납기: '+row2[c.duedt]);
+      if(c.qty>=0&&row2[c.qty])botFields.push('수량: '+row2[c.qty]);
+    }
+    var now2=new Date();
+    var ds=now2.getFullYear()+'.'+(now2.getMonth()+1).toString().padStart(2,'0')+'.'+now2.getDate().toString().padStart(2,'0');
+    botFields.push('작성일: '+ds);
+    pvBot.style.display=useBot?'':'none';
+    pvBot.innerHTML='<b>하단:</b> '+botFields.join(GAP)+(HS.worker?GAP+'등록자: '+HS.worker:'');
+  } else {pvBot.style.display='none';}
+  pv.style.display=(useTop||useBot)?'':'none';
+}
+
 // ════════════════════════════════════════
 // QR 이력 관리 (Supabase 동기화)
 // ════════════════════════════════════════
 var QR_HIST_KEY='hs_qr_history';
-function loadQRHistory(){try{return JSON.parse(localStorage.getItem(QR_HIST_KEY)||'[]');}catch(e){return[];}}
+function loadQRHistory(){
+  try{
+    var all=JSON.parse(localStorage.getItem(QR_HIST_KEY)||'[]');
+    var cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-2);
+    return all.filter(function(r){return !r.ts||new Date(r.ts)>=cutoff;});
+  }catch(e){return[];}
+}
 function saveQRHistory(hist){try{localStorage.setItem(QR_HIST_KEY,JSON.stringify(hist));}catch(e){}}
 async function addQRHistoryEntry(entry,fileName){
   var order=null;
@@ -3638,7 +3742,9 @@ async function addQRHistoryEntry(entry,fileName){
 }
 async function loadQRHistoryRemote(){
   var sb=getSB();if(!sb)return;
-  try{var r=await sb.from('harness_qr_history').select('*').order('ts',{ascending:false}).limit(200);
+  // 2개월 이내 데이터만
+  var twoMonthsAgo=new Date();twoMonthsAgo.setMonth(twoMonthsAgo.getMonth()-2);
+  try{var r=await sb.from('harness_qr_history').select('*').gte('ts',twoMonthsAgo.toISOString()).order('ts',{ascending:false}).limit(200);
     if(r.data&&r.data.length){saveQRHistory(r.data.map(function(d){return{id:d.id,ts:d.ts,fileName:d.file_name||'',
       dwg_no:d.dwg_no||'',customer:d.customer||'',project:d.project||'',unit:d.unit||'',
       qty:d.qty||1,qr_size:d.qr_size||30,po:d.po||''};}));}}catch(e){console.warn('qr_hist load',e);}
