@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.22</title>
+<title>하네스 공정관리 v5.23</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.22</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.23</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -547,15 +547,15 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div class="sb-title" style="white-space:nowrap">하네스 공정관리</div>
     </div>
     <div class="sb-nav">
-      <button class="sn-item on" id="nav-status" onclick="setPage('status')"><span class="sn-ic">📊</span> 공정현황</button>
-      <button class="sn-item" id="nav-log" onclick="setPage('status');setTimeout(()=>setSpTab('log'),50)" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> 이력 관리</button>
+      <button class="sn-item on" id="nav-status" onclick="setPage('status');setSpTab('board')"><span class="sn-ic">📊</span> 공정현황</button>
+      <button class="sn-item" id="nav-log" onclick="setPage('status');setSpTab('log')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> 이력 관리</button>
       <button class="sn-item" id="nav-stamp" onclick="setPage('stamp')"><span class="sn-ic">📐</span> QR 스탬프</button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.22 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.23 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -602,7 +602,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div class="sp-empty-d">QR 스캔 탭에서 <b>출도</b> 공정을 스캔하면<br>도면이 자동으로 등록됩니다</div>
         </div>
       </div>
-      <div class="sp-content hidden" id="sp-log"></div>
+      <div class="sp-content hidden" id="sp-log" style="overflow-y:auto;max-height:calc(100vh - 120px)"></div>
     </div>
 
     <!-- PAGE: QR 스탬프 -->
@@ -733,9 +733,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               <button class="nb" id="btnNext" disabled>다음 ▶</button>
             </div>
             <div class="act-row">
-              <button class="btn btn-gr hidden" id="btnMergeNav">🗂 병합저장 (<span id="mergeCount">0</span>개)</button>
-              <button class="btn btn-outline hidden" id="btnSaveAll">⬇ 전체저장</button>
-              <button class="btn btn-pr" id="btnSave" disabled>⬇ 현재저장</button>
+              <button class="btn btn-gr hidden" id="btnMergeNav">🗂 전체병합저장 (<span id="mergeCount">0</span>개)</button>
+              <button class="btn btn-pr" id="btnSave" disabled>⬇ 해당도면 저장</button>
             </div>
           </div>
         </div>
@@ -1955,7 +1954,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.22';
+var APP_VER='v5.23';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -2203,7 +2202,7 @@ var D={
   szBtn20:$('szBtn20'),szBtn30:$('szBtn30'),szBtn40:$('szBtn40'),szCustom:$('szCustom'),
   btnAll:$('btnAll'),btnFirst:$('btnFirst'),btnReset:$('btnReset'),btnQrGen:$('btnQrGen'),
   btnPrev:$('btnPrev'),btnNext:$('btnNext'),pgCur:$('pgCur'),pgTot:$('pgTot'),
-  btnSave:$('btnSave'),btnSaveAll:$('btnSaveAll'),btnMergeNav:$('btnMergeNav'),mergeCount:$('mergeCount'),
+  btnSave:$('btnSave'),btnSaveAll:null,btnMergeNav:$('btnMergeNav'),mergeCount:$('mergeCount'),
   bulkBar:null,bulkFileCount:null,
   bCust:$('bCust')||{value:'',addEventListener:()=>{}},
   bProj:$('bProj')||{value:'',addEventListener:()=>{}},
@@ -2261,7 +2260,7 @@ function updateBadge(){
   const multi=n>1;
   // bulkBar 제거됨 (발주 연결로 대체)
   if(multi&&D.bulkFileCount)D.bulkFileCount.textContent=n;
-  D.btnSaveAll.classList.toggle('hidden',!multi);
+  if(D.btnSaveAll)D.btnSaveAll.classList.toggle('hidden',!multi);
   D.btnMergeNav.classList.toggle('hidden',!multi);
 }
 
@@ -3305,24 +3304,37 @@ function dwgMatch(a, b){
   return false;
 }
 function findCsvRows(dwgNo){
-  if(!dwgNo||!safeKeys(getCsvData()).length) return [];
+  if(!dwgNo)return[];
+  if(!_csvData||typeof _csvData!=='object')_csvData={};
   var n=normDwg(dwgNo);
-  // 1. 완전 일치
-  if(_csvData[dwgNo]) return _csvData[dwgNo];
-  // 2. 정규화 후 완전 일치
-  for(var key in _csvData){
-    if(normDwg(key)===n) return _csvData[key];
+
+  // 1. CSV 데이터에서 찾기
+  if(safeKeys(_csvData).length>0){
+    if(_csvData[dwgNo]) return _csvData[dwgNo];
+    for(var key in _csvData){if(normDwg(key)===n) return _csvData[key];}
+    var best=null,bestLen=0;
+    for(var k in _csvData){var nk=normDwg(k);if(dwgMatch(n,nk)){var ml=Math.min(n.length,nk.length);if(ml>bestLen){bestLen=ml;best=_csvData[k];}}}
+    if(best)return best;
   }
-  // 3. 경계 있는 prefix 매칭 (긴 매칭 우선)
-  var best=null, bestLen=0;
-  for(var k in _csvData){
-    var nk=normDwg(k);
-    if(dwgMatch(n, nk)){
-      var matchLen=Math.min(n.length, nk.length);
-      if(matchLen>bestLen){ bestLen=matchLen; best=_csvData[k]; }
-    }
+
+  // 2. CSV 없으면 HS.orders 폴백 (PO 등록 정보를 납품정보로 사용)
+  var order=HS.orders.find(function(o){return o.dwg_no&&(o.dwg_no===dwgNo||normDwg(o.dwg_no)===n);});
+  if(order&&(order.po||order.customer||order.due)){
+    var cols=_csvCols;
+    // 컬럼 인덱스 기본값 설정 (CSV 미업로드 시)
+    if(cols.dest<0)cols.dest=1;if(cols.po<0)cols.po=2;if(cols.ordln<0)cols.ordln=3;
+    if(cols.delln<0)cols.delln=4;if(cols.duedt<0)cols.duedt=5;if(cols.qty<0)cols.qty=6;
+    var max=Math.max(cols.dest,cols.po,cols.ordln,cols.delln,cols.duedt,cols.qty)+1;
+    var row=[];for(var i=0;i<max;i++)row.push('');
+    if(order.customer)row[cols.dest]=order.customer;
+    if(order.po)row[cols.po]=order.po;
+    if(order.ord_ln)row[cols.ordln]=order.ord_ln;
+    if(order.del_ln)row[cols.delln]=order.del_ln;
+    if(order.due)row[cols.duedt]=order.due;
+    if(order.qty)row[cols.qty]=String(order.qty);
+    return [row];
   }
-  return best||[];
+  return [];
 }
 
 function handleCSVUpload(input){
@@ -3603,90 +3615,82 @@ function autoMatchOrder(entry){
 
 // 폴더 선택 핸들러 (최상위 파일만)
 // ════════════════════════════════════════
-// QR 이력 관리
+// QR 이력 관리 (Supabase 동기화)
 // ════════════════════════════════════════
 var QR_HIST_KEY='hs_qr_history';
-
-function loadQRHistory(){
-  try{return JSON.parse(localStorage.getItem(QR_HIST_KEY)||'[]');}catch(e){return[];}
-}
-function saveQRHistory(hist){
-  try{localStorage.setItem(QR_HIST_KEY,JSON.stringify(hist));}catch(e){}
-}
-function addQRHistoryEntry(entry, fileName){
-  var hist=loadQRHistory();
+function loadQRHistory(){try{return JSON.parse(localStorage.getItem(QR_HIST_KEY)||'[]');}catch(e){return[];}}
+function saveQRHistory(hist){try{localStorage.setItem(QR_HIST_KEY,JSON.stringify(hist));}catch(e){}}
+async function addQRHistoryEntry(entry,fileName){
   var order=null;
   if(entry.orderId){
     order=HS.orders.find(function(o){return o.id===entry.orderId;});
     if(!order){var csvL=buildCsvOrderList();order=csvL.find(function(o){return o.id===entry.orderId;});}
   }
-  var rec={
-    id:'qrh_'+Date.now(),
-    ts:new Date().toISOString(),
+  var rec={id:'qrh_'+Date.now(),ts:new Date().toISOString(),
     fileName:fileName||entry.file&&entry.file.name||'',
-    dwgNo:entry.drawingNo||'',
-    customer:entry.customer||order&&order.customer||'',
-    project:entry.project||order&&order.project||'',
-    unit:entry.unit||order&&order.unit||'',
-    qty:entry.qty||1,
-    qrSize:entry.qrSize||30,
-    po:entry.po||order&&order.po||'',
-    orderId:entry.orderId||''
-  };
-  hist.unshift(rec); // 최신 먼저
-  if(hist.length>200)hist=hist.slice(0,200); // 최대 200건
-  saveQRHistory(hist);
+    dwg_no:entry.drawingNo||'',customer:entry.customer||order&&order.customer||'',
+    project:entry.project||order&&order.project||'',unit:entry.unit||order&&order.unit||'',
+    qty:entry.qty||1,qr_size:entry.qrSize||30,po:entry.po||order&&order.po||''};
+  var hist=loadQRHistory();hist.unshift(rec);if(hist.length>200)hist=hist.slice(0,200);saveQRHistory(hist);
+  var sb=getSB();if(sb){sb.from('harness_qr_history').insert({id:rec.id,ts:rec.ts,dwg_no:rec.dwg_no,
+    customer:rec.customer,project:rec.project,unit:rec.unit,po:rec.po,qty:rec.qty,
+    qr_size:rec.qr_size,file_name:rec.fileName}).then(function(r){if(r&&r.error)console.warn('qr_hist err',r.error);}).catch(function(){});}
+}
+async function loadQRHistoryRemote(){
+  var sb=getSB();if(!sb)return;
+  try{var r=await sb.from('harness_qr_history').select('*').order('ts',{ascending:false}).limit(200);
+    if(r.data&&r.data.length){saveQRHistory(r.data.map(function(d){return{id:d.id,ts:d.ts,fileName:d.file_name||'',
+      dwg_no:d.dwg_no||'',customer:d.customer||'',project:d.project||'',unit:d.unit||'',
+      qty:d.qty||1,qr_size:d.qr_size||30,po:d.po||''};}));}}catch(e){console.warn('qr_hist load',e);}
 }
 function renderQRHistory(){
+  // 최초 진입 시 서버에서 로드
+  var el=document.getElementById('qrHistList');if(!el)return;
+  loadQRHistoryRemote().then(function(){_renderQRHistRows();});
+  _renderQRHistRows();
+}
+function _renderQRHistRows(){
   var el=document.getElementById('qrHistList');if(!el)return;
   var hist=loadQRHistory();
-  if(!hist.length){
-    el.innerHTML='<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--tx3)">저장된 이력이 없습니다</td></tr>';
-    return;
-  }
+  if(!hist.length){el.innerHTML='<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--tx3)">저장된 이력이 없습니다</td></tr>';return;}
   el.innerHTML=hist.map(function(r,ri){
     var d=new Date(r.ts);
-    var dateStr=d.getFullYear()+'.'+(d.getMonth()+1).toString().padStart(2,'0')+'.'+d.getDate().toString().padStart(2,'0');
-    var timeStr=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-    var bg=ri%2===0?'':'background:var(--bg2)';
-    return '<tr style="border-bottom:1px solid var(--border);'+bg+'">'
-      +'<td style="padding:7px 12px;white-space:nowrap;color:var(--tx3);font-size:10px">'+dateStr+' '+timeStr+'</td>'
-      +'<td style="padding:7px 12px;font-family:var(--mono);font-weight:600;font-size:11px;color:var(--tx)">'+(r.dwgNo||'—')+'</td>'
-      +'<td style="padding:7px 12px;font-size:11px;color:var(--tx)">'+(r.customer||'—')+'</td>'
+    var dt=(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    return '<tr style="border-bottom:1px solid var(--border);'+(ri%2?'background:var(--bg2)':'')+'">'
+      +'<td style="padding:7px 12px;white-space:nowrap;color:var(--tx3);font-size:10px">'+dt+'</td>'
+      +'<td style="padding:7px 12px;font-family:var(--mono);font-weight:600;font-size:11px">'+(r.dwg_no||'—')+'</td>'
+      +'<td style="padding:7px 12px;font-size:11px">'+(r.customer||'—')+'</td>'
       +'<td style="padding:7px 12px;font-size:11px;color:var(--tx2)">'+(r.project||'—')+'</td>'
       +'<td style="padding:7px 12px;font-family:var(--mono);font-size:10px;color:var(--blue)">'+(r.po||'—')+'</td>'
-      +'<td style="padding:7px 12px;text-align:center;font-size:11px">'+(r.qty||1)+'</td>'
-      +'<td style="padding:7px 12px;text-align:center;font-size:11px;color:var(--tx2)">'+(r.qrSize||30)+'mm</td>'
+      +'<td style="padding:7px 12px;text-align:center">'+(r.qty||1)+'</td>'
+      +'<td style="padding:7px 12px;text-align:center;color:var(--tx2)">'+(r.qr_size||30)+'mm</td>'
       +'<td style="padding:7px 12px;font-size:10px;color:var(--tx3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(r.fileName||'')+'">'+(r.fileName||'—')+'</td>'
       +'<td style="padding:7px 4px;text-align:center"><button onclick="deleteQRHistEntry(\''+r.id+'\')" style="border:1px solid rgba(220,38,38,.35);background:transparent;color:rgba(220,38,38,.7);cursor:pointer;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px" onmouseover="this.style.background=\'rgba(220,38,38,.15)\'" onmouseout="this.style.background=\'transparent\'">✕</button></td>'
     +'</tr>';
   }).join('');
 }
 function deleteQRHistEntry(id){
-  var hist=loadQRHistory().filter(function(r){return r.id!==id;});
-  saveQRHistory(hist);
-  renderQRHistory();
+  saveQRHistory(loadQRHistory().filter(function(r){return r.id!==id;}));_renderQRHistRows();
+  var sb=getSB();if(sb)sb.from('harness_qr_history').delete().eq('id',id).then(function(){}).catch(function(){});
 }
 function clearQRHistory(){
   if(!confirm('QR 이력을 전체 삭제할까요?'))return;
-  saveQRHistory([]);
-  renderQRHistory();
+  saveQRHistory([]);_renderQRHistRows();
+  var sb=getSB();if(sb)sb.from('harness_qr_history').delete().neq('id','__none__').then(function(){}).catch(function(){});
   toast('이력 전체 삭제됨','ok');
 }
 function exportQRHistCSV(){
-  var hist=loadQRHistory();
-  if(!hist.length){toast('이력이 없습니다','warn');return;}
+  var hist=loadQRHistory();if(!hist.length){toast('이력이 없습니다','warn');return;}
   var rows=[['저장일시','도면번호','고객사','프로젝트','PO No','수량','QR크기(mm)','파일명']];
   hist.forEach(function(r){
     var d=new Date(r.ts);
     var dt=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0')
       +' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-    rows.push([dt,r.dwgNo||'',r.customer||'',r.project||'',r.po||'',r.qty||1,r.qrSize||30,r.fileName||'']);
+    rows.push([dt,r.dwg_no||'',r.customer||'',r.project||'',r.po||'',r.qty||1,r.qr_size||30,r.fileName||'']);
   });
-  var csv='\uFEFF'+rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var csv='\uFEFF'+rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'\"\""')+'"';}).join(',');}).join('\r\n');
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;
   a.download='QR이력_'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},3000);
