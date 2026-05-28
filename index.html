@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.25.1</title>
+<title>하네스 공정관리 v5.26</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.25.1</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.26</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.25.1 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.26 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -962,15 +962,20 @@ var _csvCols={};   // 컬럼명 매핑
 function safeKeys(obj){try{return obj&&typeof obj==='object'?Object.keys(obj):[];}catch(e){return[];}}
 // _csvData null 방어: 언제든 안전한 객체 반환
 function getCsvData(){if(!_csvData||typeof _csvData!=='object'){_csvData={};}return _csvData;}
+// Excel PO등록양식 컬럼 순서:
+// 고객사 | 프로젝트 | 도면번호 | 호기 | 수량 | PO No | Order Line | Del Line | 불출일 | 납기 | 등록자 | 공정구분
 var CSV_COL_MAP={
   dwg:    ['도면번호','dwg no','drawing no','dwg_no','도면','drawing'],
-  dest:   ['납품처','delivery destination','ship to','dest'],
-  po:     ['발주번호','po number','po no','po','발주'],
+  dest:   ['고객사','customer','납품처','delivery destination','ship to','dest'],  // ★ 고객사 우선
+  po:     ['po no','po','발주번호','po number','발주'],
   ordln:  ['order line','orderline','ord line','ord_line','order ln'],
   delln:  ['del line','delline','del_line','delivery line'],
   duedt:  ['납기','due date','duedate','delivery date','납기일'],
   qty:    ['수량','quantity','qty'],
   issdt:  ['불출일','issue date','issuedate','출고일'],
+  proj:   ['프로젝트','project'],   // ★ 추가
+  unit:   ['호기','unit'],           // ★ 추가
+  type:   ['공정구분','공정타입','step type','type'],  // ★ 추가
 };
 
 var H_STEPS_DEFAULT=[
@@ -1422,12 +1427,12 @@ function hsGenId(){ return Date.now().toString(36)+Math.random().toString(36).sl
 // ════════════════════════════════════════
 function setPage(p){
   // 페이지 표시/숨김
-  ['status','stamp','scan','qrhist'].forEach(id=>{
+  ['status','stamp','stamp-single','scan','qrhist'].forEach(id=>{
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  // 사이드바 활성화 (status/stamp/scan/qrhist 각각)
-  ['status','stamp','scan','qrhist'].forEach(id=>{
+  // 사이드바 활성화
+  ['status','stamp','stamp-single','scan','qrhist'].forEach(id=>{
     const nb=document.getElementById('nav-'+id);
     if(nb) nb.classList.toggle('on', id===p);
     const mn=document.getElementById('mn-'+id);
@@ -2058,7 +2063,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.25.1';
+var APP_VER='v5.26';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -3463,6 +3468,10 @@ function handleCSVUpload(input){
         toast('도면번호 컬럼을 찾을 수 없습니다 (구분자: '+(delim==='\t'?'탭':'콤마')+', 헤더: '+headers.slice(0,4).join('/')+'...)','err');
         return;
       }
+      // 추가 컬럼 (proj, unit, type)
+      if(cols.proj===undefined)cols.proj=detectCol(headers,['프로젝트','project']);
+      if(cols.unit===undefined)cols.unit=detectCol(headers,['호기','unit']);
+      if(cols.type===undefined)cols.type=detectCol(headers,['공정구분','공정타입','type']);
       _csvCols=cols;
       _csvData={};
       for(var i=1;i<lines.length;i++){
@@ -4412,17 +4421,18 @@ async function handleOrderExcel(input){
           if(rows.length<2){toast('데이터가 없습니다','err');return;}
           var hdr=rows[0].map(function(h){return String(h).trim().toLowerCase();});
           var col=function(keys){for(var k of keys){var i=hdr.findIndex(function(h){return h.includes(k);});if(i>=0)return i;}return -1;};
-          var cCust=col(['고객사','customer']);
+          // PO등록양식 순서: 고객사|프로젝트|도면번호|호기|수량|PO No|Order Line|Del Line|불출일|납기|등록자|공정구분
+          var cCust=col(['고객사','customer','납품처']);
           var cProj=col(['프로젝트','project']);
           var cDwg =col(['도면번호','dwg','drawing']);
           var cUnit=col(['호기','unit']);
           var cQty =col(['수량','qty','quantity']);
           var cPo  =col(['po no','po','발주번호']);
-          var cOl  =col(['order line','ord line','ol']);
-          var cDl  =col(['del line','dl']);
+          var cOl  =col(['order line','ord line','ol']);   // 옵션
+          var cDl  =col(['del line','dl']);                 // 옵션
+          var cIss =col(['불출일','issue']);                 // 옵션
           var cDue =col(['납기','due','duedate']);
           var cType=col(['공정구분','공정타입','type','step type']);
-          var cStep=col(['현재공정','공정','process','step']);
           if(cDwg<0){toast('도면번호 컬럼을 찾을 수 없습니다','err');return;}
 
           var added=0,skipped=0,stepLog=0;
@@ -4487,6 +4497,7 @@ async function handleOrderExcel(input){
             if(excelLogs.length)sb.from('harness_logs').upsert(excelLogs).then(function(){}).catch(function(){});
           }
           renderStatus();
+          renderOrderStampList(); // QR스탬프 발주목록 즉시 갱신
           var msg='신규 '+added+'건 등록';
           if(skipped>0)msg+=', '+skipped+'건 중복 유지';
           if(stepLog>0)msg+=', '+stepLog+'건 공정 반영';
