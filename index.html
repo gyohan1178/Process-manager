@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.38</title>
+<title>하네스 공정관리 v5.39</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.38</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.39</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.38 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.39 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1091,8 +1091,93 @@ function openManual(){
   var el=document.getElementById('manual-body');if(!el)return;
   var stepList=H_STEPS.map(function(s){return s.icon+' '+s.id;}).join(' → ');
   el.innerHTML=[
+    // ── 1. 공정현황 ──
     '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
     '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📊 1. 공정현황</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li><b>📤 Excel 업로드</b> → PO 일괄 등록 (하네스_PO등록양식.xlsx 사용)<br>',
+    '&nbsp;&nbsp;컬럼 순서: 고객사 | 프로젝트 | 도면번호 | 호기 | 수량 | PO No | Order Line* | Del Line* | 불출일* | 납기 | 등록자* | 공정구분* (* 옵션)</li>',
+    '<li>등록 즉시 QR 스탬프 발주 목록에도 자동 반영</li>',
+    '<li>납기 셀 클릭 → YY/MM/DD 직접 입력 후 Enter</li>',
+    '<li>완료 체크박스 → 수동 완료 처리</li>',
+    '<li>사이드바 <b>이력 관리</b> → 공정별 작업 로그 및 CSV 추출</li>',
+    '<li>컬럼 헤더 우측 경계 드래그 → 폭 조정 (자동 저장)</li>',
+    '<li>⬇ 양식 → 최신 PO등록양식 Excel 다운로드</li>',
+    '</ul></div>',
+
+    // ── 2. QR 스탬프 ──
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📐 2. QR 스탬프 (발주 기반 대량)</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>공정현황에서 Excel 업로드 → 좌측 발주 목록에 자동 표시</li>',
+    '<li><b>📁 폴더 선택</b> → 폴더 내 PDF를 도번으로 자동 매칭 (리비전 무시)<br>',
+    '&nbsp;&nbsp;매칭된 발주 클릭 → PDF 즉시 로드 + QR 자동 생성</li>',
+    '<li>발주 클릭 또는 PDF 뷰어에 드래그 → 직접 파일 선택 가능</li>',
+    '<li>QR 스탬프 드래그 → 위치 지정 / 우하단 핸들 드래그 → 크기 조정</li>',
+    '<li>↻90° → 세로 도면 회전</li>',
+    '<li><b>⬇ 해당도면 저장</b> / <b>🗂 전체병합저장</b> (2개 이상 로드 시)</li>',
+    '<li>저장 완료 → 발주 목록에서 자동 제거 → QR 이력 기록</li>',
+    '<li>PDF 출력물: 상단(고객사/프로젝트/호기/PO/OL/DL/납기) + 하단(출도일/등록자)</li>',
+    '</ul></div>',
+
+    // ── 3. 단건 QR 스탬프 ──
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">⚡ 3. 단건 QR 스탬프</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>발주등록 없이 PDF 파일 직접 추가 (클릭 또는 뷰어에 드래그, 여러 개 가능)</li>',
+    '<li>상단 입력란에 고객사·프로젝트·호기·도면번호·수량·PO No·OL·DL·납기 입력</li>',
+    '<li><b>[전체 적용]</b> → 추가된 모든 파일에 동일 정보 일괄 적용</li>',
+    '<li>입력 즉시 미리보기 반영 (상단/하단 텍스트 실시간 표시)</li>',
+    '<li>QR 스탬프 드래그 → 위치 / 우하단 핸들 드래그 → 크기 (%)</li>',
+    '<li>QR 크기는 도면 폭 대비 비율(%) — 어떤 사이즈 도면이든 동일하게 표시</li>',
+    '<li><b>📊 공정현황 반영</b> → PDF 저장 없이 공정현황만 등록</li>',
+    '<li><b>⬇ 해당도면 저장</b> / <b>🗂 전체병합저장</b> → 저장 시 공정현황 자동 등록 + 출도 완료</li>',
+    '<li>PDF 출력물: 상단(고객사·프로젝트·호기·PO·OL·DL·납기) + 하단(수량·불출일·출도일·등록자)</li>',
+    '<li>파일 순번(1/3 등) → 다중파일 병합 시 도면 우측 상단에 자동 표기</li>',
+    '</ul></div>',
+
+    // ── 4. QR 이력 ──
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📋 4. QR 이력</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>QR 스탬프·단건QR 저장 완료 시 자동 기록 (Supabase 동기화, 2개월 보관)</li>',
+    '<li>저장일시 / 도면번호 / 고객사 / 프로젝트 / PO No / 수량 / QR크기 / 파일명</li>',
+    '<li>📥 CSV 추출 / 건별 ✕ 삭제 / 전체 삭제</li>',
+    '</ul></div>',
+
+    // ── 5. QR 스캔 ──
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📷 5. QR 스캔</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>작업자 이름 입력 → 공정 선택 → 도면 QR 스캔</li>',
+    '<li><b>완료 모드 (기본)</b>: 스캔 1회 → 즉시 완료. 연속 스캔 지원</li>',
+    '<li><b>시간기록 모드</b>: 체크박스 활성 → 스캔 1회 = 시작 / 스캔 1회 = 완료</li>',
+    '<li>공정 선택 버튼: 완료 ✅ / 진행중 ▶ 실시간 표시</li>',
+    '<li>USB 스캐너 + 카메라 스캔 동시 지원</li>',
+    '<li>모바일: 하단 탭 📷스캔 / 📊현황 2개만 표시</li>',
+    '</ul></div>',
+
+    // ── 6. 공정 설정 ──
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">⚙ 6. 공정 설정</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>현재 공정 흐름: '+stepList+'</li>',
+    '<li>공정 추가 / 삭제 / 순서 변경 / 색상 설정 (출도는 삭제 불가)</li>',
+    '<li><b>공정구분 탭</b>: A / B / C형별 독립 공정 흐름 설정</li>',
+    '<li>저장 시 Supabase 동기화 → 모든 기기 즉시 반영</li>',
+    '</ul></div>',
+
+    // ── 7. 데이터 동기화 ──
+    '<div style="padding:14px 0">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">🔗 7. 데이터 동기화</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>Supabase 연결 시 PC·모바일 모든 기기 실시간 공유 (배지: ✓ 연결됨)</li>',
+    '<li>공정현황·QR이력 Supabase 저장 / 오프라인 시 localStorage 백업 동작</li>',
+    '<li>납품정보(단건 QR 입력값)는 세션 동안만 유지 — 새로고침 시 초기화</li>',
+    '</ul></div>',
+  ].join('');
+  document.getElementById('manual-ovl').classList.remove('hidden');
+}
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
     '<li>사이드바 <b>공정현황</b> → 현황판 / <b>이력 관리</b> → 공정 로그</li>',
     '<li>납기 셀 클릭 → YY/MM/DD 직접 입력 후 Enter</li>',
@@ -1141,17 +1226,6 @@ function openManual(){
     '<li><b>공정구분 탭</b>: A/B/C형별 공정 흐름 설정</li>',
     '<li>저장 시 Supabase 동기화 → 모든 기기 즉시 반영</li>',
     '</ul></div>',
-
-    '<div style="padding:14px 0">',
-    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">🔗 6. 데이터 동기화</h3>',
-    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
-    '<li>Supabase 연결 시 모든 기기 실시간 공유 (배지: ✓ 연결됨)</li>',
-    '<li>첫 화면: localStorage 데이터 즉시 표시 → 서버 데이터로 갱신 (5초 타임아웃)</li>',
-    '<li>오프라인 시 localStorage 백업으로 동작</li>',
-    '</ul></div>',
-  ].join('');
-  document.getElementById('manual-ovl').classList.remove('hidden');
-}
 
 function openStepSettings(){
   _editSteps=H_STEPS.map(function(s){return Object.assign({},s);});
@@ -2050,7 +2124,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.38';
+var APP_VER='v5.39';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
