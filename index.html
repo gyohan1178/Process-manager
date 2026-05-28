@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.27</title>
+<title>하네스 공정관리 v5.30</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.27</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.30</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.27 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.30 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -682,32 +682,6 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               </div>
             </div>
           </div>
-          <div class="csv-panel" id="csvPanel">
-            <div class="csv-panel-label">📋 납품정보 CSV</div>
-            <div class="csv-action-group">
-              <label class="csv-btn csv-btn-upload" title="CSV 파일 업로드">
-                <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVUpload(this)">
-                ⬆ 업로드
-              </label>
-              <button class="csv-btn csv-btn-tmpl" onclick="downloadCSVTemplate()" title="양식 다운로드">⬇ 양식 다운로드</button>
-            </div>
-            <div class="csv-sep"></div>
-            <div id="csvStatus2" class="csv-status-chip csv-status-none">○ 미업로드</div>
-            <div class="csv-info-box" id="csvInfo" style="display:none">
-              <span class="csv-col-badge" id="csvColInfo"></span>
-              <label class="csv-check"><input type="checkbox" id="csvUseTop" checked onchange="updateOverlayPreview()"> 상단</label>
-              <label class="csv-check"><input type="checkbox" id="csvUseBot" checked onchange="updateOverlayPreview()"> 하단</label>
-              <button class="csv-btn csv-btn-clear" onclick="clearCSV()">✕ 초기화</button>
-            </div>
-            <!-- 오버레이 미리보기 -->
-            <div id="overlayPreview" style="display:none;margin-top:6px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);font-size:9px;overflow:hidden">
-              <div id="overlayPreviewTop" style="padding:4px 8px;border-bottom:1px solid var(--border);color:var(--tx2);line-height:1.6"></div>
-              <div style="height:20px;background:rgba(23,85,244,.05);display:flex;align-items:center;justify-content:center">
-                <span style="font-size:8px;color:var(--tx3)">↑ 도면 ↓</span>
-              </div>
-              <div id="overlayPreviewBot" style="padding:4px 8px;border-top:1px solid var(--border);color:var(--tx2);line-height:1.6"></div>
-            </div>
-          </div>
           <div class="sbar">
             <span class="stag st-n" id="stFile">미선택</span>
             <span class="stag st-n" id="stQr">QR 대기</span>
@@ -796,71 +770,75 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
 
 <!-- PAGE: 단건 QR 스탬프 -->
-<div id="pg-stamp-single" class="page hidden" style="display:flex;height:100%;overflow:hidden">
-  <!-- 좌측 패널 (QR 스탬프와 동일 구조) -->
+<div id="pg-stamp-single" class="page hidden">
+  <div class="stamp-layout">
   <aside class="stamp-side">
     <div class="ssd-hd">
       <div class="ssd-lbl">⚡ 단건 QR 스탬프</div>
       <span class="cnt-pill" id="ssCntPill">0</span>
     </div>
-    <!-- 파일 추가 버튼 (폴더 아닌 파일 직접 선택) -->
-    <div style="padding:8px 10px 4px;flex-shrink:0;display:flex;gap:5px">
+    <div style="padding:8px 10px 4px;flex-shrink:0">
       <button onclick="document.getElementById('ss-file-input').click()"
-        style="flex:1;padding:8px 6px;border-radius:7px;border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s"
+        style="width:100%;padding:8px 6px;border-radius:7px;border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s"
         onmouseover="this.style.background='var(--blue)';this.style.color='#fff'"
-        onmouseout="this.style.background='var(--blue-lt)';this.style.color='var(--blue)'"
-        title="PDF 파일 선택 (여러 개 선택 가능)">
-        📄 파일 추가
+        onmouseout="this.style.background='var(--blue-lt)';this.style.color='var(--blue)'">
+        📄 파일 추가 (여러 개 가능)
       </button>
     </div>
     <input type="file" id="ss-file-input" accept=".pdf" multiple style="display:none" onchange="ssAddFiles(this.files);this.value=''">
-    <!-- 파일 목록 -->
     <div id="ss-file-list" style="flex:1;overflow-y:auto"></div>
   </aside>
 
-  <!-- 우측 메인 -->
-  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-    <!-- 상단 툴바 -->
-    <div class="stamp-topbar" style="flex-wrap:wrap;gap:6px;padding:7px 12px">
-      <!-- PO 정보 입력 (PO등록양식 컬럼 순서) -->
-      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1">
-        <input id="ss-cust" class="po-inp" placeholder="고객사 *" style="width:100px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
-        <input id="ss-proj" class="po-inp" placeholder="프로젝트" style="width:100px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
-        <input id="ss-dwg" class="po-inp" placeholder="도면번호 *" style="width:140px;font-size:11px;padding:4px 8px;font-family:var(--mono)" oninput="ssUpdateCurrent()">
-        <input id="ss-unit" class="po-inp" placeholder="호기" style="width:55px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
-        <input id="ss-qty" class="po-inp" type="number" min="1" placeholder="수량" value="1" style="width:55px;font-size:11px;padding:4px 8px;text-align:center" oninput="ssUpdateCurrent()">
-        <input id="ss-po" class="po-inp" placeholder="PO No" style="width:110px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
-        <input id="ss-ol" class="po-inp" placeholder="OL" style="width:40px;font-size:11px;padding:4px 8px;text-align:center" oninput="ssUpdateCurrent()">
-        <input id="ss-dl" class="po-inp" placeholder="DL" style="width:40px;font-size:11px;padding:4px 8px;text-align:center" oninput="ssUpdateCurrent()">
-        <input id="ss-due" class="po-inp" placeholder="납기 YY/MM/DD" style="width:100px;font-size:11px;padding:4px 8px" oninput="ssUpdateCurrent()">
-        <button onclick="ssApplyInfo()" style="padding:4px 10px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">전체 적용</button>
-      </div>
-      <!-- QR 크기 / 범위 / 저장 버튼 -->
-      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-        <span style="font-size:10px;color:var(--tx3)">QR</span>
-        <div style="display:flex;gap:2px">
-          <button class="zoom-btn" onclick="setSS_Size(20)" id="ss-sz20">20mm</button>
-          <button class="zoom-btn on" onclick="setSS_Size(30)" id="ss-sz30">30mm</button>
-          <button class="zoom-btn" onclick="setSS_Size(40)" id="ss-sz40">40mm</button>
+  <!-- 우측: QR스탬프와 동일 구조 -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0">
+    <div class="meta-panel">
+      <div class="mp-inner">
+        <div class="meta-fields">
+          <div class="fg"><div class="fl"><span class="req">●</span>고객사</div><input class="fi-inp" id="ss-cust" placeholder="예: Axcelis" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl"><span class="req">●</span>프로젝트</div><input class="fi-inp" id="ss-proj" placeholder="예: CXE Ultra" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl"><span class="req">●</span>호기</div><input class="fi-inp" id="ss-unit" placeholder="예: #1" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl"><span class="req">●</span>도면번호</div><input class="fi-inp" id="ss-dwg" placeholder="파일명 자동" style="font-family:var(--mono)" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl"><span class="req">●</span>수량</div><input class="fi-inp" id="ss-qty" type="number" min="1" value="1" style="text-align:center;font-weight:700;font-size:15px" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl">PO No</div><input class="fi-inp" id="ss-po" placeholder="PO-2026-001" style="font-family:var(--mono)" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl">OL</div><input class="fi-inp" id="ss-ol" placeholder="10" style="text-align:center" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl">DL</div><input class="fi-inp" id="ss-dl" placeholder="1" style="text-align:center" oninput="ssUpdateCurrent()"></div>
+          <div class="fg"><div class="fl">납기</div><input class="fi-inp" id="ss-due" placeholder="26/06/30" oninput="ssUpdateCurrent()"></div>
+          <button onclick="ssApplyInfo()" style="align-self:flex-end;padding:6px 14px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='var(--blue)';this.style.color='#fff'" onmouseout="this.style.background='var(--blue-lt)';this.style.color='var(--blue)'">전체 적용</button>
         </div>
-        <div style="width:1px;height:16px;background:var(--border)"></div>
-        <button class="tg" id="ss-all" onclick="setSSApply(true)">전체</button>
-        <button class="tg on" id="ss-first" onclick="setSSApply(false)">첫장</button>
-        <div style="width:1px;height:16px;background:var(--border)"></div>
-        <button onclick="ssRotate()" class="zoom-btn" style="width:44px">↻90°</button>
-        <button onclick="ssPosReset()" class="zoom-btn">위치초기화</button>
-        <div style="width:1px;height:16px;background:var(--border)"></div>
-        <button id="ss-btn-status" onclick="ssSaveToOrdersManual()" class="btn btn-outline btn-sm" title="공정현황에 등록 (QR 저장 없이)">📊 공정현황 반영</button>
+        <div class="qr-panel">
+          <div class="qr-img" id="ss-qr-box"><div class="qr-empty">QR<br>미생성</div></div>
+          <div class="qr-cfg">
+            <div class="cr"><span class="cl">QR 크기</span><div class="sz-btns">
+              <button class="sz-btn" id="ss-sz20" onclick="setSS_Size(20)">20mm</button>
+              <button class="sz-btn on" id="ss-sz30" onclick="setSS_Size(30)">30mm</button>
+              <button class="sz-btn" id="ss-sz40" onclick="setSS_Size(40)">40mm</button>
+            </div></div>
+            <div class="cr"><span class="cl">범위</span><div class="tg-grp">
+              <button class="tg" id="ss-all" onclick="setSSApply(true)">전체</button>
+              <button class="tg on" id="ss-first" onclick="setSSApply(false)">첫장</button>
+            </div></div>
+            <div class="cr" style="gap:6px">
+              <button class="mb" onclick="ssRotate()">↻90°</button>
+              <button class="mb" onclick="ssPosReset()">위치초기화</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sbar">
+      <span id="ss-page-info" style="font-size:11px;color:var(--tx3)"></span>
+      <button class="zoom-btn" onclick="ssPageNav(-1)" id="ss-nav-prev" style="display:none">‹</button>
+      <button class="zoom-btn" onclick="ssPageNav(1)" id="ss-nav-next" style="display:none">›</button>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button id="ss-btn-status" onclick="ssSaveToOrdersManual()" class="btn btn-outline btn-sm">📊 공정현황 반영</button>
         <button id="ss-btn-save" onclick="ssSaveCurrent()" class="btn btn-pr btn-sm" disabled>⬇ 해당도면 저장</button>
         <button id="ss-btn-merge" onclick="ssSaveMerge()" class="btn btn-gr btn-sm hidden">🗂 전체병합저장</button>
       </div>
     </div>
-
-    <!-- PDF 뷰어 -->
     <div id="ss-viewer" style="flex:1;overflow:auto;position:relative;background:#e5e7eb;display:flex;align-items:flex-start;justify-content:center;padding:16px"
-      ondragover="event.preventDefault();document.getElementById('ss-viewer').style.outline='3px dashed var(--blue)'"
-      ondragleave="document.getElementById('ss-viewer').style.outline=''"
-      ondrop="event.preventDefault();document.getElementById('ss-viewer').style.outline='';ssAddFiles(event.dataTransfer.files)">
+      ondragover="event.preventDefault();this.style.outline='3px dashed var(--blue)'"
+      ondragleave="this.style.outline=''"
+      ondrop="event.preventDefault();this.style.outline='';ssAddFiles(event.dataTransfer.files)">
       <div id="ss-empty" style="margin:auto;text-align:center;color:var(--tx3)">
         <div style="font-size:40px;margin-bottom:10px">📄</div>
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">PDF를 추가하세요</div>
@@ -875,15 +853,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         </div>
       </div>
     </div>
-
-    <!-- 페이지 네비게이션 -->
-    <div id="ss-page-nav" style="display:none;align-items:center;justify-content:center;gap:8px;padding:6px;border-top:1px solid var(--border);flex-shrink:0;font-size:11px;background:var(--bg)">
-      <button onclick="ssPageNav(-1)" class="zoom-btn">‹</button>
-      <span id="ss-page-info" style="color:var(--tx2)">1 / 1</span>
-      <button onclick="ssPageNav(1)" class="zoom-btn">›</button>
-    </div>
   </div>
-</div>
+  </div>
 </div>
 
 <div id="pg-qrhist" class="page hidden" style="padding:20px;overflow-y:auto">
@@ -2074,7 +2045,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.27';
+var APP_VER='v5.30';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -4368,16 +4339,16 @@ function loadXLSX(cb){
 function downloadOrderTemplate(){
   loadXLSX(function(){
     var typeOpts=H_STEP_TYPES.map(function(t){return t.code;}).join('/');
-    var stepOpts=H_STEPS.map(function(s){return s.id;}).join(', ');
     var wb=XLSX.utils.book_new();
-    var headers=[['고객사','프로젝트','도면번호','호기','수량','PO No','Order Line','Del Line','납기(YYMMDD)','공정구분','현재공정']];
-    var note=[['','','','','','','','','','('+typeOpts+')','('+stepOpts+')']];
+    // ★ PO등록양식 컬럼 순서: 고객사|프로젝트|도면번호|호기|수량|PO No|Order Line|Del Line|불출일|납기|등록자|공정구분
+    var headers=[['고객사','프로젝트','도면번호','호기','수량','PO No','Order Line','Del Line','불출일','납기','등록자','공정구분']];
+    var note=[['','','','','','','(옵션)','(옵션)','(옵션) YYYY-MM-DD','YYYY-MM-DD','(옵션)','(옵션) '+typeOpts+' 기본A']];
     var sample=[
-      ['Axcelis','CXE Ultra','1600791_M_00','#1',2,'PO-2026-001','10','1','260630','A','재단'],
-      ['Edwards Korea','DF Project','1614190_E_00','2',1,'PO-2026-002','20','1','260715','B',''],
+      ['Axcelis','CXE Ultra','1600791_M_00','#1',2,'PO-2026-001','10','1','2026-05-28','2026-06-30','','A'],
+      ['Edwards Korea','DF Project','1614190_E_00','2',1,'PO-2026-002','20','1','2026-05-28','2026-07-15','','B'],
     ];
     var ws=XLSX.utils.aoa_to_sheet([...headers,...note,...sample]);
-    ws['!cols']=[{wch:12},{wch:14},{wch:18},{wch:6},{wch:6},{wch:14},{wch:10},{wch:8},{wch:12},{wch:8},{wch:10}];
+    ws['!cols']=[{wch:12},{wch:14},{wch:20},{wch:6},{wch:6},{wch:14},{wch:11},{wch:9},{wch:13},{wch:13},{wch:8},{wch:8}];
     XLSX.utils.book_append_sheet(wb,ws,'PO등록양식');
     XLSX.writeFile(wb,'하네스_PO등록양식.xlsx');
     toast('양식 다운로드 완료','ok');
