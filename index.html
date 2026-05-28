@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.19</title>
+<title>하네스 공정관리 v5.22</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -380,7 +380,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .scan-layout{display:flex!important;flex-direction:column;overflow-y:auto;height:auto}
   .scan-left{border-right:none;border-bottom:1px solid var(--border);padding:12px;gap:10px;overflow-y:visible;min-height:auto}
   .scan-right{background:var(--bg);padding-bottom:16px;overflow-y:visible}
-  .sc-steps-grid{grid-template-columns:repeat(2,1fr)!important}
+  .sc-steps-grid{grid-template-columns:repeat(3,1fr)!important;gap:5px!important}
+  .sc-step{padding:6px 4px!important;min-height:48px!important}
+  .sc-step-ic{font-size:14px!important}
+  .sc-step-nm{font-size:10px!important}
+  .sc-step-st{font-size:9px!important}
+  .sc-steps-panel{padding:8px!important}
+  .sc-steps-title{margin-bottom:6px!important;font-size:10px!important}
   .sc-btn{padding:18px 0;font-size:17px}
   .sp-bar{padding:9px 12px;gap:7px}
   .sp-search{width:100%;order:3}
@@ -472,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.19</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.22</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -549,7 +555,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.19 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.22 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -596,6 +602,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div class="sp-empty-d">QR 스캔 탭에서 <b>출도</b> 공정을 스캔하면<br>도면이 자동으로 등록됩니다</div>
         </div>
       </div>
+      <div class="sp-content hidden" id="sp-log"></div>
     </div>
 
     <!-- PAGE: QR 스탬프 -->
@@ -819,18 +826,39 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
 <!-- 모바일 하단 내비게이션 -->
 <nav class="mob-nav" id="mob-nav">
-  <button class="mob-nav-btn" id="mn-status" onclick="setPage('status')">
-    <span class="mn-ic">📊</span>공정현황
-  </button>
   <button class="mob-nav-btn on" id="mn-scan" onclick="setPage('scan')">
-    <span class="mn-ic">📷</span>QR스캔
+    <span class="mn-ic">📷</span>스캔
   </button>
-  <button class="mob-nav-btn" id="mn-stamp" onclick="setPage('stamp')">
-    <span class="mn-ic">📐</span>QR스탬프
+  <button class="mob-nav-btn" id="mn-status" onclick="setPage('status')">
+    <span class="mn-ic">📊</span>현황
   </button>
 </nav>
 
+
+
 <script>
+// ════════════════════════════════════════
+// 모바일 더보기 메뉴
+// ════════════════════════════════════════
+function mobMenuToggle(){
+  var menu=document.getElementById('mob-menu');
+  var ovl=document.getElementById('mob-ovl');
+  var btn=document.getElementById('mn-more');
+  if(!menu)return;
+  var open=menu.style.display==='none';
+  menu.style.display=open?'block':'none';
+  if(ovl)ovl.style.display=open?'block':'none';
+  if(btn)btn.classList.toggle('on',open);
+}
+function mobMenuClose(){
+  var menu=document.getElementById('mob-menu');
+  var ovl=document.getElementById('mob-ovl');
+  var btn=document.getElementById('mn-more');
+  if(menu)menu.style.display='none';
+  if(ovl)ovl.style.display='none';
+  if(btn)btn.classList.remove('on');
+}
+
 // ════════════════════════════════════════
 // PDF.js
 // ════════════════════════════════════════
@@ -981,69 +1009,66 @@ function removeStepType(ti){
 
 function openManual(){
   var el=document.getElementById('manual-body');if(!el)return;
-  var typeList=H_STEP_TYPES.map(function(t){return '<li><b>'+t.code+'형</b> - '+(t.code==='A'?'기본 공정 (출도→'+H_STEPS.map(function(s){return s.id;}).join('→')+')':t.name+(t.steps?': '+t.steps.map(function(s){return s.id;}).join('→'):''))+'</li>';}).join('');
   var stepList=H_STEPS.map(function(s){return s.icon+' '+s.id;}).join(' → ');
   el.innerHTML=[
     '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
-    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📊 1. 공정현황판</h3>',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📊 1. 공정현황</h3>',
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
-    '<li>상단 <b>진행중 / 완료 / 전체</b> 버튼으로 필터링</li>',
-    '<li>고객사·프로젝트 드롭다운 및 검색창으로 조회</li>',
-    '<li><b>납기</b> 셀 클릭 → YY/MM/DD 형식으로 직접 입력 후 Enter</li>',
-    '<li><b>완료 체크박스</b> → 수동 완료 처리 (자동 완료 탭 이동)</li>',
-    '<li>컬럼 헤더 우측 끝 드래그 → 컬럼 폭 조정 (자동 저장)</li>',
-    '<li><b>📤 Excel 업로드</b> → PO 일괄 등록 (공정구분 A/B/C형 포함)</li>',
-    '<li>⬇ 양식 → Excel 업로드 양식 다운로드</li>',
-    '<li><b>📥 CSV</b> → 현황판 탭: 현황 CSV / 이력 탭: 이력 CSV 다운로드</li>',
+    '<li>사이드바 <b>공정현황</b> → 현황판 / <b>이력 관리</b> → 공정 로그</li>',
+    '<li>납기 셀 클릭 → YY/MM/DD 직접 입력 후 Enter</li>',
+    '<li>완료 체크박스 → 수동 완료 처리</li>',
+    '<li>📤 Excel 업로드 → PO 일괄 등록 (공정구분 A/B/C형 포함)</li>',
+    '<li>📥 CSV → 현황판 CSV / 이력 관리 CSV 다운로드</li>',
+    '<li>컬럼 헤더 드래그 → 컬럼 폭 조정 (자동 저장)</li>',
     '</ul></div>',
 
     '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
     '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📐 2. QR 스탬프</h3>',
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
-    '<li>좌측 패널에 PDF 드래그 또는 [PDF 추가] 클릭</li>',
-    '<li>고객사·프로젝트·호기·도면번호·수량 입력 → QR 자동 생성</li>',
-    '<li><b>QR 스탬프를 드래그</b>하여 위치 지정 (우하단 핸들로 크기 조정)</li>',
-    '<li>⬇ 현재저장 / 전체저장 / 병합저장으로 저장</li>',
-    '<li>📋 납품정보 CSV 업로드 후 [상단] [하단] 체크 → 납품정보 + 파일순번 표기</li>',
-    '<li>일괄입력 바: 고객사·프로젝트·호기·수량 공통 입력</li>',
-    '<li>✕ 버튼(항상 표시)으로 파일 삭제 가능</li>',
+    '<li><b>납품정보 CSV 업로드</b> → 좌측에 발주 목록 자동 표시</li>',
+    '<li>발주 클릭 → PDF 파일 선택 → 미리보기 표시</li>',
+    '<li><b>📁 폴더 선택</b> → 폴더 내 PDF를 발주 도번과 자동 매칭 (리비전 무시)</li>',
+    '<li>매칭된 발주 클릭 → PDF 즉시 로드 + QR 자동 생성</li>',
+    '<li>QR 스탬프 드래그하여 위치 지정, 우하단 핸들로 크기 조정</li>',
+    '<li>↻90° 버튼 → 세로 도면 회전</li>',
+    '<li>⬇ 현재저장 / 전체저장 / 🗂 병합저장 (2개 이상 로드 시 표시)</li>',
+    '<li>저장 완료 → 발주 목록에서 제거 → QR 이력에 자동 기록</li>',
+    '<li>납품정보 CSV는 세션 동안만 유지 (새로고침 시 초기화)</li>',
     '</ul></div>',
 
     '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
-    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📷 3. QR 스캔</h3>',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📋 3. QR 이력</h3>',
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
-    '<li>작업자 이름 입력 후 공정 선택</li>',
-    '<li><b>완료 모드 (기본)</b>: 도면 QR 스캔 → 즉시 완료 처리. 연속 스캔 지원 (Lot 100개)</li>',
-    '<li><b>시간기록 모드</b>: 우상단 체크박스 체크 → 시작/완료 분리 기록</li>',
-    '<li>공정 선택 후 카메라 스캔 또는 USB 스캐너 사용</li>',
-    '<li>완료 모드: 스캔 후 카메라 유지 → 다음 도면 바로 스캔 가능</li>',
+    '<li>QR 스탬프 저장 완료 시 자동 기록 (저장일시/도면번호/고객사/PO/수량/QR크기)</li>',
+    '<li>📥 CSV 추출 → 엑셀로 내보내기</li>',
+    '<li>건별 ✕ 삭제 / 전체 삭제</li>',
     '</ul></div>',
 
     '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
-    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">⚙ 4. 공정 설정</h3>',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📷 4. QR 스캔</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>작업자 이름 입력 → 공정 선택 → 도면 QR 스캔</li>',
+    '<li><b>완료 모드 (기본)</b>: 스캔 즉시 완료 처리. 카메라 유지로 연속 스캔 (Lot 100개)</li>',
+    '<li><b>시간기록 모드</b>: 상단 체크박스 → 시작/완료 분리 기록</li>',
+    '<li>USB 스캐너 + 카메라 스캔 지원</li>',
+    '</ul></div>',
+
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">⚙ 5. 공정 설정</h3>',
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
     '<li>현재 공정 흐름: '+stepList+'</li>',
-    '<li>공정 추가·삭제·순서변경 가능 (출도는 삭제 불가)</li>',
-    '<li><b>공정 구분 탭</b>: A/B/C형별로 다른 공정 흐름 설정',
-    '<ul style="margin-top:4px">'+typeList+'</ul></li>',
-    '<li>저장 시 Supabase 동기화 → 모든 기기에 즉시 반영</li>',
-    '</ul></div>',
-
-    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
-    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">🔗 5. 데이터 동기화</h3>',
-    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
-    '<li>Supabase 연결 시 모든 기기 실시간 공유 (배지: ✓ 연결됨)</li>',
-    '<li>⚠ 일시정지 배지 클릭 → supabase.com에서 Resume 후 재연결</li>',
-    '<li>오프라인 시 localStorage에 임시 저장, 재연결 시 자동 반영</li>',
+    '<li>공정 추가/삭제/순서변경/색상 (출도는 삭제 불가)</li>',
+    '<li><b>공정구분 탭</b>: A/B/C형별 공정 흐름 설정</li>',
+    '<li>저장 시 Supabase 동기화 → 모든 기기 즉시 반영</li>',
     '</ul></div>',
 
     '<div style="padding:14px 0">',
-    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📋 6. QR 코드 형식</h3>',
-    '<div style="background:#0f172a;border-radius:var(--r);padding:10px 14px;font-family:var(--mono);font-size:11px;color:#00d2ff;margin-bottom:8px">',
-    'CUST:Axcelis | PROJ:CXE | UNIT:#1 | DWG:1600791_M_00 | QTY:2',
-    '</div>',
-    '<p style="font-size:11px;color:var(--tx3)">납품정보 QR 포함 시: + PO:PO-001 | OL:10 | DL:1 (USB 스캐너 인식 최적화)</p>',
-    '</div>',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">🔗 6. 데이터 동기화</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li>Supabase 연결 시 모든 기기 실시간 공유 (배지: ✓ 연결됨)</li>',
+    '<li>첫 화면: localStorage 데이터 즉시 표시 → 서버 데이터로 갱신 (5초 타임아웃)</li>',
+    '<li>오프라인 시 localStorage 백업으로 동작</li>',
+    '</ul></div>',
   ].join('');
   document.getElementById('manual-ovl').classList.remove('hidden');
 }
@@ -1861,35 +1886,47 @@ function renderScanStepIndicator(){
 
 function renderScanSteps(){
   const el=document.getElementById('sc-steps'); if(!el) return;
-  el.innerHTML=H_STEPS.map(s=>{
+  const order=HS.job?HS.orders.find(o=>o.dwg_no===HS.job.dwg_no):null;
+  const steps=getStepsForType(order&&order.step_type);
+  el.innerHTML=steps.map(s=>{
     const running=HS.job&&HS.logs.some(l=>!l.ended_at&&l.process===s.id&&l.dwg_no===HS.job.dwg_no);
+    const done=HS.job&&HS.logs.some(l=>l.ended_at&&l.process===s.id&&l.dwg_no===HS.job.dwg_no);
     const isSel=HS.selStep===s.id;
-    const cls='sc-step'+(isSel?' sel':'')+(running?' running':'');
-    const brd=isSel?`border-color:${s.color};background:${s.color}12`:(running?'border-color:var(--green);background:var(--green-lt)':'');
-    const nmColor=isSel?s.color:(running?'var(--green)':'var(--tx)');
-    const sub=running?'▶ 진행중':(isSel?'✓ 선택됨':'');
-    return `<div class="${cls}" style="${brd}" onclick="HS.selStep='${s.id}';renderScanSteps();renderScanActions();renderScanStepIndicator()">
-      <span class="sc-step-ic">${s.icon}</span>
-      <div class="sc-step-nm" style="color:${nmColor}">${s.id}</div>
-      ${sub?`<div class="sc-step-st" style="color:${isSel?s.color:'var(--green)'}">${sub}</div>`:'<div class="sc-step-st"></div>'}
+    const bg=isSel?s.color:done?'var(--bg2)':running?'var(--green)':'var(--bg)';
+    const color=isSel||running?'#fff':done?'var(--tx3)':'var(--tx)';
+    const border=isSel?s.color:done?'var(--border)':running?'var(--green)':'var(--border2)';
+    const icon=done?'✅':running?'▶':s.icon;
+    return `<div onclick="HS.selStep='${s.id}';renderScanSteps();renderScanActions();renderScanStepIndicator()"
+      style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 4px;border-radius:8px;border:1.5px solid ${border};background:${bg};cursor:pointer;transition:all .15s;min-height:52px">
+      <span style="font-size:13px;line-height:1">${icon}</span>
+      <div style="font-size:10px;font-weight:700;color:${color};text-align:center;line-height:1.2">${s.id}</div>
     </div>`;
   }).join('');
 }
 
 function renderScanActions(){
   const el=document.getElementById('sc-actions'); if(!el) return;
-  const running=HS.job&&HS.selStep&&HS.logs.some(l=>!l.ended_at&&l.process===HS.selStep&&l.dwg_no===HS.job.dwg_no);
-  const canStart=!!HS.job&&!!HS.selStep&&!running;
-  const canEnd=!!HS.job&&!!HS.selStep&&running;
-  // 현재 상태에서 다음 스캔 시 어떤 동작인지 강조
   if(!HS.timeMode){
-    // 완료 모드: 완료 버튼만
-    const canComplete=!!HS.job&&!!HS.selStep;
-    el.innerHTML=`<button class="sc-btn sc-btn-end" onclick="workerEnd(false)"${canComplete?'':' disabled'} style="${canComplete?'box-shadow:0 0 0 3px rgba(13,171,106,.3)':''}">✅ ${HS.selStep||'공정 선택'} 완료</button>`;
+    // ── 완료 모드: 버튼 없음. 인디케이터만 ──
+    if(!HS.selStep){
+      el.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--tx3)">↑ 공정을 선택하세요</div>';
+    } else if(!HS.job){
+      el.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--tx3)">도면 QR을 스캔하세요</div>';
+    } else {
+      el.innerHTML='<div style="text-align:center;padding:8px;font-size:12px;background:rgba(13,171,106,.1);border-radius:var(--r);color:var(--green);font-weight:600">📷 스캔 → <b>'+HS.selStep+'</b> 완료 처리</div>';
+    }
   } else {
-    el.innerHTML=
-      `<button class="sc-btn sc-btn-start" onclick="workerStart(false)"${canStart?'':' disabled'} style="${canStart?'box-shadow:0 0 0 3px rgba(23,85,244,.3)':''}">▶ ${HS.selStep||'공정 선택'} 시작</button>`+
-      `<button class="sc-btn sc-btn-end" onclick="workerEnd(false)"${canEnd?'':' disabled'} style="${canEnd?'box-shadow:0 0 0 3px rgba(13,171,106,.3)':''}">■ 완료</button>`;
+    // ── 시간기록 모드: 버튼 없음. 상태 안내만 ──
+    const running=HS.job&&HS.selStep&&HS.logs.some(l=>!l.ended_at&&l.process===HS.selStep&&l.dwg_no===HS.job.dwg_no);
+    if(!HS.selStep){
+      el.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--tx3)">↑ 공정을 선택하세요</div>';
+    } else if(!HS.job){
+      el.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--tx3)">도면 QR을 스캔하세요</div>';
+    } else if(running){
+      el.innerHTML='<div style="text-align:center;padding:8px;font-size:12px;background:rgba(23,85,244,.1);border-radius:var(--r);color:var(--blue);font-weight:600">📷 스캔 → <b>'+HS.selStep+'</b> 완료</div>';
+    } else {
+      el.innerHTML='<div style="text-align:center;padding:8px;font-size:12px;background:rgba(13,171,106,.1);border-radius:var(--r);color:var(--green);font-weight:600">📷 스캔 → <b>'+HS.selStep+'</b> 시작</div>';
+    }
   }
 }
 
@@ -1918,7 +1955,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.19';
+var APP_VER='v5.22';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -1971,7 +2008,10 @@ function showVersionModal(){
 var _spTab='board';
 function setSpTab(tab){
   _spTab=tab;
-  ['board','log'].forEach(t=>{const b=document.getElementById('spt-'+t);if(b)b.classList.toggle('on',t===tab);});
+  ['board','log'].forEach(t=>{
+    const b=document.getElementById('spt-'+t);if(b)b.classList.toggle('on',t===tab);
+    const c=document.getElementById('sp-'+t);if(c)c.classList.toggle('hidden',t!==tab);
+  });
   refreshSpTab();
 }
 function refreshSpTab(){
@@ -2073,7 +2113,7 @@ function fmtDate(d){
 var _selLogs=new Set();
 
 function renderLogMgmt(){
-  const board=document.getElementById('sp-board');if(!board)return;
+  const board=document.getElementById('sp-log');if(!board)return;
   const q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
   let logs=[...HS.logs];
   if(q)logs=logs.filter(l=>(l.dwg_no||'').toLowerCase().includes(q)||(l.worker||'').toLowerCase().includes(q)||(l.process||'').toLowerCase().includes(q)||(l.customer||'').toLowerCase().includes(q));
@@ -2634,6 +2674,9 @@ function renderOrderStampList(){
   el.innerHTML=
     (loadedCount?'<div style="padding:3px 10px;font-size:9px;font-weight:700;color:var(--tx3);background:var(--bg2);border-bottom:1px solid var(--border)">로드된 파일 ('+loadedCount+')</div>'+loadedHtml:'')
     +(pendingCount?'<div style="padding:3px 10px;font-size:9px;font-weight:700;color:var(--tx3);background:var(--bg2);border-bottom:1px solid var(--border)">'+(hasFolderScan?'매칭 발주':'발주 목록')+' ('+pendingCount+')</div>'+pendingHtml:'');
+
+  // 전체저장/병합저장 버튼 상태 갱신
+  if(typeof updateBadge==='function')updateBadge();
 
   }catch(e){
     console.error('renderOrderStampList err:',e);
