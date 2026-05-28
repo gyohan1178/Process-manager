@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.35</title>
+<title>하네스 공정관리 v5.37</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -478,7 +478,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.35</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.37</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.35 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.37 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -2050,7 +2050,7 @@ function renderScanLog(){
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.35';
+var APP_VER='v5.37';
 var VER_LOG=[
   {v:'v5.1',d:'2026-05', t:'폴더 선택 + 도번/리비전 자동 매칭 (최상위 PDF 스캔)'},  {v:'v5.0',d:'2026-05', t:'QR 출력 이력 관리 + 공정현황-QR 스탬프 데이터 연결 (발주 선택 모달, 자동 매칭)'},  {v:'v4.9',d:'2026-05', t:'도면 비율별 폰트 자동 조정 + 작성일 우측 하단'},  {v:'v4.8',d:'2026-05', t:'(회전) ↻90° 버튼으로 세로 도면 회전 지원 / (파일순번) 다중파일시 우측상단 1/3 항상 표기 / (QR위치) 캔버스 직접 합성으로 정확한 위치 보장 / (병합저장) 위치 자동동기화'},  {v:'v4.7',d:'2026-05', t:'QR위치 저장 직전 DOM동기화+잘못된hasCSVChk보정삭제 / CSV오버레이 체크박스기준실행 / 사용자매뉴얼 추가(사이드바 📖버튼)'},  {v:'v4.6',d:'2026-05', t:'(1)CSV상단표기버그수정+파일순번+하단날짜/등록자 (2)삭제X버튼 상시표기 (3)일괄입력수량추가 (4)QR위치CSV오버레이보정 (5)수량글씨색수정 (6)완료모드기본+시간기록모드토글 (7)연속스캔지원'},  {v:'v4.5',d:'2026-05', t:'공정구분 A/B/C형 — 공정설정 2탭 (공정단계/공정구분), 구분별 체크박스 공정 선택, Supabase 동기화, Excel 업로드 공정구분 컬럼 추가, 현황판 구분 뱃지 표시'},  {v:'v4.3',d:'2026-05', t:'이력 CSV에 기본정보(고객사/PO/OL/DL/납기 등) 포함, orders 조회 후 CSV 순으로 참조'},  {v:'v4.2',d:'2026-05', t:'CSV 내보내기: 현황판탭=현황CSV(PO/납기/완료여부 포함), 이력관리탭=이력CSV'},  {v:'v4.1',d:'2026-05', t:'납기 편집창 YY/MM/DD 텍스트 입력 (슬래시 자동삽입, Enter 저장)'},  {v:'v4.0',d:'2026-05', t:'납기 YY/MM/DD 형식, 수동완료 체크 시 진행중→완료탭 이동 수정'},  {v:'v3.9',d:'2026-05', t:'납기 YY/MM/DD 텍스트 표시 (클릭→달력 편집), 공정현황 완료 체크박스 추가 (수동 완료처리)'},  {v:'v3.8',d:'2026-05', t:'납기 YYMMDD 표시 (클릭→달력 편집), PDF 오버레이 납기 현황판 수동입력값 우선 반영'},  {v:'v3.7',d:'2026-05', t:'현황판 납기 직접 입력/수정 (date picker, Supabase 즉시 저장)'},  {v:'v3.6',d:'2026-05', t:'공정설정 Supabase 동기화 — 저장 시 즉시 반영, 접속 시 최신 설정 로드 (모든 기기 동일)'},  {v:'v3.5',d:'2026-05', t:'현황판 호기·수량 복원, 납기 컬럼 추가 (CSV/QR 자동 참조)'},  {v:'v3.4',d:'2026-05', t:'공정현황 테이블 컬럼 폭 드래그 조정 (헤더 우측 핸들), 폭 localStorage 저장'},  {v:'v3.3',d:'2026-05', t:'공정현황 컬럼 변경: 고객사/PO No/Order Line/Del Line/프로젝트/도면번호, QR에는 PO+OL+DL만 포함'},  {v:'v3.2',d:'2026-05', t:'납품정보 QR 내용 포함 — DEST/PO/ORD/DEL/DUE/DQTY/ISS 필드 추가, 다중 발주시 발주 선택 UI, 출도 스캔시 납품정보 자동 저장'},  {v:'v3.1',d:'2026-05', t:'공정현황 납품정보 연동 (CSV 매칭 행 표시) / QR 스탬프 코너 리사이즈 핸들 / QR 오류수정 H레벨+카메라 고해상도+폴백'},  {v:'v3.0',d:'2026-05', t:'공정현황 검색창 추가 — 도면번호/고객사/프로젝트/호기/작업자 실시간 검색, × 초기화 버튼'},  {v:'v2.9',d:'2026-05', t:'Supabase SDK 지연 로딩으로 변경 — 페이지 블로킹 완전 해결, 버튼 즉시 활성화'},  {v:'v2.8',d:'2026-05',
    t:'CSV 오버레이 완전 재설계 — pdf.js 래스터화 후 축소 삽입 (주석 위치 보존), 파일 ✕ 삭제 버튼 개선, 버전 이력 스크롤 추가'},
@@ -3740,7 +3740,8 @@ function ssAddFiles(fileList){
       drawingNo:dno,customer:ssField('ss-cust'),project:ssField('ss-proj'),
       unit:ssField('ss-unit'),po:ssField('ss-po'),qty:parseInt(ssField('ss-qty'))||1,
       ol:ssField('ss-ol'),dl:ssField('ss-dl'),due:ssField('ss-due'),
-      pos:{x:68,y:8},posSet:false,qrURL:null,saved:false,qrSize:SS.qrSize});
+      pos:{x:68,y:8},posSet:false,qrURL:null,saved:false,qrSize:SS.qrSize,
+      qrFrac:null}); // qrFrac: null이면 첫 렌더 시 drawW 기준으로 자동 결정
   });
   ssRenderList();
   if(SS.files.length>0&&SS.idx<0)ssSelectFile(0);
@@ -3860,6 +3861,7 @@ function ssDrawOverlay(entry,cv,cache){
   if(entry.po)      topFields.push('PO: '+entry.po);
   if(entry.ol)      topFields.push('OL: '+entry.ol);
   if(entry.dl)      topFields.push('DL: '+entry.dl);
+  if(entry.due)     topFields.push('납기: '+entry.due);
   var topText=topFields.join('   ')||(entry.drawingNo||'(정보를 입력하세요)');
   ctx.fillStyle='#1a2240';ctx.font='600 '+tFsz+'px "Noto Sans KR","Arial",sans-serif';
   var tw=ctx.measureText(topText).width;
@@ -3884,20 +3886,18 @@ function ssDrawOverlay(entry,cv,cache){
 
 
 function ssShowStampOnCanvas(entry,cv,drawOffX,drawOffY,drawW,drawH){
-  // CSS stamp 위치 업데이트 (드래그용)
   var stamp=document.getElementById('ss-stamp');
   var img=document.getElementById('ss-stamp-img');
   var szLbl=document.getElementById('ss-stamp-size');
   if(!stamp||!img||!cv||!entry.qrURL){if(stamp)stamp.style.display='none';return;}
+  // ★ qrFrac: 도면 폭 대비 비율로 QR 크기 결정 (페이지 크기 무관)
+  if(!entry.qrFrac)entry.qrFrac=(entry.qrSize||30)/210*0.8;
   img.src=entry.qrURL;
-  // QR 크기: mm → pt → canvas px (drawW 기준)
-  var qrPx=Math.round((entry.qrSize||SS.qrSize||30)*72/25.4*(drawW/(cv.offsetWidth||cv.width)));
+  var qrPx=Math.max(20,Math.round(entry.qrFrac*drawW));
   img.style.width=img.style.height=qrPx+'px';
-  if(szLbl)szLbl.textContent=(entry.qrSize||SS.qrSize||30)+'mm';
-  // 위치: drawOffX, drawOffY 기준으로 오프셋
-  var stampX=drawOffX+Math.round(entry.pos.x/100*drawW);
-  var stampY=drawOffY+Math.round(entry.pos.y/100*drawH);
-  stamp.style.left=stampX+'px';stamp.style.top=stampY+'px';
+  if(szLbl)szLbl.textContent=Math.round(entry.qrFrac*100)+'%';
+  stamp.style.left=(drawOffX+Math.round(entry.pos.x/100*drawW))+'px';
+  stamp.style.top=(drawOffY+Math.round(entry.pos.y/100*drawH))+'px';
   stamp.style.display='block';
 }
 
@@ -3957,9 +3957,16 @@ function ssApplyInfo(){
 }
 
 function setSS_Size(mm){
-  SS.qrSize=mm;SS.files.forEach(function(e){e.qrSize=mm;});
+  SS.qrSize=mm;
+  var frac=mm/210*0.8; // A4 기준 비율 환산
+  SS.qrFrac=frac;
+  SS.files.forEach(function(e){e.qrSize=mm;e.qrFrac=frac;});
   ['20','30','40'].forEach(function(s){var b=document.getElementById('ss-sz'+s);if(b)b.classList.toggle('on',parseInt(s)===mm);});
-  if(SS.idx>=0)ssShowStamp(SS.files[SS.idx]);
+  if(SS.idx>=0&&SS.files[SS.idx]){
+    var en=SS.files[SS.idx];
+    var cache=en._pageCache;
+    if(cache){var cv=document.getElementById('ss-canvas');if(cv){ssDrawOverlay(en,cv,cache);ssShowStampOnCanvas(en,cv,cache.drawX,cache.topPx,cache.drawW,cache.drawH);}}
+  }
 }
 
 function setSSApply(all){
@@ -4072,6 +4079,7 @@ async function ssBuildPdfBytes(entry){
       if(entry.po)       topFields.push('PO: '+entry.po);
       if(entry.ol)       topFields.push('OL: '+entry.ol);
       if(entry.dl)       topFields.push('DL: '+entry.dl);
+      if(entry.due)      topFields.push('납기: '+entry.due);
       if(topFields.length)lines.push(topFields.join(GAP));
       // 파일순번은 도면 캔버스 우측상단에 직접 그림 (여기선 제외)
     } else {
@@ -4150,7 +4158,9 @@ async function ssBuildPdfBytes(entry){
 
       // ★ QR을 PDF 좌표계에 직접 임베드 (도면 축소에 무관하게 고정 물리 크기)
       if(qrImg&&entry.qrURL){
-        var qrPt=(entry.qrSize||30)*72/25.4; // mm → pt (물리 크기 고정)
+        // ★ qrFrac: 도면 폭 대비 비율 (페이지 크기 무관하게 동일한 시각적 비율)
+        var qrFrac=entry.qrFrac||(entry.qrSize||30)/210*0.8;
+        var qrPt=qrFrac*drawW; // 도면 폭 대비 비율로 크기 결정
         var qrPdfX=drawX+Math.max(0,Math.min(entry.pos.x/100*drawW, drawW-qrPt));
         // PDF y: 아래=0. 도면 위(y=0) → PDF 위(botMarg+drawH). pos.y 도면 상단 기준 비율
         var qrPdfY=botMarg+drawH*(1-entry.pos.y/100)-qrPt;
@@ -4185,39 +4195,36 @@ function ssSaveToOrders(entry){
   hsSaveOrders();hsSaveLogs();
 }
 
-// SS QR 리사이즈 핸들
+// SS QR 리사이즈 핸들 (비율 기반)
 (function(){
-  var resizing=false,startX=0,startY=0,startSize=0;
+  var resizing=false,startX=0,startY=0,startFrac=0,startDrawW=0;
   document.addEventListener('mousedown',function(e){
     var handle=document.getElementById('ss-stamp-handle');
     if(!handle||e.target!==handle)return;
     e.preventDefault();e.stopPropagation();
     resizing=true;startX=e.clientX;startY=e.clientY;
-    startSize=SS.idx>=0&&SS.files[SS.idx]?SS.files[SS.idx].qrSize||SS.qrSize:SS.qrSize;
+    if(SS.idx>=0&&SS.files[SS.idx]){
+      var en=SS.files[SS.idx];
+      if(!en.qrFrac)en.qrFrac=(en.qrSize||30)/210*0.8;
+      startFrac=en.qrFrac;
+      var cache=en._pageCache;
+      startDrawW=cache?cache.drawW:200;
+    }
     document.body.style.cursor='se-resize';
   });
   document.addEventListener('mousemove',function(e){
-    if(!resizing)return;
+    if(!resizing||SS.idx<0||!SS.files[SS.idx])return;
+    var en=SS.files[SS.idx];
+    var cache=en._pageCache;if(!cache)return;
     var delta=Math.max(e.clientX-startX,e.clientY-startY);
-    var cv=document.getElementById('ss-canvas');
-    if(!cv)return;
-    // delta px → delta mm (canvas 폭 기준: cv.offsetWidth = pageWidth pt * scale)
-    var mmPerPx=25.4/72; // 1pt = 1/72 inch = 25.4/72 mm (scale=1 기준)
-    var newSize=Math.max(10,Math.min(80,Math.round(startSize+delta*mmPerPx*2)));
-    if(SS.idx>=0&&SS.files[SS.idx]){
-      SS.files[SS.idx].qrSize=newSize;
-      SS.qrSize=newSize;
-      // QR 이미지 크기만 즉시 업데이트
-      var img=document.getElementById('ss-stamp-img');
-      var szLbl=document.getElementById('ss-stamp-size');
-      if(img){
-        var qrPxDisp=Math.round(newSize*72/25.4*(cv.width/(cv.offsetWidth||cv.width)));
-        img.style.width=img.style.height=qrPxDisp+'px';
-      }
-      if(szLbl)szLbl.textContent=newSize+'mm';
-      // QR크기 버튼 active 상태 갱신
-      ['20','30','40'].forEach(function(s){var b=document.getElementById('ss-sz'+s);if(b)b.classList.toggle('on',parseInt(s)===newSize);});
-    }
+    // delta CSS px → fraction of drawW
+    var newFrac=Math.max(0.02,Math.min(0.5,startFrac+delta/startDrawW));
+    en.qrFrac=newFrac;SS.qrFrac=newFrac;
+    // 화면 즉시 갱신
+    var img=document.getElementById('ss-stamp-img');
+    var szLbl=document.getElementById('ss-stamp-size');
+    if(img){img.style.width=img.style.height=Math.round(newFrac*cache.drawW)+'px';}
+    if(szLbl)szLbl.textContent=Math.round(newFrac*100)+'%';
   });
   document.addEventListener('mouseup',function(){
     if(!resizing)return;resizing=false;
@@ -4244,17 +4251,15 @@ function ssSaveToOrders(entry){
     if(!drag)return;drag=false;
     var stamp=document.getElementById('ss-stamp'),cv=document.getElementById('ss-canvas');
     if(stamp&&cv&&SS.idx>=0&&SS.files[SS.idx]){
-      var e=SS.files[SS.idx];
-      // drawOffset 역산: 도면 영역 내 상대좌표 계산
-      var rotation=e.rotation||0;
-      var FONT_PT=Math.max(8,Math.min(28,Math.round(cv.offsetWidth*0.024)));
-      var marginPx=Math.round(FONT_PT*1.8*(cv.offsetWidth/(cv.offsetWidth||842)));
-      // 단순화: 전체 canvas 기준 상대좌표 저장 (저장 시 보정)
-      e.pos.x=parseFloat(stamp.style.left)/(cv.offsetWidth||1)*100;
-      e.pos.y=(parseFloat(stamp.style.top)-marginPx)/(cv.offsetHeight-marginPx*2||1)*100;
-      e.pos.x=Math.max(0,Math.min(100,e.pos.x));
-      e.pos.y=Math.max(0,Math.min(100,e.pos.y));
-      e.posSet=true;
+      var en=SS.files[SS.idx];var cache=en._pageCache;
+      if(cache){
+        // pos: drawW, drawH 기준 비율 저장
+        var stampL=parseFloat(stamp.style.left||0);
+        var stampT=parseFloat(stamp.style.top||0);
+        en.pos.x=Math.max(0,Math.min(100,(stampL-cache.drawX)/cache.drawW*100));
+        en.pos.y=Math.max(0,Math.min(100,(stampT-cache.topPx)/cache.drawH*100));
+        en.posSet=true;
+      }
     }
     if(stamp)stamp.style.cursor='grab';
   });
