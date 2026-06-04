@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v5.41</title>
+<title>하네스 공정관리 v6.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -428,7 +428,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v5.41</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.0</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -529,6 +529,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div style="font-size:10px;color:var(--tx3);text-align:center;margin-top:10px;line-height:1.6">가입 시 <b>작업자</b> 권한으로 시작합니다.<br>관리자 권한은 최고관리자가 부여합니다.</div>
     </div>
     <div id="au-msg" style="padding:0 24px 18px;font-size:12px;text-align:center;min-height:18px;color:var(--tx2)"></div>
+    <!-- 승인 대기 패널 -->
+    <div id="au-pending" style="display:none;padding:8px 24px 24px;text-align:center">
+      <div style="font-size:40px;margin-bottom:8px">⏳</div>
+      <div style="font-size:15px;font-weight:700;color:var(--tx);margin-bottom:6px"><span id="au-pending-name"></span>님, 가입 완료</div>
+      <div style="font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:16px">관리자 승인 대기 중입니다.<br>승인이 완료되면 로그인 후 이용할 수 있습니다.<br>관리자에게 승인을 요청하세요.</div>
+      <button onclick="AUTH.signOut()" style="width:100%;padding:11px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">로그아웃</button>
+    </div>
   </div>
 </div>
 
@@ -549,7 +556,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v5.41 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.0 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1047,6 +1054,17 @@ function openManual(){
   var el=document.getElementById('manual-body');if(!el)return;
   var stepList=H_STEPS.map(function(s){return s.icon+' '+s.id;}).join(' → ');
   el.innerHTML=[
+    '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
+    '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">🔐 0. 로그인 · 권한</h3>',
+    '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
+    '<li><b>아이디</b>는 이름 또는 공정명(한글 가능), 비밀번호와 함께 가입합니다</li>',
+    '<li><b>자동 로그인</b>: 한 번 로그인하면 다음 접속 시 자동 통과 (아이디 저장 체크 시)</li>',
+    '<li><b>가입 승인제</b>: 가입하면 <b>승인 대기</b> 상태 — 관리자 승인 후 사용 가능</li>',
+    '<li><b>권한 3단계</b><br>&nbsp;&nbsp;· <b>작업자</b>: 공정현황 조회 + QR 스캔만<br>&nbsp;&nbsp;· <b>관리자</b>: 전체 메뉴 + 가입 승인 · 작업자/관리자 임명 · 정지<br>&nbsp;&nbsp;· <b>최고관리자</b>: 위 전체 + 최고관리자 임명/회수</li>',
+    '<li><b>👥 사용자 관리</b>(관리자 이상): 승인 대기자 승인, 권한 변경, 정지(승인취소)</li>',
+    '<li>정지 = 다시 승인 대기 상태 (재승인 전까지 앱 사용 불가)</li>',
+    '<li>계정 완전 삭제 · 비밀번호 재설정은 Supabase 대시보드에서</li>',
+    '</ul></div>',
     '<div style="padding:14px 0;border-bottom:1px solid var(--border)">',
     '<h3 style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">📊 1. 공정현황</h3>',
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
@@ -2061,8 +2079,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v5.41';
+var APP_VER='v6.0';
 var VER_LOG=[
+  {v:'v6.0',d:'2026-06', t:'로그인/회원가입 + 자동 로그인(persistSession) 도입. 권한 체계: 작업자/관리자/최고관리자 + 가입 승인제(pending). 사용자 관리 화면 — 관리자는 승인·관리자 승격·정지, 최고관리자는 전체. 역할별 메뉴/버튼 노출 제어'},
   {v:'v5.41',d:'2026-06', t:'검사 합불 판정 추가 — 검사 공정 스캔 시 합격/불합격 선택, 불합격→재작업 자동 전환(재검사 합격 시 해제). 📈 분석 메뉴(BETA) 신설: 공정부하(WIP)·품질(합불/재작업+방치알림 2영업일)·리드타임·납기준수율. Analytics 모듈화'},
   {v:'v5.40.1',d:'2026-05', t:'공정설정 매뉴얼 stepList 오류 수정'},
   {v:'v5.40',d:'2026-05', t:'단건QR 등록자 필드, 하단 정보 정리'},
@@ -3435,8 +3454,7 @@ const isMobile=window.innerWidth<=768||/Android|iPhone|iPad|iPod|Mobile/i.test(n
 // 인증 (로그인 / 회원가입 / 권한)
 // ════════════════════════════════════════
 var AUTH={
-  user:null, profile:null, role:'worker',
-  // 아이디(한글 가능) → ASCII 가짜 이메일 (hex 인코딩, 결정적)
+  user:null, profile:null, role:'pending',
   makeEmail:function(u){
     var hex='';for(var i=0;i<u.length;i++){hex+=u.charCodeAt(i).toString(16);}
     return 'u'+hex+'@jinsun.local';
@@ -3464,7 +3482,7 @@ var AUTH={
       else localStorage.removeItem('hs_saved_id');
       this.user=r.data.user;
       await this.loadProfile();
-      this.showApp();
+      this.enter();
     }catch(e){this.msg('로그인 오류: '+(e.message||e),true);}
   },
   signUp:async function(){
@@ -3479,16 +3497,17 @@ var AUTH={
     try{
       var r=await sb.auth.signUp({email:this.makeEmail(id),password:pw,options:{data:{username:id}}});
       if(r.error){
-        var m=r.error.message||'';
-        this.msg('가입 실패 — '+(m.indexOf('already')>=0||m.indexOf('registered')>=0?'이미 존재하는 아이디입니다':m),true);
+        var m=(r.error.message||'').toLowerCase();
+        if(m.indexOf('already')>=0||m.indexOf('registered')>=0||m.indexOf('exists')>=0)
+          this.msg('이미 등록된 아이디입니다. 다른 아이디를 쓰거나 로그인하세요',true);
+        else this.msg('가입 실패 — '+r.error.message,true);
         return;
       }
       if(r.data&&r.data.session){
         this.user=r.data.user;localStorage.setItem('hs_saved_id',id);
         await this.loadProfile();
-        this.showApp();
+        this.enter(); // pending이면 자동으로 승인 대기 화면
       } else {
-        // 세션 미발급 = 이메일 확인 설정이 켜져 있음
         this.msg('가입은 됐으나 자동 로그인이 안 됩니다. 관리자에게 이메일 확인 비활성화를 요청하세요',true);
       }
     }catch(e){this.msg('가입 오류: '+(e.message||e),true);}
@@ -3496,7 +3515,7 @@ var AUTH={
   signOut:async function(){
     var sb=getSB();
     try{if(sb)await sb.auth.signOut();}catch(e){}
-    this.user=null;this.profile=null;this.role='worker';
+    this.user=null;this.profile=null;this.role='pending';
     location.reload();
   },
   loadProfile:async function(){
@@ -3504,33 +3523,45 @@ var AUTH={
     try{
       var r=await sb.from('profiles').select('*').eq('id',this.user.id).single();
       this.profile=r.data||null;
-      this.role=(r.data&&r.data.role)||'worker';
-    }catch(e){this.role='worker';}
+      this.role=(r.data&&r.data.role)||'pending';
+    }catch(e){this.role='pending';}
   },
   isAdmin:function(){return this.role==='admin'||this.role==='super_admin';},
   isSuper:function(){return this.role==='super_admin';},
+  // 로그인/가입 성공 후 진입 분기
+  enter:function(){
+    if(this.role==='pending'){ this.showPending(); return; }
+    this.showApp();
+  },
+  showPending:function(){
+    var ov=document.getElementById('auth-ovl');if(ov)ov.style.display='flex';
+    // 탭/폼 숨기고 대기 패널 표시
+    ['au-tab-login','au-tab-signup','au-form-login','au-form-signup'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+    this.msg('');
+    var p=document.getElementById('au-pending');
+    if(p){
+      p.style.display='block';
+      var nm=document.getElementById('au-pending-name');
+      if(nm)nm.textContent=(this.profile&&this.profile.username)||'';
+    }
+  },
   applyRole:function(){
     var admin=this.isAdmin(), sup=this.isSuper();
     function show(id,on){var el=document.getElementById(id);if(el)el.style.display=on?'':'none';}
-    // 작업자: 공정현황 + QR스캔만. 관리자: 전체. 최고관리자: +사용자관리
     show('nav-log',admin);
     show('nav-analytics',admin);
     show('nav-stamp',admin);
     show('nav-stamp-single',admin);
     show('nav-qrhist',admin);
-    show('nav-users',sup);
-    // 공정설정은 관리자만
+    show('nav-users',admin); // 관리자도 사용자 관리(승인) 접근
     var stepBtn=document.querySelector('[onclick="openStepSettings()"]');if(stepBtn)stepBtn.style.display=admin?'':'none';
-    // 사용자 라벨 + 로그아웃
     var box=document.getElementById('au-userbox');
     var lbl=document.getElementById('au-userlabel');
     var roleTxt=sup?'최고관리자':admin?'관리자':'작업자';
     var name=(this.profile&&this.profile.username)||'';
     if(lbl)lbl.textContent=name+' · '+roleTxt;
     if(box)box.style.display='flex';
-    // 작업자 모드 표시 (현황판 버튼 숨김용)
     document.body.classList.toggle('role-worker',!admin);
-    // 작업자가 권한 없는 페이지에 있으면 안전 페이지로
     if(!admin){
       var cur=document.querySelector('.page:not(.hidden)');
       var safe=['pg-status','pg-scan'];
@@ -3544,12 +3575,10 @@ var AUTH={
     hsLoad();
   },
   init:async function(){
-    // 저장된 아이디 채우기
     var saved=localStorage.getItem('hs_saved_id');
     if(saved){var el=document.getElementById('au-login-id');if(el)el.value=saved;}
     this.switchTab('login');
     this.msg('서버 연결 중...');
-    // SDK 로드 (5초 제한)
     var ok=await new Promise(function(resolve){
       var done=false;var t=setTimeout(function(){if(!done){done=true;resolve(false);}},6000);
       loadSupabaseSDK(function(){if(!done){done=true;clearTimeout(t);resolve(true);}});
@@ -3557,29 +3586,32 @@ var AUTH={
     if(!ok){this.msg('서버 연결 실패 — 새로고침 후 다시 시도하세요',true);return;}
     var sb=getSB();if(!sb){this.msg('서버 연결 실패',true);return;}
     this.msg('');
-    // 기존 세션 확인 → 자동 로그인
     try{
       var s=await sb.auth.getSession();
       if(s.data&&s.data.session){
         this.user=s.data.session.user;
         await this.loadProfile();
-        this.showApp();
+        this.enter();
         return;
       }
     }catch(e){}
-    // 세션 없음 → 로그인 화면 유지
     var lid=document.getElementById('au-login-id');if(lid&&!saved)lid.focus();
   }
 };
 
 // ════════════════════════════════════════
-// 사용자 관리 (최고관리자 전용)
+// 사용자 관리 (관리자: 승인/승격/정지, 최고관리자: 전체)
 // ════════════════════════════════════════
 var Users={
   list:[],
+  roleBadge:function(role){
+    var m={pending:['승인 대기','#d97706','rgba(217,119,6,.12)'],worker:['작업자','var(--tx2)','var(--bg)'],admin:['관리자','#2563eb','rgba(37,99,235,.1)'],super_admin:['최고관리자','#7c3aed','rgba(124,58,237,.12)']};
+    var x=m[role]||m.pending;
+    return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;color:'+x[1]+';background:'+x[2]+'">'+x[0]+'</span>';
+  },
   render:async function(){
     var el=document.getElementById('users-body');if(!el)return;
-    if(!AUTH.isSuper()){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--tx3)">접근 권한이 없습니다</div>';return;}
+    if(!AUTH.isAdmin()){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--tx3)">접근 권한이 없습니다</div>';return;}
     var sb=getSB();if(!sb){el.innerHTML='<div style="padding:20px;color:var(--red)">서버 연결 안 됨</div>';return;}
     el.innerHTML='<div style="padding:20px;color:var(--tx3);font-size:12px">불러오는 중...</div>';
     try{
@@ -3588,41 +3620,67 @@ var Users={
       this.list=r.data||[];
     }catch(e){el.innerHTML='<div style="padding:20px;color:var(--red);font-size:12px">오류: '+(e.message||e)+'</div>';return;}
     if(!this.list.length){el.innerHTML='<div style="padding:20px;color:var(--tx3)">가입한 사용자가 없습니다</div>';return;}
-    var roleBadge=function(role){
-      var m={worker:['작업자','var(--tx2)','var(--bg)'],admin:['관리자','#2563eb','rgba(37,99,235,.1)'],super_admin:['최고관리자','#7c3aed','rgba(124,58,237,.12)']};
-      var x=m[role]||m.worker;
-      return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;color:'+x[1]+';background:'+x[2]+'">'+x[0]+'</span>';
-    };
+    var sup=AUTH.isSuper();
     var me=AUTH.user?AUTH.user.id:'';
-    var rows=this.list.map(function(u){
+    var pendings=this.list.filter(function(u){return u.role==='pending';});
+    var actives=this.list.filter(function(u){return u.role!=='pending';});
+    var html='';
+    // ── 승인 대기 ──
+    if(pendings.length){
+      var pr=pendings.map(function(u){
+        return '<tr style="border-bottom:1px solid var(--border);background:rgba(217,119,6,.04)">'
+          +'<td style="padding:9px 12px;font-weight:600;font-size:13px">'+(u.username||'(이름없음)')+'</td>'
+          +'<td style="padding:9px 12px">'+Users.roleBadge('pending')+'</td>'
+          +'<td style="padding:9px 12px;text-align:right;white-space:nowrap">'
+            +'<button onclick="Users.setRole(\''+u.id+'\',\'worker\')" style="font-size:11px;font-weight:700;padding:5px 12px;border:none;border-radius:6px;background:#10b981;color:#fff;cursor:pointer;margin-right:5px">✅ 작업자 승인</button>'
+            +'<button onclick="Users.setRole(\''+u.id+'\',\'admin\')" style="font-size:11px;font-weight:700;padding:5px 12px;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer">관리자 승인</button>'
+          +'</td></tr>';
+      }).join('');
+      html+='<div style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:8px">⏳ 승인 대기 ('+pendings.length+'명)</div>'
+        +'<div class="grp-card" style="margin-bottom:18px"><div style="overflow-x:auto"><table class="dwg-table" style="width:100%">'
+        +'<thead><tr><th>아이디</th><th>상태</th><th style="text-align:right">승인</th></tr></thead><tbody>'+pr+'</tbody></table></div></div>';
+    }
+    // ── 활성 멤버 ──
+    var ar=actives.map(function(u){
       var isMe=u.id===me;
       var created=u.created_at?new Date(u.created_at):null;
       var cstr=created?((created.getMonth()+1)+'/'+created.getDate()):'—';
+      var action;
+      if(isMe){
+        action='<span style="font-size:11px;color:var(--tx3)">본인 변경 불가</span>';
+      } else if(u.role==='super_admin'&&!sup){
+        action='<span style="font-size:11px;color:var(--tx3)">최고관리자 — 변경 불가</span>';
+      } else {
+        var opts='<option value="worker"'+(u.role==='worker'?' selected':'')+'>작업자</option>'
+          +'<option value="admin"'+(u.role==='admin'?' selected':'')+'>관리자</option>';
+        if(sup)opts+='<option value="super_admin"'+(u.role==='super_admin'?' selected':'')+'>최고관리자</option>';
+        opts+='<option value="pending">⏸ 정지(승인취소)</option>';
+        action='<select onchange="Users.setRole(\''+u.id+'\',this.value)" style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--tx);cursor:pointer;font-family:var(--sans)">'+opts+'</select>';
+      }
       return '<tr style="border-bottom:1px solid var(--border)">'
         +'<td style="padding:9px 12px;font-weight:600;font-size:13px">'+(u.username||'(이름없음)')+(isMe?' <span style="font-size:9px;color:var(--blue)">(나)</span>':'')+'</td>'
-        +'<td style="padding:9px 12px">'+roleBadge(u.role)+'</td>'
+        +'<td style="padding:9px 12px">'+Users.roleBadge(u.role)+'</td>'
         +'<td style="padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--tx3)">'+cstr+'</td>'
-        +'<td style="padding:9px 12px;text-align:right">'
-          +(isMe?'<span style="font-size:11px;color:var(--tx3)">본인 변경 불가</span>'
-            :'<select onchange="Users.setRole(\''+u.id+'\',this.value)" style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--tx);cursor:pointer;font-family:var(--sans)">'
-              +'<option value="worker"'+(u.role==='worker'?' selected':'')+'>작업자</option>'
-              +'<option value="admin"'+(u.role==='admin'?' selected':'')+'>관리자</option>'
-              +'<option value="super_admin"'+(u.role==='super_admin'?' selected':'')+'>최고관리자</option>'
-            +'</select>')
-        +'</td></tr>';
+        +'<td style="padding:9px 12px;text-align:right">'+action+'</td></tr>';
     }).join('');
-    el.innerHTML='<div class="grp-card"><div style="overflow-x:auto"><table class="dwg-table" style="width:100%">'
-      +'<thead><tr><th>아이디</th><th>권한</th><th>가입일</th><th style="text-align:right">권한 변경</th></tr></thead>'
-      +'<tbody>'+rows+'</tbody></table></div></div>'
-      +'<div style="font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.7">※ 권한 변경은 즉시 저장됩니다. 해당 사용자가 다시 로그인(또는 새로고침)하면 적용됩니다.<br>※ 비밀번호 재설정은 Supabase 대시보드에서 처리하세요.</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">👥 멤버 ('+actives.length+'명)</div>'
+      +'<div class="grp-card"><div style="overflow-x:auto"><table class="dwg-table" style="width:100%">'
+      +'<thead><tr><th>아이디</th><th>권한</th><th>가입일</th><th style="text-align:right">권한 변경</th></tr></thead><tbody>'+ar+'</tbody></table></div></div>'
+      +'<div style="font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.7">'
+      +'※ 정지(승인취소) = 다시 승인 대기 상태로 — 해당 사용자는 로그인해도 앱을 못 씁니다.<br>'
+      +(sup?'※ 최고관리자 권한은 최고관리자만 부여/회수할 수 있습니다.<br>':'※ 최고관리자 권한 부여/회수는 최고관리자만 가능합니다.<br>')
+      +'※ 계정 완전 삭제·비밀번호 재설정은 Supabase 대시보드에서 처리하세요.</div>';
+    el.innerHTML=html;
   },
   setRole:async function(id,role){
     var sb=getSB();if(!sb)return;
+    if(role==='pending'&&!confirm('이 사용자를 정지(승인취소)할까요? 다시 승인 전까지 앱을 쓸 수 없습니다.')){this.render();return;}
     try{
       var r=await sb.from('profiles').update({role:role}).eq('id',id);
-      if(r.error){toast('권한 변경 실패: '+r.error.message,'err');this.render();return;}
-      toast('권한이 '+(role==='super_admin'?'최고관리자':role==='admin'?'관리자':'작업자')+'로 변경됨','ok');
-    }catch(e){toast('권한 변경 오류','err');}
+      if(r.error){toast('변경 실패: '+r.error.message,'err');this.render();return;}
+      var t=role==='super_admin'?'최고관리자':role==='admin'?'관리자':role==='worker'?'작업자':'정지(승인취소)';
+      toast(t+(role==='pending'?' 처리됨':'(으)로 변경됨'),'ok');
+    }catch(e){toast('변경 오류','err');}
     this.render();
   }
 };
