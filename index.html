@@ -723,7 +723,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div class="viewer" id="viewer"
             ondragover="event.preventDefault();this.style.outline='3px dashed var(--blue)'"
             ondragleave="this.style.outline=''"
-            ondrop="event.preventDefault();this.style.outline='';pickPdfs(event.dataTransfer.files)">
+            ondrop="event.preventDefault();event.stopPropagation();this.style.outline='';pickPdfs(event.dataTransfer.files)">
             <div class="empty-view" id="emptyV">
               <div class="ev-ic">📋</div>
               <div class="ev-t">도면 파일을 불러오세요</div>
@@ -2373,14 +2373,25 @@ document.addEventListener('drop',function(e){
 });
 if(D.dropZ){
   D.dropZ.addEventListener('dragover',function(e){e.preventDefault();});
-  D.dropZ.addEventListener('drop',function(e){e.preventDefault();pickPdfs(e.dataTransfer.files);});
+  D.dropZ.addEventListener('drop',function(e){e.preventDefault();e.stopPropagation();pickPdfs(e.dataTransfer.files);});
 }
 function pickPdfs(fl){const p=Array.from(fl).filter(function(f){return f.name.toLowerCase().endsWith('.pdf');});if(p.length)addFiles(p);}
 
+var _addingLock=false;
 async function addFiles(files){
+  if(_addingLock){ return; }   // 중복 호출(버블링 등) 방지
+  _addingLock=true;
   showOvl('PDF 불러오는 중...');
-  for(const file of files){
-    if(S.files.some(function(e){return e.file.name===file.name&&e.file.size===file.size;}))continue;
+  // 동기적으로 중복 제거 (이미 로드된 것 + 이번에 들어온 것끼리)
+  var seen={};
+  S.files.forEach(function(e){seen[e.file.name+'|'+e.file.size]=true;});
+  var uniq=[];
+  Array.from(files).forEach(function(f){
+    var k=f.name+'|'+f.size;
+    if(!seen[k]){seen[k]=true;uniq.push(f);}
+  });
+  try{
+  for(const file of uniq){
     try{
       const bytes=await readBytes(file);
       const pdjsDoc=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
@@ -2396,6 +2407,7 @@ async function addFiles(files){
       S.files.push(newEntry);
     }catch(err){console.error(err);toast('로딩 실패: '+file.name,'err');}
   }
+  }finally{ _addingLock=false; }
   hideOvl();renderList();renderOrderStampList();updateBadge();
   if(S.idx===-1&&S.files.length)selectFile(0);
   renderOrderStampList();
@@ -2746,7 +2758,7 @@ function stampRenderOverlay(entry,cv,cache){
   const csvRows=findCsvRows(entry.drawingNo||'');const c=_csvCols;const GAP='   ';
   const topF=[];
   if(csvRows.length>0){const r=csvRows[0];
-    if(c.dest>=0&&r[c.dest])topF.push('납품처: '+r[c.dest]);
+    if(c.dest>=0&&r[c.dest]&&r[c.dest]!==entry.customer)topF.push('납품처: '+r[c.dest]);
     if(c.po>=0&&r[c.po])topF.push('PO: '+r[c.po]);
     if(c.ordln>=0&&r[c.ordln])topF.push('OL: '+r[c.ordln]);
     if(c.delln>=0&&r[c.delln])topF.push('DL: '+r[c.delln]);
@@ -2776,7 +2788,9 @@ function applyStampPos(entry){
   D.qrStamp.style.width=qrPx+'px';D.qrStamp.style.height=qrPx+'px';
   D.qrStamp.style.left=left+'px';D.qrStamp.style.top=top+'px';
   D.sizeBadge.textContent=entry.qrSize+'mm';
-  entry.pos.x=(left/pw)*100;entry.pos.y=(top/ph)*100;
+  // 위치 저장은 도면 영역(drawW/drawH) 기준 %로 통일 (여백 offset 제외)
+  entry.pos.x=Math.min(Math.max((left-drawX)/drawW*100,0),100);
+  entry.pos.y=Math.min(Math.max((top-drawY)/drawH*100,0),100);
 }
 var clamp=function(v,a,b){return Math.min(Math.max(v,a),b);};
 if(D.qrStamp)D.qrStamp.addEventListener('mousedown',function(e){
@@ -2804,8 +2818,9 @@ document.addEventListener('mouseup',function(){
   if(resizing){resizing=false;document.body.style.cursor='';return;}
   if(!dragging)return;dragging=false;D.qrStamp.classList.remove('drag');
   if(S.idx<0)return;const e2=S.files[S.idx],cv=D.pdfCanvas;
-  e2.pos.x=(parseFloat(D.qrStamp.style.left)/cv.offsetWidth)*100;
-  e2.pos.y=(parseFloat(D.qrStamp.style.top)/cv.offsetHeight)*100;e2.posSet=true;
+  var dX=e2._drawOffX||0,dY=e2._drawOffY||0,dW=e2._drawW||cv.offsetWidth,dH=e2._drawH||cv.offsetHeight;
+  e2.pos.x=Math.min(Math.max((parseFloat(D.qrStamp.style.left)-dX)/dW*100,0),100);
+  e2.pos.y=Math.min(Math.max((parseFloat(D.qrStamp.style.top)-dY)/dH*100,0),100);e2.posSet=true;
 });
 [D.inpCust,D.inpProj,D.inpUnit,D.inpDno,D.inpQty].forEach(function(inp){if(inp)inp.addEventListener('input',debounce(function(){
   if(S.idx<0)return;[D.inpCust,D.inpProj,D.inpUnit].forEach(function(i){i.classList.remove('bulk-applied');});
@@ -2846,6 +2861,37 @@ async function doMergeSave(){
 }
 if(D.btnMergeNav)D.btnMergeNav.addEventListener('click',doMergeSave);
 function prepAllQR(){S.files.forEach(function(e){if(!e.qrURL){const c=buildContent(e);if(c.trim())e.qrURL=makeQRPng(c);}});}
+// 배치 저장용: 미리보기와 동일한 상/하단 정보 필드 생성
+function buildBatchOverlayFields(entry){
+  var csvRows=findCsvRows(entry.drawingNo||'');var c=_csvCols;var GAP='   ';
+  var topF=[];
+  if(csvRows.length>0){var r=csvRows[0];
+    if(c.dest>=0&&r[c.dest]&&r[c.dest]!==entry.customer)topF.push('납품처: '+r[c.dest]);
+    if(c.po>=0&&r[c.po])topF.push('PO: '+r[c.po]);
+    if(c.ordln>=0&&r[c.ordln])topF.push('OL: '+r[c.ordln]);
+    if(c.delln>=0&&r[c.delln])topF.push('DL: '+r[c.delln]);
+    if(c.duedt>=0&&r[c.duedt])topF.push('납기: '+r[c.duedt]);
+  }
+  if(entry.customer)topF.unshift('고객사: '+entry.customer);
+  var topTxt=topF.join(GAP)||(entry.drawingNo||'(발주정보 없음)');
+  var now=new Date();var ds=(now.getFullYear()%100).toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0');
+  var botF=[];
+  if(csvRows.length>0){var r2=csvRows[0];if(c.qty>=0&&r2[c.qty])botF.push('수량: '+r2[c.qty]);if(c.issdt>=0&&r2[c.issdt])botF.push('불출일: '+r2[c.issdt]);}
+  botF.push('출도일: '+ds);
+  return {topTxt:topTxt, botTxt:botF.join(GAP)};
+}
+// 정보 띠를 캔버스 PNG 바이트로
+function bandCanvasBytes(text,pageWpt,marginPt,fontPt,isTop){
+  var K=2;var cvW=Math.round(pageWpt*K);var cvH=Math.round(marginPt*K);var fPx=Math.round(fontPt*K);
+  var cv=document.createElement('canvas');cv.width=cvW;cv.height=cvH;var ctx=cv.getContext('2d');
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cvW,cvH);
+  ctx.strokeStyle='#cccccc';ctx.lineWidth=K*0.8;ctx.beginPath();
+  if(isTop){ctx.moveTo(0,cvH-1);ctx.lineTo(cvW,cvH-1);}else{ctx.moveTo(0,1);ctx.lineTo(cvW,1);}ctx.stroke();
+  ctx.fillStyle='#1a2240';ctx.font='600 '+fPx+'px "Noto Sans KR","Arial",sans-serif';
+  var tw=ctx.measureText(text).width;var x=Math.max(0,(cvW-tw)/2);var y=cvH*0.5+fPx*0.35;
+  ctx.fillText(text,x,y);
+  return dataURLtoBytes(cv.toDataURL('image/png'));
+}
 function rotateEntry(){
   if(S.idx<0)return;const e=S.files[S.idx];e.rotation=((e.rotation||0)+90)%360;
   const rv=document.getElementById('rotateVal');if(rv)rv.textContent=e.rotation+'°';
@@ -2859,12 +2905,13 @@ async function processFile(entry,notify,returnBytes){
     const{PDFDocument}=PDFLib;
     const fileIdx=S.files.indexOf(entry)+1;const fileTotal=S.files.length;
     const rotation=entry.rotation||0;
-    const needsCanvas=rotation!==0||fileTotal>1;
+    const needsCanvas=true; // 항상 캔버스 경로(상/하단 정보 띠 포함)로 저장
     if(S.idx>=0&&S.files[S.idx]===entry){
       const stamp=D.qrStamp;const cv2=D.pdfCanvas;
       if(stamp&&cv2&&!stamp.classList.contains('hidden')&&cv2.offsetWidth){
-        entry.pos.x=(parseFloat(stamp.style.left)||0)/cv2.offsetWidth*100;
-        entry.pos.y=(parseFloat(stamp.style.top)||0)/cv2.offsetHeight*100;
+        var dX=entry._drawOffX||0,dY=entry._drawOffY||0,dW=entry._drawW||cv2.offsetWidth,dH=entry._drawH||cv2.offsetHeight;
+        entry.pos.x=Math.min(Math.max(((parseFloat(stamp.style.left)||0)-dX)/dW*100,0),100);
+        entry.pos.y=Math.min(Math.max(((parseFloat(stamp.style.top)||0)-dY)/dH*100,0),100);
       }
     }
     await ensurePdfLoaded(entry);
@@ -2885,38 +2932,47 @@ async function processFile(entry,notify,returnBytes){
       const renderDoc=entry.pdjsDoc||await pdfjsLib.getDocument({data:entry.bytes.slice(0)}).promise;
       if(!entry.pdjsDoc)entry.pdjsDoc=renderDoc;
       const finalDoc=await PDFDocument.create();
-      const qrImg=await new Promise(function(res){var img=new Image();img.onload=function(){res(img);};img.onerror=function(){res(null);};img.src=entry.qrURL;});
+      const flds=buildBatchOverlayFields(entry);
       for(let pi=0;pi<pages.length;pi++){
         const origPg=pages[pi];const{width:origPw,height:origPh}=origPg.getSize();
         const needsOverlay=(entry.applyAll)||(pi===0);
-        if(!needsOverlay){const[cp]=await finalDoc.copyPages(pdfDoc,[pi]);finalDoc.addPage(cp);}
-        else{
-          if(notify)D.ovlS.textContent=(pi+1)+'/'+pages.length+' 페이지 렌더 중...';
-          const rPage=await renderDoc.getPage(pi+1);
-          const vp=rPage.getViewport({scale:RSCALE,rotation:rotation});
-          const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
-          const ctx=cv.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cv.width,cv.height);
-          await rPage.render({canvasContext:ctx,viewport:vp}).promise;
-          if(qrImg){
-            const cvPtsW=(rotation===90||rotation===270)?origPh:origPw;const ptToPx=cv.width/cvPtsW;
-            const qrPx=Math.round(entry.qrSize*72/25.4*ptToPx);
-            const qrCvX=Math.min(Math.max(Math.round(entry.pos.x/100*cv.width),0),cv.width-qrPx);
-            const qrCvY=Math.min(Math.max(Math.round(entry.pos.y/100*cv.height),0),cv.height-qrPx);
-            ctx.drawImage(qrImg,qrCvX,qrCvY,qrPx,qrPx);
-          }
-          if(fileTotal>1){
-            const seqStr=fileIdx+'/'+fileTotal;const fSz=Math.round(cv.height*0.038);
-            ctx.font='700 '+fSz+'px "Noto Sans KR","Arial",sans-serif';
-            const sw=ctx.measureText(seqStr).width;const pad=Math.round(fSz*0.5);
-            ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fillRect(cv.width-sw-pad*2-4,pad*0.3,sw+pad*2+4,fSz+pad*0.6);
-            ctx.fillStyle='#1a2240';ctx.fillText(seqStr,cv.width-sw-pad,fSz+pad*0.5);
-          }
-          const newPw=(rotation===90||rotation===270)?origPh:origPw;
-          const newPh=(rotation===90||rotation===270)?origPw:origPh;
-          const pageImg=await finalDoc.embedPng(dataURLtoBytes(cv.toDataURL('image/png')));
-          const newPg=finalDoc.addPage([newPw,newPh]);
-          newPg.drawImage(pageImg,{x:0,y:0,width:newPw,height:newPh});
+        if(!needsOverlay){const[cp]=await finalDoc.copyPages(pdfDoc,[pi]);finalDoc.addPage(cp);continue;}
+        if(notify)D.ovlS.textContent=(pi+1)+'/'+pages.length+' 페이지 렌더 중...';
+        const rPage=await renderDoc.getPage(pi+1);
+        const vp=rPage.getViewport({scale:RSCALE,rotation:rotation});
+        const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+        const ctx=cv.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cv.width,cv.height);
+        await rPage.render({canvasContext:ctx,viewport:vp}).promise;
+        // 연번 표시
+        if(fileTotal>1){
+          const seqStr=fileIdx+'/'+fileTotal;const fSz=Math.round(cv.height*0.038);
+          ctx.font='700 '+fSz+'px "Noto Sans KR","Arial",sans-serif';
+          const sw=ctx.measureText(seqStr).width;const pad=Math.round(fSz*0.5);
+          ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fillRect(cv.width-sw-pad*2-4,pad*0.3,sw+pad*2+4,fSz+pad*0.6);
+          ctx.fillStyle='#1a2240';ctx.fillText(seqStr,cv.width-sw-pad,fSz+pad*0.5);
         }
+        const newPw=(rotation===90||rotation===270)?origPh:origPw;
+        const newPh=(rotation===90||rotation===270)?origPw:origPh;
+        // 상/하단 여백 확보 후 도면을 가운데에 축소 배치
+        const FONT_PT=Math.max(8,Math.min(28,Math.round(newPw*0.024)));const marginPt=Math.round(FONT_PT*1.8);
+        const topMarg=marginPt,botMarg=marginPt;
+        const drawH=newPh-topMarg-botMarg;const scaleF=drawH/newPh;const drawW=newPw*scaleF;const drawX=(newPw-drawW)/2;
+        const pageImg=await finalDoc.embedPng(dataURLtoBytes(cv.toDataURL('image/png')));
+        const newPg=finalDoc.addPage([newPw,newPh]);
+        newPg.drawImage(pageImg,{x:drawX,y:botMarg,width:drawW,height:drawH});
+        // QR (도면영역 기준 위치, 실제 mm 크기)
+        if(entry.qrURL){
+          let qrPt=entry.qrSize*72/25.4;if(qrPt>drawW*0.95)qrPt=drawW*0.95;
+          const qrX=drawX+Math.max(0,Math.min(entry.pos.x/100*drawW,drawW-qrPt));
+          let qrY=botMarg+drawH*(1-entry.pos.y/100)-qrPt;qrY=Math.max(botMarg,Math.min(qrY,botMarg+drawH-qrPt));
+          const qrPng=await finalDoc.embedPng(dataURLtoBytes(entry.qrURL));
+          newPg.drawImage(qrPng,{x:qrX,y:qrY,width:qrPt,height:qrPt});
+        }
+        // 상/하단 정보 띠
+        const topImg=await finalDoc.embedPng(bandCanvasBytes(flds.topTxt,newPw,topMarg,FONT_PT,true));
+        newPg.drawImage(topImg,{x:0,y:newPh-topMarg,width:newPw,height:topMarg});
+        const botImg=await finalDoc.embedPng(bandCanvasBytes(flds.botTxt,newPw,botMarg,FONT_PT,false));
+        newPg.drawImage(botImg,{x:0,y:0,width:newPw,height:botMarg});
       }
       finalBytes=await finalDoc.save();
     }
@@ -3035,14 +3091,17 @@ function findCsvRows(dwgNo){
   }
   var order=HS.orders.find(function(o){return o.dwg_no&&(o.dwg_no===dwgNo||normDwg(o.dwg_no)===n);});
   if(order&&(order.po||order.customer||order.due)){
+    // _csvCols가 비어 있으면 기본 인덱스 채움 (undefined도 처리)
     var cols=_csvCols;
-    if(cols.dest<0)cols.dest=1;if(cols.po<0)cols.po=2;if(cols.ordln<0)cols.ordln=3;
-    if(cols.delln<0)cols.delln=4;if(cols.duedt<0)cols.duedt=5;if(cols.qty<0)cols.qty=6;
-    var max=Math.max(cols.dest,cols.po,cols.ordln,cols.delln,cols.duedt,cols.qty)+1;
+    if(!(cols.dest>=0))cols.dest=1;if(!(cols.po>=0))cols.po=2;if(!(cols.ordln>=0))cols.ordln=3;
+    if(!(cols.delln>=0))cols.delln=4;if(!(cols.duedt>=0))cols.duedt=5;if(!(cols.qty>=0))cols.qty=6;
+    if(!(cols.issdt>=0))cols.issdt=7;
+    var max=Math.max(cols.dest,cols.po,cols.ordln,cols.delln,cols.duedt,cols.qty,cols.issdt)+1;
     var row=[];for(var i=0;i<max;i++)row.push('');
     if(order.customer)row[cols.dest]=order.customer;if(order.po)row[cols.po]=order.po;
     if(order.ord_ln)row[cols.ordln]=order.ord_ln;if(order.del_ln)row[cols.delln]=order.del_ln;
     if(order.due)row[cols.duedt]=order.due;if(order.qty)row[cols.qty]=String(order.qty);
+    if(order.iss_dt)row[cols.issdt]=order.iss_dt;
     return [row];
   }
   return [];
