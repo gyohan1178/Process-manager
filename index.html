@@ -1367,6 +1367,48 @@ function getStepSt(dwg_no, stepId){
   return {s:'idle'};
 }
 var _showMode='active';
+var _spSort={key:'created_at',dir:'desc'};   // 현황판 정렬 상태
+var _selOrders=new Set();                      // 선택된 주문 id
+function setSpSort(key){
+  if(_spSort.key===key){_spSort.dir=_spSort.dir==='asc'?'desc':'asc';}
+  else{_spSort.key=key;_spSort.dir='asc';}
+  renderStatus();
+}
+function spSortVal(o,key){
+  if(key==='qty')return parseInt(o.qty)||0;
+  if(key==='due'||key==='created_at')return o[key]?new Date(o[key]).getTime():0;
+  if(key==='progress')return getOrderProgress(o.dwg_no);
+  if(key==='qr_printed')return o.qr_printed?1:0;
+  return (o[key]||'').toString().toLowerCase();
+}
+function toggleOrderSel(id,on){if(on)_selOrders.add(id);else _selOrders.delete(id);renderStatus();}
+function toggleAllOrders(on){
+  if(on){_spVisibleIds.forEach(function(id){_selOrders.add(id);});}
+  else{_spVisibleIds.forEach(function(id){_selOrders.delete(id);});}
+  renderStatus();
+}
+var _spVisibleIds=[];
+async function bulkDoneSelected(val){
+  if(!_selOrders.size)return;
+  var ids=[..._selOrders];
+  ids.forEach(function(id){var o=HS.orders.find(function(x){return x.id===id;});if(o)o.manually_done=val;});
+  localStorage.setItem('hs_orders',JSON.stringify(HS.orders));
+  var sb=getSB();
+  if(sb){for(var i=0;i<ids.length;i++){try{await sb.from('harness_orders').update({manually_done:val}).eq('id',ids[i]);}catch(e){}}}
+  _selOrders.clear();renderStatus();
+  toast(val?ids.length+'건 완료 처리':ids.length+'건 완료 취소','ok');
+}
+async function bulkDeleteSelected(){
+  if(!_selOrders.size)return;
+  if(!confirm(_selOrders.size+'건의 도면을 삭제할까요?'))return;
+  var ids=[..._selOrders];
+  HS.orders=HS.orders.filter(function(o){return ids.indexOf(o.id)<0;});
+  hsSaveOrders();
+  var sb=getSB();
+  if(sb){for(var i=0;i<ids.length;i++){try{await sb.from('harness_orders').delete().eq('id',ids[i]);}catch(e){}}}
+  _selOrders.clear();renderStatus();
+  toast(ids.length+'건 삭제됨','ok');
+}
 function setShowMode(m){
   _showMode=m;
   ['active','done','all'].forEach(function(id){var b=document.getElementById('show-'+id);if(b)b.classList.toggle('on',id===m);});
@@ -1426,10 +1468,11 @@ function renderStatus(){
     return;
   }
   orders.sort(function(a,b){
-    var c=(a.customer||'').localeCompare(b.customer||'','ko');if(c!==0)return c;
-    var p=(a.project||'').localeCompare(b.project||'','ko');if(p!==0)return p;
-    return new Date(b.created_at)-new Date(a.created_at);
+    var va=spSortVal(a,_spSort.key), vb=spSortVal(b,_spSort.key);
+    var r = va<vb?-1 : va>vb?1 : 0;
+    return _spSort.dir==='asc'?r:-r;
   });
+  _spVisibleIds=orders.map(function(o){return o.id;});
   function miniProgress(dwg_no){
     var mOrder=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
     var mSteps=getStepsForType(mOrder&&mOrder.step_type);
@@ -1461,9 +1504,13 @@ function renderStatus(){
       if(dRows.length>0){var c=_csvCols, r=dRows[0];po=c.po>=0?r[c.po]||'':'';ol=c.ordln>=0?r[c.ordln]||'':'';dl=c.delln>=0?r[c.delln]||'':'';if(!due)due=c.duedt>=0?r[c.duedt]||'':'';}
     }
     var reworkBadge=o.rework?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3);margin-left:4px">⚠ 재작업</span>':'';
+    var stp=o.step_type||'A';
+    var stpBadge='<span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px;background:'+(stp==='A'?'var(--bg)':'rgba(124,58,237,.12)')+';color:'+(stp==='A'?'var(--tx3)':'#7c3aed')+';border:1px solid '+(stp==='A'?'var(--border)':'rgba(124,58,237,.25)')+'">'+stp+'형</span>';
+    var canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
+    var checked=_selOrders.has(o.id)?' checked':'';
     return '<tr style="'+rowStyle+'">'
+      +'<td style="text-align:center">'+(canEdit?'<input type="checkbox"'+checked+' data-oid="'+o.id+'" onchange="toggleOrderSel(this.dataset.oid,this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">':'')+'</td>'
       +'<td style="font-weight:600;font-size:12px">'
-        +(o.step_type&&o.step_type!=='A'?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(124,58,237,.15);color:#7c3aed;border:1px solid rgba(124,58,237,.25);margin-right:4px">'+o.step_type+'형</span>':'')
         +(o.customer||'—')+reworkBadge
       +'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--blue)">'+(po||'—')+'</td>'
@@ -1476,7 +1523,7 @@ function renderStatus(){
       +'<td style="font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap" onclick="editDueInline(event,\''+o.id+'\',\''+(due||'')+'\')" title="클릭하여 납기 수정">'
         +(due?'<span style="color:var(--amber)">'+fmtYYMMDD(due)+'</span>':'<span style="color:var(--tx3);font-size:10px">—</span>')
       +'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+dtStr+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(o.created_at.slice(0,10)):'—')+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'
         +miniProgress(o.dwg_no)
         +(o.rework?'<span style="font-size:10px;font-weight:700;color:#f43f5e;background:rgba(244,63,94,.1);padding:2px 7px;border-radius:10px;border:1px solid rgba(244,63,94,.25)">🔧재작업</span>'
@@ -1486,21 +1533,52 @@ function renderStatus(){
       +'<td style="text-align:center">'
         +(o.qr_printed?'<div title="'+fmtQRDate(o.qr_printed_at)+'" style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:14px">✅</span><span style="font-size:9px;color:var(--tx3);font-family:var(--mono)">'+fmtQRDate(o.qr_printed_at)+'</span></div>':'<span style="font-size:16px;color:var(--tx3)" title="미출력">○</span>')
       +'</td>'
-      +'<td style="text-align:center">'+(typeof AUTH!=='undefined'&&!AUTH.isAdmin()?'':'<input type="checkbox" '+(o.manually_done?'checked':'')+' data-oid="'+o.id+'" onchange="toggleManualDone(this)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)" title="완료 처리">')+'</td>'
-      +'<td>'+(typeof AUTH!=='undefined'&&!AUTH.isAdmin()?'':'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(220,38,38,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button>')+'</td>'
       +'</tr>';
   }).join('');
+  // 정렬 가능한 헤더 (key=null이면 정렬 안 함)
+  var canEditHd=(typeof AUTH==='undefined'||AUTH.isAdmin());
+  var allSel=_spVisibleIds.length>0&&_spVisibleIds.every(function(id){return _selOrders.has(id);});
+  var cols=[
+    {h:'',key:null,w:34,al:'center'},
+    {h:'고객사',key:'customer',w:120},
+    {h:'PO No',key:'po',w:120},
+    {h:'Order Line',key:'ord_ln',w:80,al:'center'},
+    {h:'Del Line',key:'del_ln',w:70,al:'center'},
+    {h:'프로젝트',key:'project',w:110},
+    {h:'도면번호',key:'dwg_no',w:150},
+    {h:'호기',key:'unit',w:55,al:'center'},
+    {h:'수량',key:'qty',w:55,al:'center'},
+    {h:'납기',key:'due',w:88},
+    {h:'등록일',key:'created_at',w:88},
+    {h:'현황판',key:'progress',w:200},
+    {h:'QR 출력',key:'qr_printed',w:64,al:'center'}
+  ];
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
-  var defCols=[120,120,80,70,110,150,60,55,90,60,200,60,46,60];
-  var colW=(savedCols&&savedCols.length===defCols.length)?savedCols:defCols;
-  var colgroup='<colgroup>'+colW.map(function(w){return '<col style="width:'+w+'px">';}).join('')+'</colgroup>';
-  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','현황판','QR 출력','완료',''];
-  var thead='<thead><tr>'+headers.map(function(h,i){
-    var align=(i===2||i===3||i===6||i===7)?'text-align:center;':'';
-    return '<th style="position:relative;'+align+'user-select:none;overflow:hidden;white-space:nowrap">'+h
-      +(i<headers.length-1?'<div class="col-rz" data-col="'+i+'" onmousedown="startColResize(event,'+i+')"></div>':'')+'</th>';
+  var colWidths=(savedCols&&savedCols.length===cols.length)?savedCols:cols.map(function(c){return c.w;});
+  var colgroup='<colgroup>'+colWidths.map(function(w){return '<col style="width:'+w+'px">';}).join('')+'</colgroup>';
+  var thead='<thead><tr>'+cols.map(function(c,i){
+    var align=c.al==='center'?'text-align:center;':'';
+    if(i===0){
+      return '<th style="text-align:center;position:relative">'+(canEditHd?'<input type="checkbox"'+(allSel?' checked':'')+' onchange="toggleAllOrders(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)" title="전체 선택">':'')+'</th>';
+    }
+    var arrow=_spSort.key===c.key?(_spSort.dir==='asc'?' ▲':' ▼'):'';
+    var arrowColor=_spSort.key===c.key?'var(--blue)':'var(--tx3)';
+    return '<th onclick="setSpSort(\''+c.key+'\')" style="position:relative;'+align+'user-select:none;overflow:hidden;white-space:nowrap;cursor:pointer" title="클릭하여 정렬">'
+      +'<span>'+c.h+'</span><span style="color:'+arrowColor+';font-size:9px">'+arrow+'</span>'
+      +'<div class="col-rz" data-col="'+i+'" onmousedown="event.stopPropagation();startColResize(event,'+i+')"></div></th>';
   }).join('')+'</tr></thead>';
-  board.innerHTML='<div class="grp-card"><div style="overflow-x:auto">'
+  // 일괄 처리 바
+  var selCnt=_selOrders.size;
+  var bulkBar=(canEditHd&&selCnt>0)
+    ?'<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--blue-lt);border:1px solid var(--blue-lt2);border-radius:var(--r);margin-bottom:10px">'
+      +'<span style="font-size:12px;font-weight:700;color:var(--blue)">'+selCnt+'건 선택됨</span>'
+      +'<button onclick="bulkDoneSelected(true)" style="font-size:11px;font-weight:700;padding:5px 12px;border:none;border-radius:6px;background:#10b981;color:#fff;cursor:pointer">✅ 완료 처리</button>'
+      +'<button onclick="bulkDoneSelected(false)" style="font-size:11px;font-weight:600;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--tx2);cursor:pointer">완료 취소</button>'
+      +'<button onclick="bulkDeleteSelected()" style="font-size:11px;font-weight:700;padding:5px 12px;border:none;border-radius:6px;background:#f43f5e;color:#fff;cursor:pointer;margin-left:auto">🗑 삭제</button>'
+      +'<button onclick="_selOrders.clear();renderStatus()" style="font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--tx3);cursor:pointer">선택 해제</button>'
+    +'</div>'
+    :'';
+  board.innerHTML=bulkBar+'<div class="grp-card"><div style="overflow-x:auto">'
     +'<table class="dwg-table" id="sp-table" style="table-layout:fixed">'+colgroup+thead+'<tbody>'+rows+'</tbody></table></div></div>';
 }
 
@@ -1619,8 +1697,17 @@ function autoAction(){
       toast(lastInsp.result==='불합격'?'🔁 재검사 — 합격/불합격을 선택하세요':'🔍 검사 — 합격/불합격을 선택하세요','warn');
       return;
     }
-    const alreadyDone=HS.logs.some(function(l){return l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
-    if(alreadyDone){ toast('이미 완료된 공정입니다','warn'); return; }
+    var doneLog=HS.logs.find(function(l){return l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
+    if(doneLog){
+      if(!confirm('['+HS.selStep+'] 이미 완료된 공정입니다.\n다시 처리(재작업)할까요?')) return;
+      var rt=new Date().toISOString();
+      doneLog.started_at=rt;doneLog.ended_at=rt;doneLog.duration_min=0;doneLog.worker=worker;
+      hsSaveLogs();
+      renderScanSteps();renderScanActions();renderScanLog();renderScanStepIndicator();renderStatus();
+      flashScanFeedback('end');
+      toast('🔁 '+HS.selStep+' 재처리됨 — '+HS.job.dwg_no,'ok');
+      return;
+    }
     if(running){ workerEnd(true); return; }
     if(HS.selStep==='출도'){
       const exists=HS.orders.find(function(o){return o.dwg_no===HS.job.dwg_no;});
@@ -2978,7 +3065,7 @@ function startColResize(e,colIdx){
   var table=document.getElementById('sp-table');if(!table)return;
   var cols=table.querySelectorAll('col');if(!cols[colIdx])return;
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
-  var defCols=[120,120,80,70,110,150,60,55,90,60,200,60,46,60];var colW=savedCols||defCols;
+  var defCols=[34,120,120,80,70,110,150,55,55,88,88,200,64];var colW=savedCols||defCols;
   _colRz={active:true,col:colIdx,startX:e.clientX,startW:parseInt(cols[colIdx].style.width)||colW[colIdx]};
   var handle=e.target;handle.classList.add('active');_colRz.handle=handle;
   document.body.style.cursor='col-resize';document.body.style.userSelect='none';
