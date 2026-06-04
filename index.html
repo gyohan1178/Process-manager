@@ -362,6 +362,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .mob-nav{padding-bottom:env(safe-area-inset-bottom);height:calc(56px + env(safe-area-inset-bottom))}
   @media(max-width:768px){.app,.main,.page{padding-bottom:calc(56px + env(safe-area-inset-bottom))}}
 }
+.role-worker .admin-only{display:none!important}
 #fileInput{display:none}
 @media print{.app>*{display:none!important}#print-area{display:block!important}}
 #print-area{display:none;padding:16mm}
@@ -481,6 +482,56 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   </div>
 </div>
 
+<!-- ══ 로그인 / 회원가입 오버레이 ══ -->
+<div id="auth-ovl" style="position:fixed;inset:0;z-index:3000;background:linear-gradient(135deg,#0f1c36,#1e3a5f);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:340px;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden">
+    <div style="background:#0f1c36;padding:22px 24px;text-align:center">
+      <div style="font-size:17px;font-weight:700;color:#fff">하네스 공정관리</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;font-family:var(--mono)">JINSUN TECH</div>
+    </div>
+    <div style="display:flex;border-bottom:1px solid var(--border)">
+      <button id="au-tab-login" onclick="AUTH.switchTab('login')" style="flex:1;padding:12px;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-1px;cursor:pointer;font-family:var(--sans)">로그인</button>
+      <button id="au-tab-signup" onclick="AUTH.switchTab('signup')" style="flex:1;padding:12px;border:none;background:transparent;font-size:13px;font-weight:700;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;font-family:var(--sans)">회원가입</button>
+    </div>
+    <!-- 로그인 폼 -->
+    <div id="au-form-login" style="padding:22px 24px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">아이디 <span style="font-weight:400;color:var(--tx3)">(이름 또는 공정명)</span></div>
+        <input id="au-login-id" class="po-inp" placeholder="예: 김교한 / 검사1" autocomplete="username"
+          onkeydown="if(event.key==='Enter')document.getElementById('au-login-pw').focus()">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">비밀번호</div>
+        <input id="au-login-pw" type="password" class="po-inp" placeholder="비밀번호" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')AUTH.signIn()">
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer;margin-bottom:14px">
+        <input type="checkbox" id="au-remember" checked style="accent-color:var(--blue)"> 아이디 저장 · 자동 로그인
+      </label>
+      <button onclick="AUTH.signIn()" style="width:100%;padding:12px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">로그인</button>
+    </div>
+    <!-- 회원가입 폼 -->
+    <div id="au-form-signup" style="padding:22px 24px;display:none">
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">아이디 <span style="font-weight:400;color:var(--tx3)">(이름 또는 공정명)</span></div>
+        <input id="au-signup-id" class="po-inp" placeholder="예: 김교한 / 검사1">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">비밀번호 <span style="font-weight:400;color:var(--tx3)">(4자 이상)</span></div>
+        <input id="au-signup-pw" type="password" class="po-inp" placeholder="비밀번호">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">비밀번호 확인</div>
+        <input id="au-signup-pw2" type="password" class="po-inp" placeholder="비밀번호 다시 입력"
+          onkeydown="if(event.key==='Enter')AUTH.signUp()">
+      </div>
+      <button onclick="AUTH.signUp()" style="width:100%;padding:12px;border:none;border-radius:8px;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">가입하기</button>
+      <div style="font-size:10px;color:var(--tx3);text-align:center;margin-top:10px;line-height:1.6">가입 시 <b>작업자</b> 권한으로 시작합니다.<br>관리자 권한은 최고관리자가 부여합니다.</div>
+    </div>
+    <div id="au-msg" style="padding:0 24px 18px;font-size:12px;text-align:center;min-height:18px;color:var(--tx2)"></div>
+  </div>
+</div>
+
 <div class="app">
   <aside class="sidebar">
     <div class="sb-brand">
@@ -494,6 +545,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-stamp-single" onclick="setPage('stamp-single')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">⚡</span> 단건 QR 스탬프</button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
+      <button class="sn-item" id="nav-users" onclick="setPage('users')" style="display:none"><span class="sn-ic">👥</span> 사용자 관리</button>
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -506,6 +558,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button onclick="openManual()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans);margin-top:5px" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)';this.style.background='var(--green-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
         <span>📖</span> 사용자 매뉴얼
       </button>
+      <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.55);display:none;align-items:center;justify-content:space-between;gap:6px">
+        <span id="au-userlabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button onclick="AUTH.signOut()" title="로그아웃" style="flex-shrink:0;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer">로그아웃</button>
+      </div>
     </div>
   </aside>
 
@@ -528,9 +584,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
-          <button class="btn btn-pr btn-sm" onclick="triggerOrderExcel()" title="Excel로 PO 일괄 등록">📤 Excel 업로드</button>
+          <button class="btn btn-pr btn-sm admin-only" onclick="triggerOrderExcel()" title="Excel로 PO 일괄 등록">📤 Excel 업로드</button>
           <input type="file" id="orderExcelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleOrderExcel(this)">
-          <button class="btn btn-outline btn-sm" onclick="downloadOrderTemplate()" title="양식 다운로드">⬇ 양식</button>
+          <button class="btn btn-outline btn-sm admin-only" onclick="downloadOrderTemplate()" title="양식 다운로드">⬇ 양식</button>
           <button class="btn btn-outline btn-sm" onclick="refreshSpTab()">↻</button>
         </div>
       </div>
@@ -558,6 +614,18 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <button class="an-tab" id="antab-ontime" onclick="Analytics.setTab('ontime')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer">📅 납기 준수율</button>
       </div>
       <div id="an-body" style="padding:18px 20px"></div>
+    </div>
+
+    <!-- PAGE: 사용자 관리 (최고관리자 전용) -->
+    <div id="pg-users" class="page hidden" style="overflow-y:auto">
+      <div class="sp-bar">
+        <div class="sp-title">👥 사용자 관리 <span style="font-size:10px;background:rgba(124,58,237,.12);color:var(--purple);padding:2px 8px;border-radius:10px;font-weight:700;margin-left:4px">최고관리자 전용</span></div>
+        <div style="margin-left:auto"><button class="btn btn-outline btn-sm" onclick="Users.render()">↻ 새로고침</button></div>
+      </div>
+      <div style="padding:8px 20px;font-size:12px;color:var(--tx3);background:var(--bg2);border-bottom:1px solid var(--border)">
+        가입한 사용자에게 권한을 부여합니다. <b style="color:var(--tx2)">작업자</b>=스캔·현황 조회 / <b style="color:var(--tx2)">관리자</b>=전체 메뉴 / <b style="color:var(--tx2)">최고관리자</b>=권한 부여까지
+      </div>
+      <div id="users-body" style="padding:16px 20px"></div>
     </div>
 
     <div id="pg-stamp" class="page hidden">
@@ -1104,14 +1172,14 @@ function loadSupabaseSDK(cb){
   var s=document.createElement('script');
   s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
   s.onload=function(){
-    if(window.supabase&&!_sb) _sb=window.supabase.createClient(SB_URL,SB_KEY);
+    if(window.supabase&&!_sb) _sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
     cb();
   };
   s.onerror=function(){ setBadge('err'); };
   document.head.appendChild(s);
 }
 function getSB(){
-  if(!_sb&&window.supabase){_sb=window.supabase.createClient(SB_URL,SB_KEY);}
+  if(!_sb&&window.supabase){_sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});}
   return _sb;
 }
 
@@ -1242,11 +1310,16 @@ async function hsLoad(){
 function hsGenId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 
 function setPage(p){
-  ['status','analytics','stamp','stamp-single','scan','qrhist'].forEach(function(id){
+  // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users'].indexOf(p)>=0){
+    toast('접근 권한이 없습니다','warn');return;
+  }
+  if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isSuper())){toast('최고관리자만 접근 가능합니다','warn');return;}
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb) nb.classList.toggle('on', id===p);
     const mn=document.getElementById('mn-'+id);
@@ -1257,6 +1330,7 @@ function setPage(p){
   if(p==='analytics') Analytics.render();
   if(p==='stamp') renderOrderStampList();
   if(p==='qrhist') renderQRHistory();
+  if(p==='users') Users.render();
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -1394,8 +1468,8 @@ function renderStatus(){
       +'<td style="text-align:center">'
         +(o.qr_printed?'<div title="'+fmtQRDate(o.qr_printed_at)+'" style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:14px">✅</span><span style="font-size:9px;color:var(--tx3);font-family:var(--mono)">'+fmtQRDate(o.qr_printed_at)+'</span></div>':'<span style="font-size:16px;color:var(--tx3)" title="미출력">○</span>')
       +'</td>'
-      +'<td style="text-align:center"><input type="checkbox" '+(o.manually_done?'checked':'')+' data-oid="'+o.id+'" onchange="toggleManualDone(this)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)" title="완료 처리"></td>'
-      +'<td><button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(220,38,38,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button></td>'
+      +'<td style="text-align:center">'+(typeof AUTH!=='undefined'&&!AUTH.isAdmin()?'':'<input type="checkbox" '+(o.manually_done?'checked':'')+' data-oid="'+o.id+'" onchange="toggleManualDone(this)" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)" title="완료 처리">')+'</td>'
+      +'<td>'+(typeof AUTH!=='undefined'&&!AUTH.isAdmin()?'':'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(220,38,38,.3)" data-oid="'+o.id+'" onclick="deleteDwg(this.dataset.oid)">삭제</button>')+'</td>'
       +'</tr>';
   }).join('');
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
@@ -3356,8 +3430,205 @@ function mobMenuToggle(){}
 // INIT
 // ════════════════════════════════════════
 const isMobile=window.innerWidth<=768||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-try{if(isMobile){setPage('scan');}else{setPage('status');refreshSpTab();}}catch(e){console.error('페이지 초기화 오류:',e);}
-hsLoad();
+
+// ════════════════════════════════════════
+// 인증 (로그인 / 회원가입 / 권한)
+// ════════════════════════════════════════
+var AUTH={
+  user:null, profile:null, role:'worker',
+  // 아이디(한글 가능) → ASCII 가짜 이메일 (hex 인코딩, 결정적)
+  makeEmail:function(u){
+    var hex='';for(var i=0;i<u.length;i++){hex+=u.charCodeAt(i).toString(16);}
+    return 'u'+hex+'@jinsun.local';
+  },
+  msg:function(t,err){var e=document.getElementById('au-msg');if(e){e.textContent=t||'';e.style.color=err?'#dc2626':'var(--tx2)';}},
+  switchTab:function(t){
+    var lf=document.getElementById('au-form-login'),sf=document.getElementById('au-form-signup');
+    var lt=document.getElementById('au-tab-login'),st=document.getElementById('au-tab-signup');
+    var on=(t==='login');
+    if(lf)lf.style.display=on?'':'none';if(sf)sf.style.display=on?'none':'';
+    if(lt){lt.style.color=on?'var(--blue)':'var(--tx3)';lt.style.borderBottomColor=on?'var(--blue)':'transparent';}
+    if(st){st.style.color=on?'var(--tx3)':'var(--blue)';st.style.borderBottomColor=on?'transparent':'var(--blue)';}
+    this.msg('');
+  },
+  signIn:async function(){
+    var id=(document.getElementById('au-login-id').value||'').trim();
+    var pw=document.getElementById('au-login-pw').value||'';
+    if(!id||!pw){this.msg('아이디와 비밀번호를 입력하세요',true);return;}
+    var sb=getSB();if(!sb){this.msg('서버 연결 중입니다. 잠시 후 다시 시도하세요',true);return;}
+    this.msg('로그인 중...');
+    try{
+      var r=await sb.auth.signInWithPassword({email:this.makeEmail(id),password:pw});
+      if(r.error){this.msg('로그인 실패 — 아이디 또는 비밀번호를 확인하세요',true);return;}
+      if(document.getElementById('au-remember').checked)localStorage.setItem('hs_saved_id',id);
+      else localStorage.removeItem('hs_saved_id');
+      this.user=r.data.user;
+      await this.loadProfile();
+      this.showApp();
+    }catch(e){this.msg('로그인 오류: '+(e.message||e),true);}
+  },
+  signUp:async function(){
+    var id=(document.getElementById('au-signup-id').value||'').trim();
+    var pw=document.getElementById('au-signup-pw').value||'';
+    var pw2=document.getElementById('au-signup-pw2').value||'';
+    if(!id||!pw){this.msg('아이디와 비밀번호를 입력하세요',true);return;}
+    if(pw.length<4){this.msg('비밀번호는 4자 이상이어야 합니다',true);return;}
+    if(pw!==pw2){this.msg('비밀번호가 일치하지 않습니다',true);return;}
+    var sb=getSB();if(!sb){this.msg('서버 연결 중입니다. 잠시 후 다시 시도하세요',true);return;}
+    this.msg('가입 중...');
+    try{
+      var r=await sb.auth.signUp({email:this.makeEmail(id),password:pw,options:{data:{username:id}}});
+      if(r.error){
+        var m=r.error.message||'';
+        this.msg('가입 실패 — '+(m.indexOf('already')>=0||m.indexOf('registered')>=0?'이미 존재하는 아이디입니다':m),true);
+        return;
+      }
+      if(r.data&&r.data.session){
+        this.user=r.data.user;localStorage.setItem('hs_saved_id',id);
+        await this.loadProfile();
+        this.showApp();
+      } else {
+        // 세션 미발급 = 이메일 확인 설정이 켜져 있음
+        this.msg('가입은 됐으나 자동 로그인이 안 됩니다. 관리자에게 이메일 확인 비활성화를 요청하세요',true);
+      }
+    }catch(e){this.msg('가입 오류: '+(e.message||e),true);}
+  },
+  signOut:async function(){
+    var sb=getSB();
+    try{if(sb)await sb.auth.signOut();}catch(e){}
+    this.user=null;this.profile=null;this.role='worker';
+    location.reload();
+  },
+  loadProfile:async function(){
+    var sb=getSB();if(!sb||!this.user)return;
+    try{
+      var r=await sb.from('profiles').select('*').eq('id',this.user.id).single();
+      this.profile=r.data||null;
+      this.role=(r.data&&r.data.role)||'worker';
+    }catch(e){this.role='worker';}
+  },
+  isAdmin:function(){return this.role==='admin'||this.role==='super_admin';},
+  isSuper:function(){return this.role==='super_admin';},
+  applyRole:function(){
+    var admin=this.isAdmin(), sup=this.isSuper();
+    function show(id,on){var el=document.getElementById(id);if(el)el.style.display=on?'':'none';}
+    // 작업자: 공정현황 + QR스캔만. 관리자: 전체. 최고관리자: +사용자관리
+    show('nav-log',admin);
+    show('nav-analytics',admin);
+    show('nav-stamp',admin);
+    show('nav-stamp-single',admin);
+    show('nav-qrhist',admin);
+    show('nav-users',sup);
+    // 공정설정은 관리자만
+    var stepBtn=document.querySelector('[onclick="openStepSettings()"]');if(stepBtn)stepBtn.style.display=admin?'':'none';
+    // 사용자 라벨 + 로그아웃
+    var box=document.getElementById('au-userbox');
+    var lbl=document.getElementById('au-userlabel');
+    var roleTxt=sup?'최고관리자':admin?'관리자':'작업자';
+    var name=(this.profile&&this.profile.username)||'';
+    if(lbl)lbl.textContent=name+' · '+roleTxt;
+    if(box)box.style.display='flex';
+    // 작업자 모드 표시 (현황판 버튼 숨김용)
+    document.body.classList.toggle('role-worker',!admin);
+    // 작업자가 권한 없는 페이지에 있으면 안전 페이지로
+    if(!admin){
+      var cur=document.querySelector('.page:not(.hidden)');
+      var safe=['pg-status','pg-scan'];
+      if(cur&&safe.indexOf(cur.id)<0){setPage(isMobile?'scan':'status');}
+    }
+  },
+  showApp:function(){
+    var ov=document.getElementById('auth-ovl');if(ov)ov.style.display='none';
+    try{if(isMobile){setPage('scan');}else{setPage('status');refreshSpTab();}}catch(e){}
+    this.applyRole();
+    hsLoad();
+  },
+  init:async function(){
+    // 저장된 아이디 채우기
+    var saved=localStorage.getItem('hs_saved_id');
+    if(saved){var el=document.getElementById('au-login-id');if(el)el.value=saved;}
+    this.switchTab('login');
+    this.msg('서버 연결 중...');
+    // SDK 로드 (5초 제한)
+    var ok=await new Promise(function(resolve){
+      var done=false;var t=setTimeout(function(){if(!done){done=true;resolve(false);}},6000);
+      loadSupabaseSDK(function(){if(!done){done=true;clearTimeout(t);resolve(true);}});
+    });
+    if(!ok){this.msg('서버 연결 실패 — 새로고침 후 다시 시도하세요',true);return;}
+    var sb=getSB();if(!sb){this.msg('서버 연결 실패',true);return;}
+    this.msg('');
+    // 기존 세션 확인 → 자동 로그인
+    try{
+      var s=await sb.auth.getSession();
+      if(s.data&&s.data.session){
+        this.user=s.data.session.user;
+        await this.loadProfile();
+        this.showApp();
+        return;
+      }
+    }catch(e){}
+    // 세션 없음 → 로그인 화면 유지
+    var lid=document.getElementById('au-login-id');if(lid&&!saved)lid.focus();
+  }
+};
+
+// ════════════════════════════════════════
+// 사용자 관리 (최고관리자 전용)
+// ════════════════════════════════════════
+var Users={
+  list:[],
+  render:async function(){
+    var el=document.getElementById('users-body');if(!el)return;
+    if(!AUTH.isSuper()){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--tx3)">접근 권한이 없습니다</div>';return;}
+    var sb=getSB();if(!sb){el.innerHTML='<div style="padding:20px;color:var(--red)">서버 연결 안 됨</div>';return;}
+    el.innerHTML='<div style="padding:20px;color:var(--tx3);font-size:12px">불러오는 중...</div>';
+    try{
+      var r=await sb.from('profiles').select('*').order('created_at',{ascending:true});
+      if(r.error){el.innerHTML='<div style="padding:20px;color:var(--red);font-size:12px">목록 조회 실패: '+r.error.message+'</div>';return;}
+      this.list=r.data||[];
+    }catch(e){el.innerHTML='<div style="padding:20px;color:var(--red);font-size:12px">오류: '+(e.message||e)+'</div>';return;}
+    if(!this.list.length){el.innerHTML='<div style="padding:20px;color:var(--tx3)">가입한 사용자가 없습니다</div>';return;}
+    var roleBadge=function(role){
+      var m={worker:['작업자','var(--tx2)','var(--bg)'],admin:['관리자','#2563eb','rgba(37,99,235,.1)'],super_admin:['최고관리자','#7c3aed','rgba(124,58,237,.12)']};
+      var x=m[role]||m.worker;
+      return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;color:'+x[1]+';background:'+x[2]+'">'+x[0]+'</span>';
+    };
+    var me=AUTH.user?AUTH.user.id:'';
+    var rows=this.list.map(function(u){
+      var isMe=u.id===me;
+      var created=u.created_at?new Date(u.created_at):null;
+      var cstr=created?((created.getMonth()+1)+'/'+created.getDate()):'—';
+      return '<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:9px 12px;font-weight:600;font-size:13px">'+(u.username||'(이름없음)')+(isMe?' <span style="font-size:9px;color:var(--blue)">(나)</span>':'')+'</td>'
+        +'<td style="padding:9px 12px">'+roleBadge(u.role)+'</td>'
+        +'<td style="padding:9px 12px;font-family:var(--mono);font-size:11px;color:var(--tx3)">'+cstr+'</td>'
+        +'<td style="padding:9px 12px;text-align:right">'
+          +(isMe?'<span style="font-size:11px;color:var(--tx3)">본인 변경 불가</span>'
+            :'<select onchange="Users.setRole(\''+u.id+'\',this.value)" style="font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--tx);cursor:pointer;font-family:var(--sans)">'
+              +'<option value="worker"'+(u.role==='worker'?' selected':'')+'>작업자</option>'
+              +'<option value="admin"'+(u.role==='admin'?' selected':'')+'>관리자</option>'
+              +'<option value="super_admin"'+(u.role==='super_admin'?' selected':'')+'>최고관리자</option>'
+            +'</select>')
+        +'</td></tr>';
+    }).join('');
+    el.innerHTML='<div class="grp-card"><div style="overflow-x:auto"><table class="dwg-table" style="width:100%">'
+      +'<thead><tr><th>아이디</th><th>권한</th><th>가입일</th><th style="text-align:right">권한 변경</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div></div>'
+      +'<div style="font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.7">※ 권한 변경은 즉시 저장됩니다. 해당 사용자가 다시 로그인(또는 새로고침)하면 적용됩니다.<br>※ 비밀번호 재설정은 Supabase 대시보드에서 처리하세요.</div>';
+  },
+  setRole:async function(id,role){
+    var sb=getSB();if(!sb)return;
+    try{
+      var r=await sb.from('profiles').update({role:role}).eq('id',id);
+      if(r.error){toast('권한 변경 실패: '+r.error.message,'err');this.render();return;}
+      toast('권한이 '+(role==='super_admin'?'최고관리자':role==='admin'?'관리자':'작업자')+'로 변경됨','ok');
+    }catch(e){toast('권한 변경 오류','err');}
+    this.render();
+  }
+};
+
+// 로그인 후 앱 시작은 AUTH.showApp()가 담당
+AUTH.init();
 </script>
 </body>
 </html>
