@@ -1973,6 +1973,8 @@ var Analytics={
     while(cur<e){var dow=cur.getDay();if(dow!==0&&dow!==6)cnt++;cur.setDate(cur.getDate()+1);}
     return cnt;
   },
+  _wipOpen:{},
+  toggleWIP:function(stepId){this._wipOpen[stepId]=!this._wipOpen[stepId];this.render();},
   render:function(){
     var el=document.getElementById('an-body');if(!el)return;
     if(this.tab==='wip')this.renderWIP(el);
@@ -2010,22 +2012,49 @@ var Analytics={
       stepLoad[current].push(o);
     });
     var maxLoad=Math.max(1,...H_STEPS.map(function(s){return (stepLoad[s.id]||[]).length;}));
+    var self=this;
     var bars=H_STEPS.map(function(s){
       var items=stepLoad[s.id]||[];var n=items.length;
       var pct=Math.round(n/maxLoad*100);
+      var open=!!self._wipOpen[s.id];
+      // 고객사별 그룹
+      var byCust={};items.forEach(function(o){var k=o.customer||'(미지정)';if(!byCust[k])byCust[k]=[];byCust[k].push(o);});
+      var custKeys=Object.keys(byCust).sort(function(a,b){return byCust[b].length-byCust[a].length;});
+      var detail='';
+      if(open&&n>0){
+        detail='<div style="margin:6px 0 4px;padding:8px 10px;background:var(--bg);border-radius:6px">'
+          +custKeys.map(function(ck){
+            var list=byCust[ck];
+            var rows=list.map(function(o){
+              var run=HS.logs.some(function(l){return !l.ended_at&&l.dwg_no===o.dwg_no;});
+              return '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0;font-size:11px;color:var(--tx2)">'
+                +'<span style="font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(o.dwg_no||'—')+(o.unit?' <span style=\'color:var(--tx3)\'>('+o.unit+')</span>':'')+'</span>'
+                +'<span style="flex-shrink:0;color:'+(run?s.color:'var(--tx3)')+';font-weight:600">'+(run?'작업중':'대기')+'</span>'
+              +'</div>';
+            }).join('');
+            return '<div style="margin-bottom:6px">'
+              +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--tx);border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:3px">'
+                +'<span>'+ck+'</span><span style="color:'+s.color+'">'+list.length+'건</span>'
+              +'</div>'+rows
+            +'</div>';
+          }).join('')
+        +'</div>';
+      }
+      var sid=(s.id+'').replace(/'/g,"");
       return '<div style="margin-bottom:10px">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-          +'<span style="font-size:12px;font-weight:600;color:var(--tx)">'+s.icon+' '+s.id+'</span>'
+        +'<div onclick="Analytics.toggleWIP(\''+sid+'\')" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;cursor:'+(n>0?'pointer':'default')+'">'
+          +'<span style="font-size:12px;font-weight:600;color:var(--tx)">'+(n>0?(open?'▾ ':'▸ '):'')+s.icon+' '+s.id+'</span>'
           +'<span style="font-size:12px;font-weight:700;color:'+(n>0?s.color:'var(--tx3)')+'">'+n+'건</span>'
         +'</div>'
-        +'<div style="height:18px;background:var(--bg);border-radius:5px;overflow:hidden">'
+        +'<div onclick="Analytics.toggleWIP(\''+sid+'\')" style="height:18px;background:var(--bg);border-radius:5px;overflow:hidden;cursor:'+(n>0?'pointer':'default')+'">'
           +'<div style="height:100%;width:'+pct+'%;background:'+s.color+';border-radius:5px;transition:width .4s;min-width:'+(n>0?'4px':'0')+'"></div>'
         +'</div>'
-        +(n>0?'<div style="font-size:9px;color:var(--tx3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+items.slice(0,5).map(function(o){return o.dwg_no;}).join(', ')+(n>5?' 외 '+(n-5)+'건':'')+'</div>':'')
+        +(n>0&&!open?'<div style="font-size:9px;color:var(--tx3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+custKeys.slice(0,4).map(function(ck){return ck+' '+byCust[ck].length;}).join(' · ')+(custKeys.length>4?' 외':'')+'</div>':'')
+        +detail
       +'</div>';
     }).join('');
     var totalActive=activeOrders.length;
-    el.innerHTML=this.card('🔧 공정별 재공(WIP) 부하',bars,'진행중 '+totalActive+'건의 도면이 현재 머물러 있는 공정별 분포 — 막대가 길수록 해당 공정에 일감이 몰려 있습니다')
+    el.innerHTML=this.card('🔧 공정별 재공(WIP) 부하',bars,'완료건 제외, 진행중 '+totalActive+'건의 현재 공정별 분포 — 항목을 누르면 고객사별 상세가 펼쳐집니다')
       +'<div style="font-size:11px;color:var(--tx3);text-align:center;padding:4px">※ 정체가 심한 공정 = 병목 가능성. 인력/순서 조정 검토</div>';
   },
   // ── 품질 (합불/재작업 + 방치 알림) ──
