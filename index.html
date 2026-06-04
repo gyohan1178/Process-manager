@@ -548,11 +548,11 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <div class="sb-nav">
       <button class="sn-item on" id="nav-status" onclick="setPage('status');setSpTab('board')"><span class="sn-ic">📊</span> 공정현황</button>
       <button class="sn-item" id="nav-log" onclick="setPage('status');setSpTab('log')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> 이력 관리</button>
-      <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:rgba(217,119,6,.25);color:#fbbf24;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">BETA</span></button>
       <button class="sn-item" id="nav-stamp" onclick="setPage('stamp')"><span class="sn-ic">📐</span> QR 스탬프</button>
       <button class="sn-item" id="nav-stamp-single" onclick="setPage('stamp-single')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">⚡</span> 단건 QR 스탬프</button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
+      <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:rgba(217,119,6,.25);color:#fbbf24;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">BETA</span></button>
       <button class="sn-item" id="nav-users" onclick="setPage('users')" style="display:none"><span class="sn-ic">👥</span> 사용자 관리</button>
     </div>
       <div class="sb-ver">
@@ -1524,13 +1524,13 @@ function renderStatus(){
     return '<tr style="'+rowStyle+'">'
       +'<td style="text-align:center">'+(canEdit?'<input type="checkbox"'+checked+' data-oid="'+o.id+'" onchange="toggleOrderSel(this.dataset.oid,this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">':'')+'</td>'
       +'<td style="font-weight:600;font-size:12px">'
-        +(o.customer||'—')+reworkBadge
+        +(o.customer||'—')
       +'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--blue)">'+(po||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(ol||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(dl||'—')+'</td>'
       +'<td style="font-size:12px;color:var(--tx2)">'+(o.project||'—')+'</td>'
-      +'<td><div class="dwg-no">'+(o.dwg_no||'—')+'</div></td>'
+      +'<td><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
       +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
       +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap" onclick="editDueInline(event,\''+o.id+'\',\''+(due||'')+'\')" title="클릭하여 납기 수정">'
@@ -1539,9 +1539,8 @@ function renderStatus(){
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(o.created_at.slice(0,10)):'—')+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'
         +miniProgress(o.dwg_no)
-        +(o.rework?'<span style="font-size:10px;font-weight:700;color:#f43f5e;background:rgba(244,63,94,.1);padding:2px 7px;border-radius:10px;border:1px solid rgba(244,63,94,.25)">🔧재작업</span>'
-          :'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
-          +(done?'✅완료':prog>0?(prog+'/'+getStepsForType(o.step_type).length):'대기')+'</span>')
+        +'<span style="font-size:10px;font-weight:700;color:'+(done?'var(--green)':prog>0?'var(--blue)':'var(--tx3)')+'">'
+          +(done?'✅완료':prog>0?(prog+'/'+getStepsForType(o.step_type).length):'대기')+'</span>'
       +'</div></td>'
       +'<td style="text-align:center">'
         +(o.qr_printed?'<div title="'+fmtQRDate(o.qr_printed_at)+'" style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:14px">✅</span><span style="font-size:9px;color:var(--tx3);font-family:var(--mono)">'+fmtQRDate(o.qr_printed_at)+'</span></div>':'<span style="font-size:16px;color:var(--tx3)" title="미출력">○</span>')
