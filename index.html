@@ -519,7 +519,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <input id="au-signup-id" class="po-inp" placeholder="예: 김교한 / 검사1">
       </div>
       <div style="margin-bottom:12px">
-        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">비밀번호 <span style="font-weight:400;color:var(--tx3)">(4자 이상)</span></div>
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px">비밀번호 <span style="font-weight:400;color:var(--tx3)">(6자 이상)</span></div>
         <input id="au-signup-pw" type="password" class="po-inp" placeholder="비밀번호">
       </div>
       <div style="margin-bottom:14px">
@@ -3751,7 +3751,7 @@ var AUTH={
     var pw=document.getElementById('au-signup-pw').value||'';
     var pw2=document.getElementById('au-signup-pw2').value||'';
     if(!id||!pw){this.msg('아이디와 비밀번호를 입력하세요',true);return;}
-    if(pw.length<4){this.msg('비밀번호는 4자 이상이어야 합니다',true);return;}
+    if(pw.length<6){this.msg('비밀번호는 6자 이상이어야 합니다',true);return;}
     if(pw!==pw2){this.msg('비밀번호가 일치하지 않습니다',true);return;}
     var sb=getSB();if(!sb){this.msg('서버 연결 중입니다. 잠시 후 다시 시도하세요',true);return;}
     this.msg('가입 중...');
