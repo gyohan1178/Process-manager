@@ -359,11 +359,43 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .mp-inner{flex-direction:column;gap:8px}
   .meta-fields{grid-template-columns:1fr 1fr!important}
   .qr-panel{min-width:0;width:100%}
+  /* ── 모바일 상단 앱바 ── */
+  .mob-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:150;background:linear-gradient(135deg,#0f1c36,#1e3a5f);color:#fff;padding:11px 16px;padding-top:calc(11px + env(safe-area-inset-top));box-shadow:0 2px 12px rgba(15,28,54,.18)}
+  .mob-top .mt-l{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .mob-top .mt-title{font-size:15px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .mob-top .mt-sub{font-size:10px;color:rgba(255,255,255,.5);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mob-top .mt-user{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .mob-top .mt-chip{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
+  .mob-top .mt-name{font-size:11px;font-weight:700}
+  .mob-top .mt-role{font-size:9px;color:rgba(255,255,255,.5)}
+  .mob-top .mt-out{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .mob-top .mt-out:active{background:rgba(255,255,255,.18)}
+  /* ── 하단 네비 세련화 ── */
+  .mob-nav{height:60px;border-top:none;box-shadow:0 -2px 18px rgba(15,28,54,.1);background:rgba(255,255,255,.97);backdrop-filter:blur(10px)}
+  .mob-nav-btn{position:relative;gap:3px;font-size:10px;color:#94a3b8}
+  .mob-nav-btn .mn-ic{font-size:21px;transition:transform .18s}
+  .mob-nav-btn.on{color:var(--blue)}
+  .mob-nav-btn.on .mn-ic{transform:translateY(-2px) scale(1.1)}
+  .mob-nav-btn.on::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;border-radius:0 0 4px 4px;background:var(--blue)}
+  /* ── 메뉴 바텀시트 ── */
+  .mob-sheet-ovl{display:none;position:fixed;inset:0;z-index:250;background:rgba(15,23,42,.45)}
+  .mob-sheet-ovl.show{display:block}
+  .mob-sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 16px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -8px 32px rgba(0,0,0,.22);animation:sheetUp .24s cubic-bezier(.22,1,.36,1)}
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .mob-sheet .sh-grip{width:40px;height:4px;border-radius:2px;background:#cbd5e1;margin:6px auto 14px}
+  .mob-sheet .sh-hd{font-size:12px;font-weight:700;color:var(--tx3);margin:0 2px 10px}
+  .mob-sheet .sh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .mob-sheet .sh-item{display:flex;flex-direction:column;align-items:center;gap:7px;padding:15px 6px;border-radius:14px;background:var(--bg);border:1px solid var(--border);cursor:pointer;color:var(--tx);font-size:11px;font-weight:600;transition:all .12s}
+  .mob-sheet .sh-item:active{transform:scale(.96)}
+  .mob-sheet .sh-item .sh-ic{font-size:23px;line-height:1}
+  .mob-sheet .sh-item.on{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
 }
 @supports(padding-bottom:env(safe-area-inset-bottom)){
   .mob-nav{padding-bottom:env(safe-area-inset-bottom);height:calc(56px + env(safe-area-inset-bottom))}
   @media(max-width:768px){.app,.main,.page{padding-bottom:calc(56px + env(safe-area-inset-bottom))}}
 }
+.mob-top{display:none}
+.mob-sheet-ovl{display:none}
 .role-worker .admin-only{display:none!important}
 #fileInput{display:none}
 @media print{.app>*{display:none!important}#print-area{display:block!important}}
@@ -542,6 +574,16 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </div>
 
 <div class="app">
+  <header class="mob-top" id="mob-top">
+    <div class="mt-l">
+      <div class="mt-title" id="mob-title">하네스 공정관리</div>
+      <div class="mt-sub" id="mob-sub">JINSUN TECH</div>
+    </div>
+    <div class="mt-user">
+      <div class="mt-chip"><span class="mt-name" id="mob-uname"></span><span class="mt-role" id="mob-urole"></span></div>
+      <button class="mt-out" onclick="AUTH.signOut()" title="로그아웃">⏻</button>
+    </div>
+  </header>
   <aside class="sidebar">
     <div class="sb-brand">
       <div class="sb-title" style="white-space:nowrap">하네스 공정관리</div>
@@ -919,10 +961,20 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   <button class="mob-nav-btn on" id="mn-scan" onclick="setPage('scan')">
     <span class="mn-ic">📷</span>스캔
   </button>
-  <button class="mob-nav-btn" id="mn-status" onclick="setPage('status')">
+  <button class="mob-nav-btn" id="mn-status" onclick="setPage('status');setSpTab('board')">
     <span class="mn-ic">📊</span>현황
   </button>
+  <button class="mob-nav-btn" id="mn-menu" onclick="openMobSheet()">
+    <span class="mn-ic">☰</span>메뉴
+  </button>
 </nav>
+<div class="mob-sheet-ovl" id="mob-sheet-ovl" onclick="if(event.target===this)closeMobSheet()">
+  <div class="mob-sheet">
+    <div class="sh-grip"></div>
+    <div class="sh-hd">메뉴</div>
+    <div class="sh-grid" id="mob-sheet-grid"></div>
+  </div>
+</div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1350,6 +1402,7 @@ function setPage(p){
     if(mn) mn.classList.toggle('on', id===p);
   });
   if(p!=='scan') stopCamera();
+  if(typeof setMobTitle==='function')setMobTitle(p);
   if(p==='status') refreshSpTab();
   if(p==='analytics') Analytics.render();
   if(p==='stamp') renderOrderStampList();
@@ -3714,6 +3767,41 @@ const isMobile=window.innerWidth<=768||/Android|iPhone|iPad|iPod|Mobile/i.test(n
 // ════════════════════════════════════════
 // 인증 (로그인 / 회원가입 / 권한)
 // ════════════════════════════════════════
+// ── 모바일 메뉴 / 상단바 ──
+var MOB_SHEET=[
+  {ic:'📊',nm:'공정현황',role:'all',page:'status-board',fn:function(){setPage('status');setSpTab('board');}},
+  {ic:'📷',nm:'QR 스캔',role:'all',page:'scan',fn:function(){setPage('scan');}},
+  {ic:'📋',nm:'이력 관리',role:'admin',page:'status-log',fn:function(){setPage('status');setSpTab('log');}},
+  {ic:'📐',nm:'QR 스탬프',role:'admin',page:'stamp',fn:function(){setPage('stamp');}},
+  {ic:'⚡',nm:'단건 QR',role:'admin',page:'stamp-single',fn:function(){setPage('stamp-single');}},
+  {ic:'🗂',nm:'QR 이력',role:'admin',page:'qrhist',fn:function(){setPage('qrhist');}},
+  {ic:'📈',nm:'분석',role:'admin',page:'analytics',fn:function(){setPage('analytics');}},
+  {ic:'👥',nm:'사용자 관리',role:'super',page:'users',fn:function(){setPage('users');}}
+];
+var _mobVisible=[];
+var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리'};
+function buildMobSheet(){
+  var grid=document.getElementById('mob-sheet-grid');if(!grid)return;
+  var admin=(typeof AUTH!=='undefined'&&AUTH.isAdmin&&AUTH.isAdmin());
+  var sup=(typeof AUTH!=='undefined'&&AUTH.isSuper&&AUTH.isSuper());
+  _mobVisible=MOB_SHEET.filter(function(m){return m.role==='all'||(m.role==='admin'&&admin)||(m.role==='super'&&sup);});
+  var cur=document.querySelector('.page:not(.hidden)');var curId=cur?cur.id.replace('pg-',''):'';
+  var curTab=(typeof _spTab!=='undefined')?_spTab:'board';
+  grid.innerHTML=_mobVisible.map(function(m,i){
+    var on=false;
+    if(m.page==='status-board')on=(curId==='status'&&curTab==='board');
+    else if(m.page==='status-log')on=(curId==='status'&&curTab==='log');
+    else on=(curId===m.page);
+    return '<div class="sh-item'+(on?' on':'')+'" onclick="mobGo('+i+')"><span class="sh-ic">'+m.ic+'</span>'+m.nm+'</div>';
+  }).join('');
+}
+function openMobSheet(){buildMobSheet();var o=document.getElementById('mob-sheet-ovl');if(o)o.classList.add('show');}
+function closeMobSheet(){var o=document.getElementById('mob-sheet-ovl');if(o)o.classList.remove('show');}
+function mobGo(i){var m=_mobVisible[i];closeMobSheet();if(m&&m.fn)m.fn();}
+function setMobTitle(p){
+  var t=document.getElementById('mob-title');if(t)t.textContent=MOB_TITLES[p]||'하네스 공정관리';
+}
+
 var AUTH={
   user:null, profile:null, role:'pending',
   makeEmail:function(u){
@@ -3822,6 +3910,8 @@ var AUTH={
     var name=(this.profile&&this.profile.username)||'';
     if(lbl)lbl.textContent=name+' · '+roleTxt;
     if(box)box.style.display='flex';
+    var mu=document.getElementById('mob-uname');if(mu)mu.textContent=name;
+    var mr=document.getElementById('mob-urole');if(mr)mr.textContent=roleTxt;
     document.body.classList.toggle('role-worker',!admin);
     if(!admin){
       var cur=document.querySelector('.page:not(.hidden)');
