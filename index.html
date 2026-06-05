@@ -77,6 +77,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .grp-meta{font-size:11px;color:var(--tx3)}
 .grp-cnt{margin-left:auto;font-size:11px;color:var(--tx3);font-family:var(--mono)}
 .dwg-table{width:100%;border-collapse:collapse}
+.dwg-table thead th{position:sticky;top:0;z-index:3}
 .dwg-table th{background:var(--bg);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
 .dwg-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px;color:var(--tx)}
 .dwg-table tr:last-child td{border-bottom:none}
@@ -1590,8 +1591,9 @@ function renderStatus(){
       +'<button onclick="_selOrders.clear();renderStatus()" style="font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--tx3);cursor:pointer">선택 해제</button>'
     +'</div>'
     :'';
-  board.innerHTML=bulkBar+'<div class="grp-card"><div style="overflow-x:auto">'
-    +'<table class="dwg-table" id="sp-table" style="table-layout:fixed">'+colgroup+thead+'<tbody>'+rows+'</tbody></table></div></div>';
+  board.innerHTML=(bulkBar?'<div style="flex-shrink:0">'+bulkBar+'</div>':'')
+    +'<div style="flex:1;min-height:0;overflow:auto;border:1px solid var(--border);border-radius:var(--r2);background:var(--white)">'
+    +'<table class="dwg-table" id="sp-table" style="table-layout:fixed;width:100%">'+colgroup+thead+'<tbody>'+rows+'</tbody></table></div>';
 }
 
 function fmtYYMMDD(val){
