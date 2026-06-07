@@ -328,6 +328,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .toast.hide{transform:translateY(60px);opacity:0;pointer-events:none}
 .t-ic{font-size:15px;flex-shrink:0}.t-tx{color:var(--tx)}
 .mob-nav{display:none}
+.mob-top{display:none}
+.mob-sheet-ovl{display:none}
 @media(max-width:768px){
   html,body{overflow:auto;height:auto;min-height:100vh}
   .app{flex-direction:column;height:auto;min-height:calc(100vh - 56px);padding-bottom:56px}
@@ -415,8 +417,6 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .mob-nav{padding-bottom:env(safe-area-inset-bottom);height:calc(56px + env(safe-area-inset-bottom))}
   @media(max-width:768px){.app,.main,.page{padding-bottom:calc(56px + env(safe-area-inset-bottom))}}
 }
-.mob-top{display:none}
-.mob-sheet-ovl{display:none}
 .role-worker .admin-only{display:none!important}
 #fileInput{display:none}
 @media print{.app>*{display:none!important}#print-area{display:block!important}}
