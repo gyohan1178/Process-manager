@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.2</title>
+<title>하네스 공정관리 v6.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -483,7 +483,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.2</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.3</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -621,7 +621,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.2 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.3 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -653,6 +653,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <button class="sp-show-btn" id="show-done" onclick="setShowMode('done')">완료</button>
           <button class="sp-show-btn" id="show-all" onclick="setShowMode('all')">전체</button>
         </div>
+        <button class="sp-show-btn on" id="sp-group-btn" onclick="toggleSpGroup()" title="같은 프로젝트끼리 묶어 대표 1건만 표시 (▶ 클릭 시 세부 펼침)" style="margin-left:6px">🗂 프로젝트 묶기</button>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
@@ -1136,9 +1137,11 @@ function openManual(){
     '<ul style="font-size:12px;color:var(--tx2);line-height:2;padding-left:16px">',
     '<li><b>📤 Excel 업로드</b> → PO 일괄 등록 (하네스_PO등록양식.xlsx)</li>',
     '<li>등록 즉시 QR 스탬프 발주 목록에 자동 반영</li>',
-    '<li>납기 셀 클릭 → 날짜 입력 후 Enter (6/30 입력 시 26/06/30 자동 변환). 납기·등록일은 항상 YY/MM/DD 표시</li>',
+    '<li>납기 셀 클릭 → 날짜 입력 후 Enter (6/30·2026-06-06 등 자동 변환). 납기·등록일은 항상 YYYY-MM-DD 표시</li>',
     '<li>맨 앞 체크박스로 여러 건 선택 → 완료 처리 / 완료 취소 / 삭제 일괄 처리</li>',
     '<li>현황판에 현재 공정 차례 표기 (완료 다음 ▶공정 + 진행도). 완료건은 기본 숨김 — 진행중/완료/전체 버튼으로 전환</li>',
+    '<li>같은 도면번호라도 PO·오더라인·델라인이 다르면 별개 건으로 구분됨</li>',
+    '<li>프로젝트 묶기: 같은 프로젝트는 대표 1건만 표시, ▶ 클릭 시 세부 도면 펼침 (상단 버튼으로 ON/OFF)</li>',
     '<li><b>모바일</b>: 현장용으로 공정현황·QR 스캔만 표시 (스탬프·단건·분석·사용자관리는 PC에서)</li>',
     '<li>상단 헤더 클릭 → 오름/내림차순 정렬 (빈 값은 맨 뒤)</li>',
     '</ul></div>',
@@ -1430,8 +1433,19 @@ function setPage(p){
 }
 
 var _modalStep=null;
-function getStepSt(dwg_no, stepId){
-  var logs=HS.logs.filter(function(l){return l.dwg_no===dwg_no&&l.process===stepId;});
+// 로그-주문 매칭: 객체(ref)면 도번+PO+OL+DL 합치키, 문자열이면 도번만(레거시)
+function logMatch(l, ref){
+  if(ref&&typeof ref==='object'){
+    if(l.dwg_no!==ref.dwg_no) return false;
+    if(!(l.po||l.ord_ln||l.del_ln)) return true; // 구버전 로그(식별필드 없음)는 도번만 매칭
+    return (l.po||'')===(ref.po||'')
+      && (l.ord_ln||'')===(ref.ord_ln||'')
+      && (l.del_ln||'')===(ref.del_ln||'');
+  }
+  return l.dwg_no===ref;
+}
+function getStepSt(ref, stepId){
+  var logs=HS.logs.filter(function(l){return logMatch(l,ref)&&l.process===stepId;});
   var run=logs.find(function(l){return !l.ended_at;});
   if(run) return {s:'run',worker:run.worker,time:run.started_at};
   var done=logs.filter(function(l){return l.ended_at;}).sort(function(a,b){return new Date(b.ended_at)-new Date(a.ended_at);})[0];
@@ -1439,6 +1453,10 @@ function getStepSt(dwg_no, stepId){
   return {s:'idle'};
 }
 var _showMode='active';
+var _spGroup=true;                 // 프로젝트 묶기(기본 ON)
+var _spExpanded=new Set();          // 펼쳐진 프로젝트 키
+function toggleSpGroup(){_spGroup=!_spGroup; var b=document.getElementById('sp-group-btn'); if(b)b.classList.toggle('on',_spGroup); renderStatus();}
+function toggleProjGroup(el){var k=el.dataset.pk||''; if(_spExpanded.has(k))_spExpanded.delete(k); else _spExpanded.add(k); renderStatus();}
 var _spSort={key:'created_at',dir:'desc'};   // 현황판 정렬 상태
 var _selOrders=new Set();                      // 선택된 주문 id
 function setSpSort(key){
@@ -1449,7 +1467,7 @@ function setSpSort(key){
 function spSortVal(o,key){
   if(key==='qty')return parseInt(o.qty)||0;
   if(key==='due'||key==='created_at')return o[key]?new Date(o[key]).getTime():0;
-  if(key==='progress')return getOrderProgress(o.dwg_no);
+  if(key==='progress')return getOrderProgress(o);
   if(key==='qr_printed')return o.qr_printed?1:0;
   return (o[key]||'').toString().toLowerCase();
 }
@@ -1491,27 +1509,27 @@ function setShowMode(m){
   ['active','done','all'].forEach(function(id){var b=document.getElementById('show-'+id);if(b)b.classList.toggle('on',id===m);});
   renderStatus();
 }
-function isOrderDone(dwg_no){
-  var order=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
+function isOrderDone(ref){
+  var order=(ref&&typeof ref==='object')?ref:HS.orders.find(function(o){return o.dwg_no===ref;});
   if(order&&order.rework) return false; // 재작업 중이면 미완료
   if(order&&order.manually_done) return true;
   var steps=getStepsForType(order&&order.step_type);
   var lastStep=steps[steps.length-1];
-  return HS.logs.some(function(l){return l.dwg_no===dwg_no&&l.process===lastStep.id&&l.ended_at;});
+  return HS.logs.some(function(l){return logMatch(l,order||ref)&&l.process===lastStep.id&&l.ended_at;});
 }
-function nextStepName(dwg_no, stype){
+function nextStepName(ref, stype){
   var steps=getStepsForType(stype);
   for(var i=0;i<steps.length;i++){
-    var st=getStepSt(dwg_no, steps[i].id);
+    var st=getStepSt(ref, steps[i].id);
     if(st.s!=='done') return steps[i];
   }
   return null;
 }
-function getOrderProgress(dwg_no){
-  var order=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
+function getOrderProgress(ref){
+  var order=(ref&&typeof ref==='object')?ref:HS.orders.find(function(o){return o.dwg_no===ref;});
   var steps=getStepsForType(order&&order.step_type);
   var done=0;
-  steps.forEach(function(s){if(HS.logs.some(function(l){return l.dwg_no===dwg_no&&l.process===s.id&&l.ended_at;}))done++;});
+  steps.forEach(function(s){if(HS.logs.some(function(l){return logMatch(l,order||ref)&&l.process===s.id&&l.ended_at;}))done++;});
   return done;
 }
 function populateFilters(orders){
@@ -1539,8 +1557,8 @@ function renderStatus(){
     return (o.dwg_no||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)
       ||(o.project||'').toLowerCase().includes(q)||(o.unit||'').toLowerCase().includes(q);
   });
-  if(_showMode==='active') orders=orders.filter(function(o){return !isOrderDone(o.dwg_no);});
-  else if(_showMode==='done') orders=orders.filter(function(o){return isOrderDone(o.dwg_no);});
+  if(_showMode==='active') orders=orders.filter(function(o){return !isOrderDone(o);});
+  else if(_showMode==='done') orders=orders.filter(function(o){return isOrderDone(o);});
   populateFilters(HS.orders);
   var cnt=document.getElementById('sp-cnt');
   if(cnt) cnt.textContent=orders.length+'건';
@@ -1561,12 +1579,11 @@ function renderStatus(){
     return _spSort.dir==='asc'?r:-r;
   });
   _spVisibleIds=orders.map(function(o){return o.id;});
-  function miniProgress(dwg_no){
-    var mOrder=HS.orders.find(function(o){return o.dwg_no===dwg_no;});
+  function miniProgress(mOrder){
     var mSteps=getStepsForType(mOrder&&mOrder.step_type);
     return '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
       +mSteps.map(function(s){
-        var st=getStepSt(dwg_no,s.id);
+        var st=getStepSt(mOrder,s.id);
         var isDone=st.s==='done', isRun=st.s==='run';
         var bg=isDone?s.color:isRun?s.color:'var(--border2)';
         var col=isDone?'#fff':isRun?'#fff':'var(--tx3)';
@@ -1583,12 +1600,12 @@ function renderStatus(){
   // ── 모바일: 카드 리스트 (목업 스타일) ──
   if(typeof isMobile!=='undefined'&&isMobile){
     var cards=orders.map(function(o){
-      var done=isOrderDone(o.dwg_no);var prog=getOrderProgress(o.dwg_no);
+      var done=isOrderDone(o);var prog=getOrderProgress(o);
       var tot=getStepsForType(o.step_type).length;
       var due=o.due||'';
       var statusHtml=done
         ?'<span style="font-size:11px;font-weight:700;color:var(--green)">✅ 완료</span>'
-        :(function(){var ns=nextStepName(o.dwg_no,o.step_type);return '<span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:11px;font-weight:700;background:var(--blue-lt);color:var(--blue);padding:2px 9px;border-radius:11px">▶ '+(ns?ns.id:'')+'</span><span style="font-size:10px;color:var(--tx3);font-weight:600">'+prog+'/'+tot+'</span></span>';})();
+        :(function(){var ns=nextStepName(o,o.step_type);return '<span style="display:inline-flex;align-items:center;gap:5px"><span style="font-size:11px;font-weight:700;background:var(--blue-lt);color:var(--blue);padding:2px 9px;border-radius:11px">▶ '+(ns?ns.id:'')+'</span><span style="font-size:10px;color:var(--tx3);font-weight:600">'+prog+'/'+tot+'</span></span>';})();
       var meta=[];
       if(o.po)meta.push(o.po);
       if(o.unit)meta.push(o.unit+'호기');
@@ -1610,31 +1627,27 @@ function renderStatus(){
     board.innerHTML='<div style="display:flex;flex-direction:column;gap:9px;padding-bottom:8px">'+cards+'</div>';
     return;
   }
-  var rows=orders.map(function(o){
-    var prog=getOrderProgress(o.dwg_no);
-    var done=isOrderDone(o.dwg_no);
-    var dt=new Date(o.created_at);
-    var dtStr=(dt.getMonth()+1)+'/'+(dt.getDate());
+  function _he(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function rowHTML(o, projCell, childBg){
+    var prog=getOrderProgress(o);
+    var done=isOrderDone(o);
     var rowStyle=done?'opacity:.55':'';
+    if(childBg)rowStyle+=';background:var(--bg)';
     var po=o.po||'', ol=o.ord_ln||'', dl=o.del_ln||'', due=o.due||'';
     if(!po&&!ol&&!dl){
       var dRows=findCsvRows(o.dwg_no);
       if(dRows.length>0){var c=_csvCols, r=dRows[0];po=c.po>=0?r[c.po]||'':'';ol=c.ordln>=0?r[c.ordln]||'':'';dl=c.delln>=0?r[c.delln]||'':'';if(!due)due=c.duedt>=0?r[c.duedt]||'':'';}
     }
     var reworkBadge=o.rework?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3);margin-left:4px">⚠ 재작업</span>':'';
-    var stp=o.step_type||'A';
-    var stpBadge='<span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:4px;background:'+(stp==='A'?'var(--bg)':'rgba(124,58,237,.12)')+';color:'+(stp==='A'?'var(--tx3)':'#7c3aed')+';border:1px solid '+(stp==='A'?'var(--border)':'rgba(124,58,237,.25)')+'">'+stp+'형</span>';
     var canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
     var checked=_selOrders.has(o.id)?' checked':'';
     return '<tr style="'+rowStyle+'">'
       +'<td style="text-align:center">'+(canEdit?'<input type="checkbox"'+checked+' data-oid="'+o.id+'" onchange="toggleOrderSel(this.dataset.oid,this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">':'')+'</td>'
-      +'<td style="font-weight:600;font-size:12px">'
-        +(o.customer||'—')
-      +'</td>'
+      +'<td style="font-weight:600;font-size:12px">'+(o.customer||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--blue)">'+(po||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(ol||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(dl||'—')+'</td>'
-      +'<td style="font-size:12px;color:var(--tx2)">'+(o.project||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--tx2)">'+projCell+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
       +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
       +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
@@ -1643,14 +1656,33 @@ function renderStatus(){
       +'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(o.created_at.slice(0,10)):'—')+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'
-        +miniProgress(o.dwg_no)
+        +miniProgress(o)
         +(done?'<span style="font-size:10px;font-weight:700;color:var(--green)">✅ 완료</span>':'')
       +'</div></td>'
       +'<td style="text-align:center">'
         +(o.qr_printed?'<div title="'+fmtQRDate(o.qr_printed_at)+'" style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:14px">✅</span><span style="font-size:9px;color:var(--tx3);font-family:var(--mono)">'+fmtQRDate(o.qr_printed_at)+'</span></div>':'<span style="font-size:16px;color:var(--tx3)" title="미출력">○</span>')
       +'</td>'
       +'</tr>';
-  }).join('');
+  }
+  function _projKey(o){return (o.project||'').trim()||'(미지정)';}
+  var rows='';
+  if(_spGroup){
+    var _gs=[],_gm={};
+    orders.forEach(function(o){var k=_projKey(o);if(!_gm[k]){_gm[k]={key:k,items:[]};_gs.push(_gm[k]);}_gm[k].items.push(o);});
+    _gs.forEach(function(g){
+      var n=g.items.length, main=g.items[0];
+      if(n>1){
+        var exp=_spExpanded.has(g.key);
+        var toggle='<span data-pk="'+_he(g.key)+'" onclick="toggleProjGroup(this)" style="cursor:pointer;font-weight:700;color:var(--blue);user-select:none;white-space:nowrap">'+(exp?'▼':'▶')+' '+_he(g.key)+' <span style="font-size:10px;color:var(--tx3);font-weight:600">('+n+'건)</span></span>';
+        rows+=rowHTML(main, toggle, false);
+        if(exp){for(var i=1;i<n;i++){rows+=rowHTML(g.items[i],'<span style="color:var(--tx3);padding-left:14px">└ '+_he(g.items[i].project||'')+'</span>',true);}}
+      } else {
+        rows+=rowHTML(main, _he(main.project||'—'), false);
+      }
+    });
+  } else {
+    rows=orders.map(function(o){return rowHTML(o, _he(o.project||'—'), false);}).join('');
+  }
   // 정렬 가능한 헤더 (key=null이면 정렬 안 함)
   var canEditHd=(typeof AUTH==='undefined'||AUTH.isAdmin());
   var allSel=_spVisibleIds.length>0&&_spVisibleIds.every(function(id){return _selOrders.has(id);});
@@ -1702,14 +1734,16 @@ function renderStatus(){
 function fmtYYMMDD(val){
   if(!val)return '';
   var iso=(typeof normDueToISO==='function')?normDueToISO(val):val;
-  var d=(''+iso).replace(/-/g,'');
-  if(d.length===8)return d.slice(2,4)+'/'+d.slice(4,6)+'/'+d.slice(6,8);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(''+iso))return iso;   // YYYY-MM-DD 표기
   return val;
 }
 // 다양한 납기 입력(6/30, 26/06/30, 260630 등)을 ISO(YYYY-MM-DD)로 정규화
 function normDueToISO(v){
-  if(!v)return '';v=String(v).trim();if(!v)return '';
-  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+  if(v===null||v===undefined||v==='')return '';
+  if(v instanceof Date){ if(isNaN(v))return ''; return v.getFullYear()+'-'+('0'+(v.getMonth()+1)).slice(-2)+'-'+('0'+v.getDate()).slice(-2); }
+  if(typeof v==='number'){ if(v>20000&&v<90000){ var _dt=new Date(Math.round((v-25569)*86400000)); if(!isNaN(_dt))return _dt.getUTCFullYear()+'-'+('0'+(_dt.getUTCMonth()+1)).slice(-2)+'-'+('0'+_dt.getUTCDate()).slice(-2); } }
+  v=String(v).trim();if(!v)return '';
+  if(/^\d{4}-\d{2}-\d{2}/.test(v))return v.slice(0,10);
   var y,m,d;
   var parts=v.split(/[^\d]+/).filter(function(p){return p!=='';});
   if(parts.length>=3){
@@ -1734,7 +1768,7 @@ function editDueInline(e, id, curVal){
   var td=e.currentTarget;
   if(td.querySelector('input'))return;
   var display=curVal?fmtYYMMDD(curVal):'';
-  td.innerHTML='<input type="text" value="'+display+'" placeholder="YY/MM/DD" maxlength="8" style="border:1.5px solid var(--blue);border-radius:4px;background:var(--amber-lt);font-family:var(--mono);font-size:11px;color:var(--amber);outline:none;padding:2px 5px;width:78px;text-align:center" data-oid="'+id+'" oninput="this.value=autoSlash(this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" onblur="saveDueText(this)" />';
+  td.innerHTML='<input type="text" value="'+display+'" placeholder="YYYY-MM-DD" maxlength="10" style="border:1.5px solid var(--blue);border-radius:4px;background:var(--amber-lt);font-family:var(--mono);font-size:11px;color:var(--amber);outline:none;padding:2px 5px;width:96px;text-align:center" data-oid="'+id+'" oninput="this.value=autoDash(this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" onblur="saveDueText(this)" />';
   var inp=td.querySelector('input');
   if(inp){inp.focus();inp.select();}
 }
@@ -1742,6 +1776,12 @@ function autoSlash(v){
   var d=v.replace(/\D/g,'').slice(0,6);
   if(d.length>4) return d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);
   if(d.length>2) return d.slice(0,2)+'/'+d.slice(2);
+  return d;
+}
+function autoDash(v){
+  var d=v.replace(/\D/g,'').slice(0,8);
+  if(d.length>6) return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6);
+  if(d.length>4) return d.slice(0,4)+'-'+d.slice(4);
   return d;
 }
 async function saveDueText(input){
@@ -1824,12 +1864,12 @@ function autoAction(){
   if(!HS.job||!HS.selStep) return;
   const worker=(HS.worker||'').trim();
   if(!worker){ toast('작업자 이름을 입력하세요','err'); return; }
-  const running=HS.logs.find(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
+  const running=HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
 
   if(!HS.timeMode){
     // ★ 검사 공정: 합불 판정 UI (즉시 완료 안 함). 불합격(재작업) 상태면 재검사 허용
     if(HS.selStep===INSPECT_STEP){ recordInspect(HS.inspectMode,worker); return; }
-    var doneLog=HS.logs.find(function(l){return l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
+    var doneLog=HS.logs.find(function(l){return l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
     if(doneLog){
       if(!confirm('['+HS.selStep+'] 이미 완료된 공정입니다.\n다시 처리(재작업)할까요?')) return;
       var rt=new Date().toISOString();
@@ -1882,7 +1922,7 @@ function workerStart(auto){
   if(!HS.selStep){ toast('공정을 선택하세요','err'); return; }
   const worker=(HS.worker||'').trim();
   if(!worker){ toast('작업자 이름을 입력하세요','err'); return; }
-  const already=HS.logs.find(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
+  const already=HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
   if(already){ toast('이미 진행 중입니다 — 다시 스캔하면 완료','warn'); return; }
   HS.logs.unshift({id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,worker:worker,process:HS.selStep,started_at:new Date().toISOString(),ended_at:null,duration_min:null});
   hsSaveLogs();
@@ -1895,11 +1935,11 @@ function workerEnd(auto){
   if(!HS.job||!HS.selStep){ toast('공정을 선택하세요','err'); return; }
   // ★ 검사 공정: 시간기록 모드 완료 시에도 합불 판정
   if(HS.selStep===INSPECT_STEP){
-    var runLogIns=HS.logs.find(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===INSPECT_STEP;});
+    var runLogIns=HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===INSPECT_STEP;});
     recordInspect(HS.inspectMode,(HS.worker||'').trim(),runLogIns||null);
     return;
   }
-  let log=HS.logs.find(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
+  let log=HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
   if(!log){
     if(!HS.timeMode){
       const worker2=(HS.worker||'').trim();
@@ -1975,10 +2015,10 @@ function recordInspect(mode,worker,timeLog){
   worker=(worker||HS.worker||'').trim();
   if(!worker){toast('작업자 이름을 입력하세요','err');return;}
   var now=new Date().toISOString();
-  var last=getStepSt(HS.job.dwg_no,INSPECT_STEP);
+  var last=getStepSt(HS.job,INSPECT_STEP);
   if(mode==='합격'&&last.s==='done'&&last.result==='합격'){toast('이미 검사 합격된 도면입니다','warn');return;}
-  var log=timeLog||HS.logs.find(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===INSPECT_STEP;});
-  if(!log)log=HS.logs.find(function(l){return l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===INSPECT_STEP;});
+  var log=timeLog||HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===INSPECT_STEP;});
+  if(!log)log=HS.logs.find(function(l){return l.ended_at&&logMatch(l,HS.job)&&l.process===INSPECT_STEP;});
   if(log){
     if(!log.ended_at){log.ended_at=now;log.duration_min=Math.round((new Date(now)-new Date(log.started_at))/60000);}
     else{log.started_at=now;log.ended_at=now;log.duration_min=0;}
@@ -2029,8 +2069,8 @@ function renderScanStepIndicator(){
   if(!HS.selStep){ el.innerHTML=''; return; }
   const step=H_STEPS.find(function(s){return s.id===HS.selStep;});
   if(!step){ el.innerHTML=''; return; }
-  const running=HS.job&&HS.logs.some(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
-  const runLog=HS.job&&HS.logs.find(function(l){return !l.ended_at&&l.dwg_no===HS.job.dwg_no&&l.process===HS.selStep;});
+  const running=HS.job&&HS.logs.some(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
+  const runLog=HS.job&&HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
   let nextAction, nextColor, nextText;
   if(!HS.job){nextAction='📐 도면 QR을 스캔하세요';nextColor='rgba(255,255,255,.2)';nextText='var(--tx3)';}
   else if(HS.selStep===INSPECT_STEP&&!running){nextAction='🔍 스캔 → 검사-'+(HS.inspectMode||'?');nextColor='rgba(124,58,237,.15)';nextText='var(--purple)';}
@@ -2050,7 +2090,7 @@ function renderScanSteps(){
   el.innerHTML=steps.map(function(s){
     // 검사 공정: 합격/불합격 두 버튼으로 분리
     if(s.id===INSPECT_STEP){
-      var st2=HS.job?getStepSt(HS.job.dwg_no,INSPECT_STEP):{};
+      var st2=HS.job?getStepSt(HS.job,INSPECT_STEP):{};
       var passed=st2.s==='done'&&st2.result==='합격';
       var failed=st2.s==='done'&&st2.result==='불합격';
       var insBtn=function(mode){
@@ -2063,13 +2103,13 @@ function renderScanSteps(){
       };
       return insBtn('합격')+insBtn('불합격');
     }
-    const running=HS.job&&HS.logs.some(function(l){return !l.ended_at&&l.process===s.id&&l.dwg_no===HS.job.dwg_no;});
-    const done=HS.job&&HS.logs.some(function(l){return l.ended_at&&l.process===s.id&&l.dwg_no===HS.job.dwg_no;});
+    const running=HS.job&&HS.logs.some(function(l){return !l.ended_at&&l.process===s.id&&logMatch(l,HS.job);});
+    const done=HS.job&&HS.logs.some(function(l){return l.ended_at&&l.process===s.id&&logMatch(l,HS.job);});
     const isSel=HS.selStep===s.id;
     // 검사 불합격(재작업) 여부
     var inspFail=false;
     if(s.id===INSPECT_STEP&&HS.job&&done){
-      var st=getStepSt(HS.job.dwg_no,INSPECT_STEP);
+      var st=getStepSt(HS.job,INSPECT_STEP);
       if(st.result==='불합격')inspFail=true;
     }
     var bg=isSel?s.color:inspFail?'#f43f5e':done?'var(--bg2)':running?'var(--green)':'var(--bg)';
@@ -2101,7 +2141,7 @@ function renderScanActions(){
     else if(HS.selStep===INSPECT_STEP){var _im=HS.inspectMode;if(_im!=='합격'&&_im!=='불합격'){el.innerHTML='<div style=\"text-align:center;padding:8px;font-size:12px;background:rgba(124,58,237,.1);border-radius:var(--r);color:var(--purple);font-weight:600\">🔍 <b>검사-합격</b> 또는 <b>검사-불합격</b>을 선택하세요</div>';}else{var _c=_im==='합격'?'rgba(16,185,129,.12)':'rgba(244,63,94,.12)';var _t=_im==='합격'?'#10b981':'#f43f5e';el.innerHTML='<div style=\"text-align:center;padding:8px;font-size:12px;background:'+_c+';border-radius:var(--r);color:'+_t+';font-weight:600\">📷 스캔 → <b>검사-'+_im+'</b> 처리</div>';}}
     else{el.innerHTML='<div style="text-align:center;padding:8px;font-size:12px;background:rgba(13,171,106,.1);border-radius:var(--r);color:var(--green);font-weight:600">📷 스캔 → <b>'+HS.selStep+'</b> 완료 처리</div>';}
   } else {
-    const running=HS.job&&HS.selStep&&HS.logs.some(function(l){return !l.ended_at&&l.process===HS.selStep&&l.dwg_no===HS.job.dwg_no;});
+    const running=HS.job&&HS.selStep&&HS.logs.some(function(l){return !l.ended_at&&l.process===HS.selStep&&logMatch(l,HS.job);});
     if(!HS.selStep){el.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--tx3)">↑ 공정을 선택하세요</div>';}
     else if(!HS.job){el.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--tx3)">도면 QR을 스캔하세요</div>';}
     else if(running){el.innerHTML='<div style="text-align:center;padding:8px;font-size:12px;background:rgba(23,85,244,.1);border-radius:var(--r);color:var(--blue);font-weight:600">📷 스캔 → <b>'+HS.selStep+'</b> 완료</div>';}
@@ -2166,7 +2206,7 @@ var Analytics={
   // ── 공정 부하 (WIP) ──
   renderWIP:function(el){
     // 진행중(미완료) 도면을 현재 머물러 있는 공정으로 집계
-    var activeOrders=HS.orders.filter(function(o){return !isOrderDone(o.dwg_no);});
+    var activeOrders=HS.orders.filter(function(o){return !isOrderDone(o);});
     var stepLoad={};H_STEPS.forEach(function(s){stepLoad[s.id]=[];});
     activeOrders.forEach(function(o){
       var steps=getStepsForType(o.step_type);
@@ -2334,7 +2374,7 @@ var Analytics={
   },
   // ── 납기 준수율 ──
   renderOntime:function(el){
-    var withDue=HS.orders.filter(function(o){return o.due&&isOrderDone(o.dwg_no);});
+    var withDue=HS.orders.filter(function(o){return o.due&&isOrderDone(o);});
     if(!withDue.length){
       el.innerHTML=this.card('📅 납기 준수율','<div style="text-align:center;padding:20px;color:var(--tx3);font-size:12px">납기가 등록된 완료 도면이 없습니다<br><span style="font-size:11px">납기 입력 + 완료 처리된 도면이 집계 대상입니다</span></div>');
       return;
@@ -2371,8 +2411,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.2';
+var APP_VER='v6.3';
 var VER_LOG=[
+  {v:'v6.3',d:'2026-06', t:'제조 피드백 반영. 같은 도면번호라도 PO·오더라인·델라인이 다르면 별개 건으로 구분(진행/완료 판정을 도번 단일키→도번+PO+OL+DL 합치키). 납기·등록일 표기를 YYYY-MM-DD로 통일, 엑셀 날짜셀(2026-06-06)·시리얼 인식 보강. 공정현황 프로젝트 묶기: 같은 프로젝트는 대표 1건만 표시, ▶ 클릭 시 세부 도면 펼침(아코디언)·토글 ON/OFF'},
   {v:'v6.2',d:'2026-06', t:'모바일 UI 개선: 상단 앱바(제목·사용자·로그아웃) 추가, 하단 네비 세련화. 모바일은 현장용으로 공정현황·QR스캔만 노출(스탬프·단건·QR이력·분석·사용자관리는 PC 전용). 공정현황 현재 공정 차례 표기(완료 다음 ▶공정 + 진행도). 비밀번호 최소 6자. 재작업 표시 도면번호 옆 단일화. 분석 메뉴 위치 조정'},
   {v:'v6.1',d:'2026-06', t:'신갑순 부장 피드백 반영. 공정현황: 등록일 YY/MM/DD 통일·납기 자동변환(6/30→26/06/30)·체크박스 일괄 완료/삭제·헤더 정렬(빈값 후순위). 검사: 합불 판정 모달 제거 → 검사-합격/검사-불합격 버튼 분리(스캔 즉시 처리). QR스탬프: 드래그 중복로드(2배) 수정·QR 위치 드리프트 수정·상하단 정보 누락 수정·저장/병합 PDF에 정보 띠 포함. 단건QR 전체 현황반영 버튼. 이력관리 스크롤·헤더 고정. 완료 공정 재스캔 시 재처리 확인. 분석 WIP 고객사별 펼침'},
   {v:'v6.0',d:'2026-06', t:'로그인/회원가입 + 자동 로그인(persistSession) 도입. 권한 체계: 작업자/관리자/최고관리자 + 가입 승인제(pending). 사용자 관리 화면 — 관리자는 승인·관리자 승격·정지, 최고관리자는 전체. 역할별 메뉴/버튼 노출 제어'},
@@ -2424,8 +2465,8 @@ function exportBoardCSV(){
   var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','완료여부','재작업','현황'];
   var rows=HS.orders.map(function(o){
     var po=o.po||'', ol=o.ord_ln||'', dl=o.del_ln||'', due=o.due||'';
-    var done=isOrderDone(o.dwg_no);
-    var prog=getOrderProgress(o.dwg_no);
+    var done=isOrderDone(o);
+    var prog=getOrderProgress(o);
     var dt=new Date(o.created_at);
     var dtStr=dt.getFullYear()+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0');
     return [o.customer||'',po,ol,dl,o.project||'',o.dwg_no||'',o.unit||'',o.qty||1,
@@ -3787,7 +3828,7 @@ async function handleOrderExcel(input){
             var r=rows[ri];var dwgNo=String(r[cDwg]||'').trim();if(!dwgNo)continue;
             var poVal=cPo>=0?String(r[cPo]||'').trim():'';
             var existing=HS.orders.find(function(o){return o.dwg_no===dwgNo&&(o.po===poVal||(poVal===''&&!o.po));});
-            var dueISO=cDue>=0?normDueToISO(String(r[cDue]||'')):'';
+            var dueISO=cDue>=0?normDueToISO(r[cDue]):'';
             if(dueISO&&!/^\d{4}-\d{2}-\d{2}$/.test(dueISO))dueISO='';
             var typeVal=cType>=0?String(r[cType]||'').trim().toUpperCase():'A';
             if(!typeVal||!H_STEP_TYPES.find(function(t){return t.code===typeVal;}))typeVal='A';
