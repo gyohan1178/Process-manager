@@ -78,6 +78,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .grp-cnt{margin-left:auto;font-size:11px;color:var(--tx3);font-family:var(--mono)}
 .dwg-table{width:100%;border-collapse:collapse}
 .dwg-table thead th{position:sticky;top:0;z-index:3}
+.dwg-table tbody tr:nth-child(even) td{background:#fafbfd}
+.dwg-table tbody tr:hover td{background:var(--blue-lt)}
 .dwg-table th{background:var(--bg);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
 .dwg-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px;color:var(--tx)}
 .dwg-table tr:last-child td{border-bottom:none}
@@ -290,6 +292,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .sc-log-dur{font-size:11px;font-family:var(--mono);color:var(--tx2);white-space:nowrap}
 .log-toolbar{display:flex;align-items:center;gap:8px;padding:8px 0;flex-wrap:wrap}
 .log-table{width:100%;border-collapse:collapse;font-size:12px}
+.log-table tbody tr:nth-child(even) td{background:#fafbfd}
+.log-table tbody tr:hover td{background:var(--blue-lt)}
 .log-table thead th{position:sticky;top:0;z-index:2}
 .log-table th{background:var(--bg);padding:7px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--tx3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
 .log-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--tx)}
@@ -1709,7 +1713,7 @@ function renderStatus(){
       var dRows=findCsvRows(o.dwg_no);
       if(dRows.length>0){var c=_csvCols, r=dRows[0];po=c.po>=0?r[c.po]||'':'';ol=c.ordln>=0?r[c.ordln]||'':'';dl=c.delln>=0?r[c.delln]||'':'';if(!due)due=c.duedt>=0?r[c.duedt]||'':'';}
     }
-    var reworkBadge=o.rework?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3);margin-left:4px">⚠ 재작업</span>':'';
+    var reworkBadge=o.rework?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3);margin-left:4px">⚠ 재작업</span>':'';
     var canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
     var checked=_selOrders.has(o.id)?' checked':'';
     return '<tr style="'+rowStyle+'">'
@@ -1731,7 +1735,7 @@ function renderStatus(){
             if(dd<0)return '<span style="color:#fff;background:#d8443c;padding:2px 7px;border-radius:5px;font-weight:800">'+lbl+' ('+(-dd)+'일 지연)</span>';
             if(dd<=3)return '<span style="color:#b45309;background:rgba(224,146,47,.16);padding:2px 7px;border-radius:5px;font-weight:800">'+lbl+' (D-'+dd+')</span>';
           }
-          return '<span style="color:var(--amber)">'+lbl+'</span>';
+          return '<span style="color:var(--tx2)">'+lbl+'</span>';
         })()
       +'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(o.created_at.slice(0,10)):'—')+'</td>'
@@ -2550,7 +2554,7 @@ var Analytics={
 // ════════════════════════════════════════
 var APP_VER='v6.6';
 var VER_LOG=[
-  {v:'v6.6',d:'2026-06', t:'worker 전용 간소 화면(모바일: 큰 검색창+심플 카드+스캔만, 관리 버튼·필터 숨김). 분석 탭 합치키 매칭 수정(WIP·리드타임이 같은 도번 다른 건의 로그와 섞이던 문제). 이력관리 헤더 클릭 정렬. QR 스탬프·단건 QR에 구방식 표시(작업지시서 전환 예고). 사용자 매뉴얼 전면 재작성(작업자용 3단계 안내·역할별 구성·FAQ)'},
+  {v:'v6.6',d:'2026-06', t:'worker 전용 간소 화면(모바일: 큰 검색창+심플 카드+스캔만, 관리 버튼·필터 숨김). 분석 탭 합치키 매칭 수정(WIP·리드타임이 같은 도번 다른 건의 로그와 섞이던 문제). 이력관리 헤더 클릭 정렬. QR 스탬프·단건 QR에 구방식 표시(작업지시서 전환 예고). 사용자 매뉴얼 전면 재작성(작업자용 3단계 안내·역할별 구성·FAQ). 디자인 정리: 표 줄무늬·hover 강조, 납기 일반표시 중립색(주황은 임박·지연 경고 전용), 뱃지 둥글기 통일'},
   {v:'v6.5',d:'2026-06', t:'비판 검토 반영. [버그] 출도 스캔 중복체크·검사 재작업 대상을 합치키(도번+PO+OL+DL)로 정확화. [버그] 데이터 로드 1000행 제한 돌파(페이지네이션 전량 로드). 현황판: 기본 정렬 납기 임박순, 납기 지연(빨강 N일 지연)·임박(주황 D-3) 강조, 상단 요약 칩(진행·오늘납기·지연·재작업·재검대기). 작업자 이름 로그인 사용자명 자동 채움'},
   {v:'v6.4',d:'2026-06', t:'현장 편의성·성능 일괄 개선. 스캔 성공/실패 전체화면 피드백(대형 표시+소리+진동). 방금 기록 취소(60초 내 작업자 셀프 취소, 검사 불합격 시 재작업 자동 해제 포함). 모바일 스캔 화면 글자·버튼 대폭 확대(고령 작업자 가독성: 공정버튼 76px·라벨 15px). 검사 보류(재검) 상태 지원(비전 연동 대비, 주황 검사? 칩). 성능: 로그 도면별 인덱싱으로 현황판 렌더 속도 개선, 검색 입력 디바운스'},
   {v:'v6.3',d:'2026-06', t:'제조 피드백 반영. 같은 도면번호라도 PO·오더라인·델라인이 다르면 별개 건으로 구분(진행/완료 판정을 도번 단일키→도번+PO+OL+DL 합치키). 납기·등록일 표기를 YYYY-MM-DD로 통일, 엑셀 날짜셀(2026-06-06)·시리얼 인식 보강. 공정현황 프로젝트 묶기: 같은 프로젝트는 대표 1건만 표시, ▶ 클릭 시 세부 도면 펼침(아코디언)·토글 ON/OFF'},
