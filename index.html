@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.6</title>
+<title>하네스 공정관리 v6.7</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -331,6 +331,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .toast.ok{border-left-color:var(--green)}.toast.err{border-left-color:var(--red)}.toast.warn{border-left-color:var(--amber)}
 .toast.hide{transform:translateY(60px);opacity:0;pointer-events:none}
 .t-ic{font-size:15px;flex-shrink:0}.t-tx{color:var(--tx)}
+.sn-item{white-space:nowrap}
 .mob-nav{display:none}
 .mob-top{display:none}
 .mob-sheet-ovl{display:none}
@@ -496,7 +497,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.6</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.7</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -626,7 +627,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item on" id="nav-status" onclick="setPage('status');setSpTab('board')"><span class="sn-ic">📊</span> 공정현황</button>
       <button class="sn-item" id="nav-log" onclick="setPage('status');setSpTab('log')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> 이력 관리</button>
       <button class="sn-item" id="nav-stamp" onclick="setPage('stamp')"><span class="sn-ic">📐</span> QR 스탬프 <span style="font-size:8px;background:rgba(122,131,158,.25);color:#cbd5e1;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700" title="작업지시서 방식으로 전환 예정">구방식</span></button>
-      <button class="sn-item" id="nav-stamp-single" onclick="setPage('stamp-single')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">⚡</span> 단건 QR 스탬프 <span style="font-size:8px;background:rgba(122,131,158,.25);color:#cbd5e1;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700" title="작업지시서 방식으로 전환 예정">구방식</span></button>
+      <button class="sn-item" id="nav-stamp-single" onclick="setPage('stamp-single')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">⚡</span> 단건 QR <span style="font-size:8px;background:rgba(122,131,158,.25);color:#cbd5e1;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700" title="작업지시서 방식으로 전환 예정">구방식</span></button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
       <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:rgba(217,119,6,.25);color:#fbbf24;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">BETA</span></button>
@@ -634,7 +635,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.6 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.7 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -667,6 +668,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <button class="sp-show-btn" id="show-all" onclick="setShowMode('all')">전체</button>
         </div>
         <button class="sp-show-btn on admin-only" id="sp-group-btn" onclick="toggleSpGroup()" title="같은 프로젝트끼리 묶어 대표 1건만 표시 (▶ 클릭 시 세부 펼침)" style="margin-left:6px">🗂 프로젝트 묶기</button>
+        <button class="sp-show-btn admin-only" id="sp-cust-btn" onclick="toggleSpView()" title="고객사별 소제목으로 구분해 보기" style="margin-left:4px">🏢 고객사별</button>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <button class="btn btn-outline btn-sm admin-only" onclick="exportCSV()">📥 CSV</button>
@@ -1503,6 +1505,8 @@ var _showMode='active';
 var _spGroup=true;                 // 프로젝트 묶기(기본 ON)
 var _spExpanded=new Set();          // 펼쳐진 프로젝트 키
 function toggleSpGroup(){_spGroup=!_spGroup; var b=document.getElementById('sp-group-btn'); if(b)b.classList.toggle('on',_spGroup); renderStatus();}
+var _spView='due';
+function toggleSpView(){_spView=_spView==='due'?'cust':'due';var b=document.getElementById('sp-cust-btn');if(b)b.classList.toggle('on',_spView==='cust');renderStatus();}
 function toggleProjGroup(el){var k=el.dataset.pk||''; if(_spExpanded.has(k))_spExpanded.delete(k); else _spExpanded.add(k); renderStatus();}
 var _spSort={key:'due',dir:'asc'};   // 현황판 정렬 상태 (기본: 납기 임박순)
 var _selOrders=new Set();                      // 선택된 주문 id
@@ -1732,8 +1736,8 @@ function renderStatus(){
           var iso=normDueToISO(due), lbl=fmtYYMMDD(due);
           if(/^\d{4}-\d{2}-\d{2}$/.test(iso)&&!done){
             var dd=Math.floor((new Date(iso)-new Date(new Date().toISOString().slice(0,10)))/86400000);
-            if(dd<0)return '<span style="color:#fff;background:#d8443c;padding:2px 7px;border-radius:5px;font-weight:800">'+lbl+' ('+(-dd)+'일 지연)</span>';
-            if(dd<=3)return '<span style="color:#b45309;background:rgba(224,146,47,.16);padding:2px 7px;border-radius:5px;font-weight:800">'+lbl+' (D-'+dd+')</span>';
+            if(dd<0)return '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:#d8443c;color:#fff;padding:3px 8px;border-radius:6px;font-weight:800;line-height:1.2"><span>'+lbl+'</span><span style="font-size:9px">'+(-dd)+'일 지연</span></span>';
+            if(dd<=3)return '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:rgba(224,146,47,.16);color:#b45309;padding:3px 8px;border-radius:6px;font-weight:800;line-height:1.2"><span>'+lbl+'</span><span style="font-size:9px">D-'+dd+'</span></span>';
           }
           return '<span style="color:var(--tx2)">'+lbl+'</span>';
         })()
@@ -1750,7 +1754,16 @@ function renderStatus(){
   }
   function _projKey(o){return (o.project||'').trim()||'(미지정)';}
   var rows='';
-  if(_spGroup){
+  if(_spView==='cust'){
+    // 고객사별 소제목 구분 (섹션 내부는 현재 정렬 = 납기순 유지)
+    var _cs=[],_cm={};
+    orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!_cm[k]){_cm[k]={key:k,items:[]};_cs.push(_cm[k]);}_cm[k].items.push(o);});
+    _cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
+    _cs.forEach(function(g){
+      rows+='<tr><td colspan="13" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
+      g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
+    });
+  } else if(_spGroup){
     var _gs=[],_gm={};
     orders.forEach(function(o){var k=_projKey(o);if(!_gm[k]){_gm[k]={key:k,items:[]};_gs.push(_gm[k]);}_gm[k].items.push(o);});
     _gs.forEach(function(g){
@@ -2552,8 +2565,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.6';
+var APP_VER='v6.7';
 var VER_LOG=[
+  {v:'v6.7',d:'2026-07', t:'현황판 고객사별 보기 추가(🏢 버튼: 고객사 소제목으로 구분, 섹션 내 납기순 유지). 납기 지연·임박 배지 2줄 표기로 겹침 해소. 사이드바 메뉴 줄바꿈 방지·라벨 정리'},
   {v:'v6.6',d:'2026-06', t:'worker 전용 간소 화면(모바일: 큰 검색창+심플 카드+스캔만, 관리 버튼·필터 숨김). 분석 탭 합치키 매칭 수정(WIP·리드타임이 같은 도번 다른 건의 로그와 섞이던 문제). 이력관리 헤더 클릭 정렬. QR 스탬프·단건 QR에 구방식 표시(작업지시서 전환 예고). 사용자 매뉴얼 전면 재작성(작업자용 3단계 안내·역할별 구성·FAQ). 디자인 정리: 표 줄무늬·hover 강조, 납기 일반표시 중립색(주황은 임박·지연 경고 전용), 뱃지 둥글기 통일'},
   {v:'v6.5',d:'2026-06', t:'비판 검토 반영. [버그] 출도 스캔 중복체크·검사 재작업 대상을 합치키(도번+PO+OL+DL)로 정확화. [버그] 데이터 로드 1000행 제한 돌파(페이지네이션 전량 로드). 현황판: 기본 정렬 납기 임박순, 납기 지연(빨강 N일 지연)·임박(주황 D-3) 강조, 상단 요약 칩(진행·오늘납기·지연·재작업·재검대기). 작업자 이름 로그인 사용자명 자동 채움'},
   {v:'v6.4',d:'2026-06', t:'현장 편의성·성능 일괄 개선. 스캔 성공/실패 전체화면 피드백(대형 표시+소리+진동). 방금 기록 취소(60초 내 작업자 셀프 취소, 검사 불합격 시 재작업 자동 해제 포함). 모바일 스캔 화면 글자·버튼 대폭 확대(고령 작업자 가독성: 공정버튼 76px·라벨 15px). 검사 보류(재검) 상태 지원(비전 연동 대비, 주황 검사? 칩). 성능: 로그 도면별 인덱싱으로 현황판 렌더 속도 개선, 검색 입력 디바운스'},
