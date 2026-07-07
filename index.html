@@ -626,6 +626,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <div class="sb-nav">
       <button class="sn-item on" id="nav-status" onclick="setPage('status');setSpTab('board')"><span class="sn-ic">📊</span> 공정현황</button>
       <button class="sn-item" id="nav-log" onclick="setPage('status');setSpTab('log')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> 이력 관리</button>
+      <button class="sn-item" id="nav-workorder" onclick="setPage('workorder')"><span class="sn-ic">📄</span> 작업지시서 QR <span style="font-size:8px;background:rgba(23,85,244,.2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
       <button class="sn-item" id="nav-stamp" onclick="setPage('stamp')"><span class="sn-ic">📐</span> QR 스탬프 <span style="font-size:8px;background:rgba(122,131,158,.25);color:#cbd5e1;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700" title="작업지시서 방식으로 전환 예정">구방식</span></button>
       <button class="sn-item" id="nav-stamp-single" onclick="setPage('stamp-single')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">⚡</span> 단건 QR <span style="font-size:8px;background:rgba(122,131,158,.25);color:#cbd5e1;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700" title="작업지시서 방식으로 전환 예정">구방식</span></button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
@@ -716,6 +717,26 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div id="users-body" style="padding:16px 20px"></div>
     </div>
 
+    <div id="pg-workorder" class="page hidden" style="padding:20px;overflow-y:auto">
+      <div style="max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:var(--tx)">📄 작업지시서 QR 삽입</div>
+          <div style="font-size:13px;color:var(--tx3);margin-top:4px">작업지시서 PDF를 올리면 파일명(작업지시서_도면번호)으로 등록된 수주정보를 찾아, 공정 QR을 공정 칸에 자동 삽입합니다.</div>
+        </div>
+        <div id="wo-drop" style="border:2px dashed var(--border2);border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;background:var(--bg);transition:all .15s"
+          onclick="document.getElementById('wo-file').click()">
+          <div style="font-size:34px">📄</div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx2);margin-top:8px">작업지시서 PDF를 여기에 끌어놓거나 클릭해서 선택</div>
+          <div style="font-size:12px;color:var(--tx3);margin-top:4px">여러 개 한 번에 가능 · 파일명 예: <b>작업지시서_1631500_D_01.pdf</b></div>
+          <input type="file" id="wo-file" accept="application/pdf" multiple style="display:none" onchange="WO.add(this.files)">
+        </div>
+        <div id="wo-list"></div>
+        <div id="wo-actions" style="display:none;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-pr" onclick="WO.generate()">🔗 공정 QR 삽입 + 병합 PDF 만들기</button>
+          <button class="btn btn-outline" onclick="WO.clear()">비우기</button>
+        </div>
+      </div>
+    </div>
     <div id="pg-stamp" class="page hidden">
       <div class="stamp-layout">
         <aside class="stamp-side">
@@ -1188,8 +1209,14 @@ function openManual(){
     TIP+'※ 실제 데이터가 쌓이면 정확해집니다. 지금은 참고용.</div>',
     '</div>',
 
+    D, S+'📄 작업지시서 QR (신규)</h3>', U,
+    '<li>비전 쪽에서 만든 작업지시서 PDF에 <b>공정 QR을 자동으로 넣는</b> 기능입니다</li>',
+    '<li>PDF 파일명은 <b>작업지시서_도면번호</b> 형식 (예: 작업지시서_1631500_D_01.pdf)</li>',
+    '<li>사용법: [📄 작업지시서 QR] → PDF 여러 개 끌어놓기 → 자동 매칭 확인 → [공정 QR 삽입 + 병합]</li>',
+    '<li>파일명의 도면번호로 등록된 수주정보를 찾아, 우측 하단 공정 칸에 QR을 넣어 한 개 PDF로 저장합니다</li>',
+    '</ul></div>',
     D, S+'📐 QR 스탬프 / 단건 QR (구방식)</h3>', U,
-    '<li>도면 PDF에 직접 QR을 찍던 방식입니다. <b>작업지시서 방식으로 바뀔 예정</b>이라 곧 정리됩니다</li>',
+    '<li>도면 PDF에 직접 QR을 찍던 방식입니다. <b>작업지시서 방식으로 대체</b>되어 곧 정리됩니다</li>',
     '</ul></div>',
 
     D, S+'❓ 자주 묻는 것</h3>', U,
@@ -1436,15 +1463,15 @@ function hsGenId(){ return Date.now().toString(36)+Math.random().toString(36).sl
 
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isSuper())){toast('최고관리자만 접근 가능합니다','warn');return;}
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb) nb.classList.toggle('on', id===p);
     const mn=document.getElementById('mn-'+id);
@@ -1913,7 +1940,7 @@ function deleteDwg(id){
 
 // ── QR 스캔 ──
 function parseDrawingQR(text){
-  const r={customer:'',project:'',unit:'',dwg_no:'',qty:''};
+  const r={customer:'',project:'',unit:'',dwg_no:'',qty:'',po:'',ord_ln:'',del_ln:'',due:''};
   if(text.includes('CUST:')||text.includes('DWG:')){
     text.split('|').forEach(function(seg){
       var s=seg.trim();
@@ -1922,6 +1949,10 @@ function parseDrawingQR(text){
       else if(s.startsWith('UNIT:')) r.unit=s.slice(5).trim();
       else if(s.startsWith('DWG:'))  r.dwg_no=s.slice(4).trim();
       else if(s.startsWith('QTY:'))  r.qty=s.slice(4).trim();
+      else if(s.startsWith('PO:'))   r.po=s.slice(3).trim();
+      else if(s.startsWith('OL:'))   r.ord_ln=s.slice(3).trim();
+      else if(s.startsWith('DL:'))   r.del_ln=s.slice(3).trim();
+      else if(s.startsWith('DUE:'))  r.due=s.slice(4).trim();
     });
   } else {
     text.split('\n').forEach(function(line){
@@ -2567,7 +2598,7 @@ var Analytics={
 // ════════════════════════════════════════
 var APP_VER='v6.7';
 var VER_LOG=[
-  {v:'v6.7',d:'2026-07', t:'현황판 고객사별 보기 추가(🏢 버튼: 고객사 소제목으로 구분, 섹션 내 납기순 유지). 납기 지연·임박 배지 2줄 표기로 겹침 해소. 사이드바 메뉴 줄바꿈 방지·라벨 정리'},
+  {v:'v6.7',d:'2026-07', t:'작업지시서 QR 삽입 기능 신규(작업지시서_도번 파일명으로 수주정보 자동 매칭 → 공정 칸에 공정 QR 일괄 삽입 → 병합 PDF). QR 스캔 파서 PO/OL/DL/DUE 인식 확장. 현황판 고객사별 보기(🏢), 납기 배지 2줄 겹침 해소, 사이드바 줄바꿈 방지'},
   {v:'v6.6',d:'2026-06', t:'worker 전용 간소 화면(모바일: 큰 검색창+심플 카드+스캔만, 관리 버튼·필터 숨김). 분석 탭 합치키 매칭 수정(WIP·리드타임이 같은 도번 다른 건의 로그와 섞이던 문제). 이력관리 헤더 클릭 정렬. QR 스탬프·단건 QR에 구방식 표시(작업지시서 전환 예고). 사용자 매뉴얼 전면 재작성(작업자용 3단계 안내·역할별 구성·FAQ). 디자인 정리: 표 줄무늬·hover 강조, 납기 일반표시 중립색(주황은 임박·지연 경고 전용), 뱃지 둥글기 통일'},
   {v:'v6.5',d:'2026-06', t:'비판 검토 반영. [버그] 출도 스캔 중복체크·검사 재작업 대상을 합치키(도번+PO+OL+DL)로 정확화. [버그] 데이터 로드 1000행 제한 돌파(페이지네이션 전량 로드). 현황판: 기본 정렬 납기 임박순, 납기 지연(빨강 N일 지연)·임박(주황 D-3) 강조, 상단 요약 칩(진행·오늘납기·지연·재작업·재검대기). 작업자 이름 로그인 사용자명 자동 채움'},
   {v:'v6.4',d:'2026-06', t:'현장 편의성·성능 일괄 개선. 스캔 성공/실패 전체화면 피드백(대형 표시+소리+진동). 방금 기록 취소(60초 내 작업자 셀프 취소, 검사 불합격 시 재작업 자동 해제 포함). 모바일 스캔 화면 글자·버튼 대폭 확대(고령 작업자 가독성: 공정버튼 76px·라벨 15px). 검사 보류(재검) 상태 지원(비전 연동 대비, 주황 검사? 칩). 성능: 로그 도면별 인덱싱으로 현황판 렌더 속도 개선, 검색 입력 디바운스'},
@@ -2945,6 +2976,121 @@ function buildContent(e,delivRowIdx){
   }
   return fields.join(' | ');
 }
+// ══════════════════════════════════════
+// 작업지시서 QR 삽입 (파일명 작업지시서_도번 → 수주정보 매칭 → 공정 QR)
+// ══════════════════════════════════════
+var WO={
+  files:[],  // {name, dwg, bytes, order, status}
+  add:async function(fileList){
+    var arr=Array.prototype.slice.call(fileList||[]);
+    for(var i=0;i<arr.length;i++){
+      var f=arr[i]; if(!/\.pdf$/i.test(f.name))continue;
+      var bytes=new Uint8Array(await f.arrayBuffer());
+      var dwg=WO.extractDwg(f.name);
+      var order=WO.match(dwg);
+      WO.files.push({name:f.name,dwg:dwg,bytes:bytes,order:order,status:order?'ok':'nomatch'});
+    }
+    WO.render();
+  },
+  extractDwg:function(fname){
+    var n=fname.replace(/\.pdf$/i,'').trim();
+    n=n.replace(/^작업지시서[_\-\s]*/,'');   // 접두어 제거
+    return n.trim();
+  },
+  match:function(dwg){
+    if(!dwg)return null;
+    var exact=HS.orders.filter(function(o){return (o.dwg_no||'').trim()===dwg;});
+    if(exact.length>0){
+      // 미완료 우선, 그중 납기 빠른 것
+      var act=exact.filter(function(o){return !isOrderDone(o);});
+      var pool=act.length?act:exact;
+      pool.sort(function(a,b){return (normDueToISO(a.due)||'9999')<(normDueToISO(b.due)||'9999')?-1:1;});
+      return pool[0];
+    }
+    return null;
+  },
+  woPayload:function(o){
+    var f=['DWG:'+(o.dwg_no||'')];
+    if(o.customer)f.push('CUST:'+o.customer);
+    if(o.project)f.push('PROJ:'+o.project);
+    if(o.unit)f.push('UNIT:'+o.unit);
+    f.push('QTY:'+(o.qty||1));
+    if(o.po)f.push('PO:'+o.po);
+    if(o.ord_ln)f.push('OL:'+o.ord_ln);
+    if(o.del_ln)f.push('DL:'+o.del_ln);
+    if(o.due)f.push('DUE:'+normDueToISO(o.due));
+    return f.join(' | ');
+  },
+  render:function(){
+    var el=document.getElementById('wo-list');if(!el)return;
+    if(WO.files.length===0){el.innerHTML='';document.getElementById('wo-actions').style.display='none';return;}
+    var okN=WO.files.filter(function(f){return f.status==='ok';}).length;
+    var rows=WO.files.map(function(f,i){
+      var ok=f.status==='ok';
+      var badge=ok?'<span style="font-size:11px;font-weight:700;color:var(--green);background:rgba(13,171,106,.12);padding:2px 9px;border-radius:10px">✔ 매칭</span>'
+        :'<span style="font-size:11px;font-weight:700;color:#d8443c;background:rgba(216,68,60,.1);padding:2px 9px;border-radius:10px">✕ 미등록 도번</span>';
+      var info=ok?(f.order.customer||'')+' · '+(f.order.po||'-')+' · 납기 '+(f.order.due?fmtYYMMDD(f.order.due):'-'):'등록된 수주정보에 없음';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--white)">'
+        +'<div style="flex:1;min-width:0"><div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx)">'+f.dwg+'</div>'
+        +'<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+info+'</div></div>'
+        +badge
+        +'<button onclick="WO.remove('+i+')" style="border:none;background:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>'
+      +'</div>';
+    }).join('');
+    el.innerHTML='<div style="font-size:12px;color:var(--tx3);margin-bottom:8px">총 '+WO.files.length+'개 · 매칭 '+okN+'개'+(WO.files.length-okN>0?' · 미매칭 '+(WO.files.length-okN)+'개':'')+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:8px">'+rows+'</div>';
+    var act=document.getElementById('wo-actions');act.style.display=okN>0?'flex':'none';
+  },
+  remove:function(i){WO.files.splice(i,1);WO.render();},
+  clear:function(){WO.files=[];WO.render();},
+  generate:async function(){
+    var targets=WO.files.filter(function(f){return f.status==='ok';});
+    if(targets.length===0){toast('매칭된 파일이 없습니다','warn');return;}
+    toast('공정 QR 삽입 중... ('+targets.length+'개)','ok');
+    try{
+      var{PDFDocument}=PDFLib;
+      var merged=await PDFDocument.create();
+      for(var i=0;i<targets.length;i++){
+        var t=targets[i];
+        var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
+        var pngUrl=makeQRPng(WO.woPayload(t.order),500);
+        var pngBytes=WO.dataURLtoBytes(pngUrl);
+        var png=await merged.embedPng(pngBytes);
+        var pages=await merged.copyPages(src,src.getPageIndices());
+        pages.forEach(function(pg){
+          merged.addPage(pg);
+          var pw=pg.getWidth(), ph=pg.getHeight();
+          // 공정 QR 셀: 실측 비율 기준 (x중심 0.850, y중심(하단기준) 0.281, 크기 0.20*높이)
+          var qs=ph*0.20;
+          var cx=pw*0.850, cyb=ph*0.281;
+          pg.drawImage(png,{x:cx-qs/2, y:cyb-qs/2+ph*0.01, width:qs, height:qs});
+        });
+        // 출력 표시
+        if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();}
+      }
+      hsSaveOrders&&hsSaveOrders();
+      var bytes=await merged.save();
+      WO.download(bytes,'작업지시서_공정QR_'+new Date().toISOString().slice(0,10)+'.pdf');
+      renderStatus&&renderStatus();
+      toast('완료! '+targets.length+'개 병합 PDF 저장됨','ok');
+    }catch(e){console.error(e);toast('오류: '+e.message,true);}
+  },
+  dataURLtoBytes:function(u){var b=atob(u.split(',')[1]);var a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;},
+  download:function(bytes,name){
+    var blob=new Blob([bytes],{type:'application/pdf'});
+    var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=name;a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+};
+// 드래그앤드롭
+(function(){
+  document.addEventListener('DOMContentLoaded',function(){
+    var dz=document.getElementById('wo-drop');if(!dz)return;
+    ['dragover','dragenter'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='var(--blue)';dz.style.background='var(--blue-lt)';});});
+    ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='';dz.style.background='';});});
+    dz.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files)WO.add(e.dataTransfer.files);});
+  });
+})();
 function makeQRPng(text,px){
   px=px||400;
   const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();
