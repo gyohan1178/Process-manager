@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.7</title>
+<title>하네스 공정관리 v6.8</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -502,7 +502,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.7</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.8</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,7 +639,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.7 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.8 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1378,6 +1378,7 @@ async function hsSaveLogs(){
     const res=await sb.from('harness_logs').upsert(HS.logs.map(function(l){
       return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
               unit:l.unit||null,qty:l.qty||1,worker:l.worker||null,process:l.process,
+              po:l.po||null,ord_ln:l.ord_ln||null,del_ln:l.del_ln||null,
               started_at:l.started_at||null,ended_at:l.ended_at||null,duration_min:l.duration_min||null,
               result:l.result||null};
     }));
@@ -2610,8 +2611,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.7';
+var APP_VER='v6.8';
 var VER_LOG=[
+  {v:'v6.8',d:'2026-07', t:'[실가동 전 정합성] 로그 저장 시 PO·오더라인·델라인을 DB에 함께 저장(harness_logs.po/ord_ln/del_ln). 이전에는 이 필드가 DB에 저장되지 않아 새로고침 후 같은 도번 다른 건이 완료 오인식될 수 있었음. ※ Supabase에 컬럼 추가 SQL 1회 실행 필요(harness_logs_컬럼추가.sql). 구방식 메뉴 완전 삭제'},
   {v:'v6.7',d:'2026-07', t:'작업지시서 QR 삽입 기능 신규(작업지시서_도번 파일명으로 수주정보 자동 매칭 → 공정 칸에 공정 QR 일괄 삽입 → 병합 PDF). QR 스캔 파서 PO/OL/DL/DUE 인식 확장. 현황판 고객사별 보기(🏢), 납기 배지 2줄 겹침 해소, 사이드바 줄바꿈 방지. 구방식(QR 스탬프·단건 QR) 메뉴 숨김. 레이아웃 정리: 사이드바 활성 강조·여백, 툴바 검색 포커스, 표 간격, 모바일 카드 개편(납기 배지 카드 내 강조·터치 영역 확대)'},
   {v:'v6.6',d:'2026-06', t:'worker 전용 간소 화면(모바일: 큰 검색창+심플 카드+스캔만, 관리 버튼·필터 숨김). 분석 탭 합치키 매칭 수정(WIP·리드타임이 같은 도번 다른 건의 로그와 섞이던 문제). 이력관리 헤더 클릭 정렬. QR 스탬프·단건 QR에 구방식 표시(작업지시서 전환 예고). 사용자 매뉴얼 전면 재작성(작업자용 3단계 안내·역할별 구성·FAQ). 디자인 정리: 표 줄무늬·hover 강조, 납기 일반표시 중립색(주황은 임박·지연 경고 전용), 뱃지 둥글기 통일'},
   {v:'v6.5',d:'2026-06', t:'비판 검토 반영. [버그] 출도 스캔 중복체크·검사 재작업 대상을 합치키(도번+PO+OL+DL)로 정확화. [버그] 데이터 로드 1000행 제한 돌파(페이지네이션 전량 로드). 현황판: 기본 정렬 납기 임박순, 납기 지연(빨강 N일 지연)·임박(주황 D-3) 강조, 상단 요약 칩(진행·오늘납기·지연·재작업·재검대기). 작업자 이름 로그인 사용자명 자동 채움'},
