@@ -1059,6 +1059,12 @@ var H_STEPS_DEFAULT=[
 var H_STEPS=JSON.parse(localStorage.getItem('hs_steps')||'null')||H_STEPS_DEFAULT.map(function(s){return Object.assign({},s);});
 (function(){var ren={'압착':'제작','조립':'납땜&조립'};var chg=false;
 H_STEPS.forEach(function(s){if(ren[s.id]){s.id=ren[s.id];chg=true;}});
+if(!H_STEPS.some(function(s){return s.id==='납땜&조립';})){
+  var ins={id:'납땜&조립',icon:'🔩',color:'#e8900a',desc:'조립 전 지그'};
+  var gi=H_STEPS.findIndex(function(s){return s.id==='검사';});
+  if(gi>=0)H_STEPS.splice(gi,0,ins);else H_STEPS.push(ins);
+  chg=true;
+}
 if(chg)localStorage.setItem('hs_steps',JSON.stringify(H_STEPS));})();
 function migrateLogSteps(){var ren={'압착':'제작','조립':'납땜&조립'};var chg=false;
 (HS.logs||[]).forEach(function(l){if(ren[l.process]){l.process=ren[l.process];chg=true;}});return chg;}
