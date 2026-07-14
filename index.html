@@ -1083,6 +1083,22 @@ function saveHSteps(){
 }
 
 var H_STEP_TYPES=JSON.parse(localStorage.getItem('hs_step_types')||'null')||[{code:'A',name:'기본 (A형)',steps:null}];
+(function(){
+  if(!H_STEP_TYPES.some(function(t){return t.code==='B';})){
+    H_STEP_TYPES.push({code:'B',name:'세분화 (B형)',steps:[
+      {id:'출도',icon:'📋',color:'#6d28d9',desc:'도면 출력 (사무실)'},
+      {id:'재단',icon:'✂️',color:'#1755f4',desc:'외피 탈피 · 케이블 절단'},
+      {id:'넘버링',icon:'🔢',color:'#0891b2',desc:'넘버링 삽입'},
+      {id:'하우징',icon:'🧩',color:'#0dab6a',desc:'하우징 삽입'},
+      {id:'압착',icon:'🗜️',color:'#65a30d',desc:'러그 · 페놀 압착'},
+      {id:'납땜&조립',icon:'🔩',color:'#e8900a',desc:'조립 전 지그'},
+      {id:'라벨',icon:'🏷️',color:'#d97706',desc:'라벨 부착'},
+      {id:'검사',icon:'🔍',color:'#7c3aed',desc:'길이 · 본검사'},
+      {id:'포장',icon:'📦',color:'#d43b3b',desc:'포장 완료'}
+    ]});
+    localStorage.setItem('hs_step_types',JSON.stringify(H_STEP_TYPES));
+  }
+})();
 function getStepsForType(typeCode){
   if(!typeCode||typeCode==='A') return H_STEPS;
   var t=H_STEP_TYPES.find(function(t){return t.code===typeCode;});
@@ -1262,7 +1278,7 @@ function renderStepList(){
         +'<button onclick="moveStep('+i+',-1)" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1" '+(i===0?'disabled':'')+'>▲</button>'
         +'<button onclick="moveStep('+i+',1)"  style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1" '+(i===_editSteps.length-1?'disabled':'')+'>▼</button>'
       +'</div>'
-      +'<div style="width:32px;height:32px;border-radius:7px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+s.icon+'</div>'
+      +'<div onclick="cycleStepIcon('+i+')" title="클릭: 아이콘 변경" style="width:32px;height:32px;border-radius:7px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer;user-select:none">'+s.icon+'</div>'
       +'<div style="flex:1;min-width:0">'
         +'<input data-sidx="'+i+'" data-field="id" value="'+s.id+'" onchange="updateEditStep(this)" style="font-size:13px;font-weight:700;color:var(--tx);border:none;background:transparent;outline:none;width:100%;padding:1px 0;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" '+(isFirst?'readonly':'')+'>'
         +'<input data-sidx="'+i+'" data-field="desc" value="'+s.desc+'" onchange="updateEditStep(this)" style="font-size:11px;color:var(--tx3);border:none;background:transparent;outline:none;width:100%;padding:1px 0;margin-top:1px;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" placeholder="설명">'
@@ -1288,6 +1304,13 @@ function removeStep(i){
   if(i===0){toast('첫 번째 공정(출도)은 삭제할 수 없습니다','err');return;}
   if(!confirm('['+_editSteps[i].id+'] 공정을 삭제할까요?'))return;
   _editSteps.splice(i,1);
+  renderStepList();
+}
+var STEP_ICONS=['📋','✂️','🔢','🧩','🗜️','🔩','🏷️','🔍','📦','🔧','🧵','⚡','🖨️','📐','🧪','🚚'];
+function cycleStepIcon(i){
+  var s=_editSteps[i];if(!s)return;
+  var k=STEP_ICONS.indexOf(s.icon);
+  s.icon=STEP_ICONS[(k+1)%STEP_ICONS.length];
   renderStepList();
 }
 function addStep(){
