@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.10</title>
+<title>하네스 공정관리 v6.11</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -502,7 +502,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.10</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.11</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -529,7 +529,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg)">
         <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:10px">+ 공정 추가</div>
         <div style="display:grid;grid-template-columns:60px 1fr 90px 1fr;gap:8px;align-items:end">
-          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div><input class="po-inp" id="new-step-icon" placeholder="📦" maxlength="2" style="text-align:center;font-size:18px"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div><button type="button" onclick="openIconPalette(this,'new')" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white);cursor:pointer;font-size:18px" title="클릭하여 선택"><span id="new-icon-preview">📦</span></button><input type="hidden" id="new-step-icon" value="📦"></div>
           <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">공정명 <span style="color:var(--red)">*</span></div><input class="po-inp" id="new-step-id" placeholder="예: 검수"></div>
           <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">색상</div><input type="color" id="new-step-color" value="#1755f4" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px"></div>
           <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">설명</div><input class="po-inp" id="new-step-desc" placeholder="간단한 설명"></div>
@@ -639,7 +639,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.10 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.11 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1130,16 +1130,24 @@ function setStab(tab){
   if(tBtn){tBtn.style.color=tab==='types'?'var(--blue)':'var(--tx2)';tBtn.style.borderBottomColor=tab==='types'?'var(--blue)':'transparent';}
   if(tab==='types') renderTypeList();
 }
+function allStepDefs(){
+  var seen={},out=[];
+  function add(list){(list||[]).forEach(function(s){if(s&&s.id&&!seen[s.id]){seen[s.id]=1;out.push({id:s.id,icon:s.icon,color:s.color,desc:s.desc});}});}
+  add((typeof _editSteps!=='undefined'&&_editSteps&&_editSteps.length)?_editSteps:H_STEPS);
+  (H_STEP_TYPES||[]).forEach(function(t){add(t.steps);});
+  return out;
+}
 function renderTypeList(){
   var el=document.getElementById('type-list');if(!el)return;
   el.innerHTML=H_STEP_TYPES.map(function(t,ti){
     var isA=t.code==='A';
     var stepsForType=isA?H_STEPS:(t.steps||H_STEPS);
-    var _pool=(typeof _editSteps!=='undefined'&&_editSteps&&_editSteps.length)?_editSteps:H_STEPS;
+    var _pool=allStepDefs();
     var checkboxes=_pool.map(function(s){
-      var checked=isA||stepsForType.some(function(ts){return ts.id===s.id;});
-      return '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:5px;background:'+(checked?s.color+'18':'var(--bg)')+';border:1.5px solid '+(checked?s.color+'44':'var(--border)')+';cursor:'+(isA?'default':'pointer')+';margin:2px">'
-        +'<input type="checkbox" '+(checked?'checked':'')+' '+(isA?'disabled':'')+' data-tidx="'+ti+'" data-sid="'+s.id+'" onchange="toggleTypeStep(this)" style="accent-color:'+s.color+'"> '
+      var checked=stepsForType.some(function(ts){return ts.id===s.id;});
+      var lock=(isA&&s.id===(H_STEPS[0]&&H_STEPS[0].id));  // A형은 첫 공정(출도)만 잠금
+      return '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:5px;background:'+(checked?s.color+'18':'var(--bg)')+';border:1.5px solid '+(checked?s.color+'44':'var(--border)')+';cursor:'+(lock?'default':'pointer')+';margin:2px;opacity:'+(lock?'.7':'1')+'">'
+        +'<input type="checkbox" '+(checked?'checked':'')+' '+(lock?'disabled':'')+' data-tidx="'+ti+'" data-sid="'+s.id+'" onchange="toggleTypeStep(this)" style="accent-color:'+s.color+'"> '
         +s.icon+' '+s.id
         +'</label>';
     }).join('');
@@ -1158,19 +1166,30 @@ function toggleTypeStep(cb){
   var ti=parseInt(cb.dataset.tidx);
   var sid=cb.dataset.sid;
   var t=H_STEP_TYPES[ti];
-  if(!t||t.code==='A')return;
+  if(!t)return;
+  var pool=allStepDefs();
+  var orderIdx=function(id){var k=pool.findIndex(function(s){return s.id===id;});return k<0?999:k;};
+  var def=pool.find(function(s){return s.id===sid;});
+  if(t.code==='A'){
+    // A형 = 기본 공정(H_STEPS) 직접 편집
+    if(sid===(H_STEPS[0]&&H_STEPS[0].id)){renderTypeList();return;} // 출도 잠금
+    if(cb.checked){ if(def&&!H_STEPS.some(function(s){return s.id===sid;})) H_STEPS.push(Object.assign({},def)); }
+    else { if(H_STEPS.length>1) H_STEPS=H_STEPS.filter(function(s){return s.id!==sid;}); }
+    H_STEPS.sort(function(a,b){return orderIdx(a.id)-orderIdx(b.id);});
+    if(typeof _editSteps!=='undefined') _editSteps=H_STEPS.map(function(s){return Object.assign({},s);});
+    saveHSteps();
+    if(typeof renderStepList==='function')renderStepList();
+    renderTypeList();renderStatus();
+    return;
+  }
   if(!t.steps) t.steps=H_STEPS.map(function(s){return Object.assign({},s);});
   if(cb.checked){
-    if(!t.steps.some(function(s){return s.id===sid;})){
-      var orig=H_STEPS.find(function(s){return s.id===sid;});
-      if(orig) t.steps.push(Object.assign({},orig));
-    }
+    if(!t.steps.some(function(s){return s.id===sid;})&&def) t.steps.push(Object.assign({},def));
   } else {
     t.steps=t.steps.filter(function(s){return s.id!==sid;});
   }
-  t.steps.sort(function(a,b){
-    return H_STEPS.findIndex(function(s){return s.id===a.id;}) - H_STEPS.findIndex(function(s){return s.id===b.id;});
-  });
+  t.steps.sort(function(a,b){return orderIdx(a.id)-orderIdx(b.id);});
+  saveHStepTypes();
   renderTypeList();
 }
 function addStepType(){
@@ -1285,7 +1304,7 @@ function renderStepList(){
         +'<button onclick="moveStep('+i+',-1)" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1" '+(i===0?'disabled':'')+'>▲</button>'
         +'<button onclick="moveStep('+i+',1)"  style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1" '+(i===_editSteps.length-1?'disabled':'')+'>▼</button>'
       +'</div>'
-      +'<div onclick="cycleStepIcon('+i+')" title="클릭: 아이콘 변경" style="width:32px;height:32px;border-radius:7px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer;user-select:none">'+s.icon+'</div>'
+      +'<div onclick="openIconPalette(this,'+i+')" title="클릭: 아이콘 선택" style="width:32px;height:32px;border-radius:7px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer;user-select:none">'+s.icon+'</div>'
       +'<div style="flex:1;min-width:0">'
         +'<input data-sidx="'+i+'" data-field="id" value="'+s.id+'" onchange="updateEditStep(this)" style="font-size:13px;font-weight:700;color:var(--tx);border:none;background:transparent;outline:none;width:100%;padding:1px 0;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" '+(isFirst?'readonly':'')+'>'
         +'<input data-sidx="'+i+'" data-field="desc" value="'+s.desc+'" onchange="updateEditStep(this)" style="font-size:11px;color:var(--tx3);border:none;background:transparent;outline:none;width:100%;padding:1px 0;margin-top:1px;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" placeholder="설명">'
@@ -1313,12 +1332,28 @@ function removeStep(i){
   _editSteps.splice(i,1);
   renderStepList();
 }
-var STEP_ICONS=['📋','✂️','🔢','🧩','🗜️','🔩','🏷️','🔍','📦','🔧','🧵','⚡','🖨️','📐','🧪','🚚'];
-function cycleStepIcon(i){
-  var s=_editSteps[i];if(!s)return;
-  var k=STEP_ICONS.indexOf(s.icon);
-  s.icon=STEP_ICONS[(k+1)%STEP_ICONS.length];
-  renderStepList();
+var STEP_ICONS=['📋','✂️','🔢','🧩','🗜️','🔩','🏷️','🔍','📦','🔧','⚡','🔌','🔥','📏','🧪','🚚'];
+function openIconPalette(target,i){
+  var old=document.getElementById('icon-palette');if(old)old.remove();
+  var pal=document.createElement('div');pal.id='icon-palette';
+  pal.style.cssText='position:absolute;z-index:9999;background:var(--white);border:1px solid var(--border2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:3px;';
+  STEP_ICONS.forEach(function(ic){
+    var b=document.createElement('button');b.textContent=ic;
+    b.style.cssText='font-size:18px;width:32px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px;';
+    b.onmouseover=function(){b.style.background='var(--bg)';};
+    b.onmouseout=function(){b.style.background='none';};
+    b.onclick=function(e){e.stopPropagation();
+      if(i==='new'){document.getElementById('new-step-icon').value=ic;var pv=document.getElementById('new-icon-preview');if(pv)pv.textContent=ic;}
+      else{_editSteps[i].icon=ic;renderStepList();}
+      pal.remove();
+    };
+    pal.appendChild(b);
+  });
+  document.body.appendChild(pal);
+  var r=target.getBoundingClientRect();
+  pal.style.left=Math.min(r.left,window.innerWidth-300)+'px';
+  pal.style.top=(r.bottom+4)+'px';
+  setTimeout(function(){document.addEventListener('click',function h2(){pal.remove();document.removeEventListener('click',h2);});},50);
 }
 function addStep(){
   setTimeout(function(){if(typeof renderTypeList==='function')renderTypeList();},0);
@@ -1330,7 +1365,8 @@ function addStep(){
   if(_editSteps.some(function(s){return s.id===id;})){toast('이미 같은 이름의 공정이 있습니다','err');return;}
   _editSteps.push({id:id,icon:icon,color:color,desc:desc});
   document.getElementById('new-step-id').value='';
-  document.getElementById('new-step-icon').value='';
+  document.getElementById('new-step-icon').value='📦';
+  var _pv=document.getElementById('new-icon-preview');if(_pv)_pv.textContent='📦';
   document.getElementById('new-step-desc').value='';
   renderStepList();
   toast(id+' 공정 추가됨','ok');
@@ -2699,8 +2735,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.10';
+var APP_VER='v6.11';
 var VER_LOG=[
+  {v:'v6.11',d:'2026-07', t:'공정구분 개선: A형도 체크박스로 편집 가능(기본 공정 직접 추가/삭제, 출도만 잠금), 모든 형에서 전체 공정(합집합) 선택 가능(B형 납땜 등 포함). 아이콘 팔레트 선택(격자 16종, 클릭 순환 폐지), 공정 추가 폼에서도 아이콘 즉시 선택'},
   {v:'v6.10',d:'2026-07', t:'기본 공정 5단계(출도→재단→제작→검사→포장)로 확정, 납땜&조립 등 추가는 공정 설정에서 사용자가 직접 관리. 납땜&조립 자동 삽입은 최초 1회만(삭제 시 유지). 세분화(B형) 9단계 사전 등록. 공정 아이콘 클릭 변경(16종)'},
   {v:'v6.9',d:'2026-07', t:'제조 개선요청 반영. 공정 개편: 출도→재단→제작→납땜&조립→검사→포장 (압착·조립 통합 개명, 기존 설정 자동 마이그레이션). 스캔 검사 버튼 단일화: 검사 선택→스캔→합격/불합격 판정 버튼(합불 사전선택 불필요). 공정 추가/삭제 시 A/B/C 공정구분 목록 즉시 반영. 현황판 일괄 바에 공정구분 변경(선택 건 A/B/C 일괄 전환)'},
   {v:'v6.8',d:'2026-07', t:'[실가동 전 정합성] 로그 저장 시 PO·오더라인·델라인을 DB에 함께 저장(harness_logs.po/ord_ln/del_ln). 이전에는 이 필드가 DB에 저장되지 않아 새로고침 후 같은 도번 다른 건이 완료 오인식될 수 있었음. ※ Supabase에 컬럼 추가 SQL 1회 실행 필요(harness_logs_컬럼추가.sql). 구방식 메뉴 완전 삭제'},
