@@ -1411,6 +1411,7 @@ var HS={
   job:null,selStep:null,
   timeMode:false,
   pendingInspect:null, // ★ 검사 합불 판정 대기 상태
+  alarmPending:null,   // ★ 작업중단 사유 입력 후 스캔 대기
 };
 
 function setBadge(s){
@@ -2151,6 +2152,7 @@ function handleQRInput(text){
     HS.job=job;
     toast('📐 '+job.dwg_no);
     renderScanJobArea(); renderScanSteps(); renderScanActions(); renderScanStepIndicator();
+    if(applyPendingAlarm()) return;   // 중단 대기 중이면 중단 등록만 하고 종료
     if(HS.selStep) autoAction();
   }
 }
@@ -2409,7 +2411,7 @@ function renderScanJobArea(){
   const fieldRow=function(k,v,c){ return v?('<div class="sc-job-row"><span class="sc-job-k">'+k+'</span><span class="sc-job-v"'+(c?' style="color:'+c+'"':'')+'>'+v+'</span></div>'):''; };
   el.innerHTML='<div class="sc-job">'
     +'<div class="sc-job-hd"><div class="sc-job-title">📐 현재 도면</div>'
-    +'<button class="sc-job-clr" onclick="HS.job=null;HS.selStep=null;HS.pendingInspect=null;renderScanJobArea();renderScanSteps();renderScanActions();renderScanStepIndicator()">✕</button></div>'
+    +'<button class="sc-job-clr" onclick="HS.job=null;HS.selStep=null;HS.pendingInspect=null;HS.alarmPending=null;renderScanJobArea();renderScanSteps();renderScanActions();renderScanStepIndicator()">✕</button></div>'
     +'<div style="font-size:19px;font-weight:700;color:#fff;font-family:var(--mono);margin-bottom:10px;letter-spacing:.02em">'+(j.dwg_no||'—')+'</div>'
     +'<div style="background:rgba(255,255,255,.06);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:4px">'
     +fieldRow('고객사', j.customer, null)+fieldRow('프로젝트', j.project, null)+fieldRow('호기', j.unit, null)
@@ -2474,7 +2476,16 @@ function renderScanSteps(){
 function renderAlarmBtn(){
   var el=document.getElementById('sc-alarm-wrap');if(!el)return;
   var ord=HS.job?(HS.orders.find(function(x){return orderMatch(x,HS.job);})||HS.orders.find(function(x){return x.dwg_no===HS.job.dwg_no;})):null;
-  if(!HS.job){el.innerHTML='';return;}
+  // 중단 대기: 사유를 먼저 적고 QR 스캔을 기다리는 상태
+  if(HS.alarmPending&&!(ord&&ord.alarm)){
+    el.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:10px;background:rgba(224,146,47,.12);border:1.5px solid rgba(224,146,47,.45)">'
+      +'<span style="font-size:16px;flex-shrink:0">⛔</span>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:800;color:#b45309">중단 등록 대기 — QR을 찍으세요</div>'
+      +'<div style="font-size:11px;color:var(--tx2);margin-top:1px">사유: '+hEsc(HS.alarmPending)+'</div></div>'
+      +'<button onclick="HS.alarmPending=null;renderAlarmBtn();" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--tx3);font-size:12px;font-weight:700;cursor:pointer">취소</button>'
+    +'</div>';
+    return;
+  }
   if(ord&&ord.alarm){
     el.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:10px;background:rgba(216,68,60,.1);border:1.5px solid rgba(216,68,60,.35)">'
       +'<span style="width:12px;height:12px;border-radius:50%;background:#d8443c;flex-shrink:0"></span>'
@@ -2487,14 +2498,33 @@ function renderAlarmBtn(){
   }
 }
 function alarmFromScan(){
-  if(!HS.job){toast('먼저 작업지시서 QR을 스캔하세요','warn');return;}
-  var ord=HS.orders.find(function(x){return orderMatch(x,HS.job);})||HS.orders.find(function(x){return x.dwg_no===HS.job.dwg_no;});
-  if(!ord){toast('등록된 도면이 아닙니다','err');return;}
   var reason=prompt('작업중단 사유를 입력하세요\n(예: 자재 부족, 도면 오류, 설비 고장)');
   if(!reason||!reason.trim())return;
-  setAlarm(ord,reason.trim(),HS.selStep||'',(HS.worker||'').trim());
+  reason=reason.trim();
+  if(!HS.job){
+    // 공정 선택 → 중단 → 스캔 순서 지원: 사유를 담아두고 다음 스캔 때 등록
+    HS.alarmPending=reason;
+    renderAlarmBtn();
+    toast('⛔ 사유 입력됨 — 작업지시서 QR을 찍으세요','warn');
+    return;
+  }
+  var ord=HS.orders.find(function(x){return orderMatch(x,HS.job);})||HS.orders.find(function(x){return x.dwg_no===HS.job.dwg_no;});
+  if(!ord){toast('등록된 도면이 아닙니다','err');return;}
+  setAlarm(ord,reason,HS.selStep||'',(HS.worker||'').trim());
+  HS.alarmPending=null;
   renderAlarmBtn();renderStatus();
   scanFlash('err','작업중단 등록',HS.job.dwg_no);
+}
+// 스캔 직후 대기 중인 중단 사유가 있으면 등록 (true면 일반 처리 건너뜀)
+function applyPendingAlarm(){
+  if(!HS.alarmPending||!HS.job)return false;
+  var ord=HS.orders.find(function(x){return orderMatch(x,HS.job);})||HS.orders.find(function(x){return x.dwg_no===HS.job.dwg_no;});
+  if(!ord){toast('등록된 도면이 아닙니다','err');return false;}
+  setAlarm(ord,HS.alarmPending,HS.selStep||'',(HS.worker||'').trim());
+  HS.alarmPending=null;
+  renderAlarmBtn();renderStatus();
+  scanFlash('err','작업중단 등록',HS.job.dwg_no);
+  return true;
 }
 function alarmClearFromScan(){
   if(!HS.job)return;
@@ -2804,7 +2834,7 @@ var Analytics={
 // ════════════════════════════════════════
 var APP_VER='v6.13';
 var VER_LOG=[
-  {v:'v6.13',d:'2026-07', t:'제조 요청 — 작업중단(Alarm) 기능 신규. 스캔 화면 공정 선택 하단에 [⛔ 작업중단/불가] 버튼(사유 입력), 현황판에 상태 컬럼 추가(현황판↔QR출력 사이, 빨강=중단·초록=정상, 클릭 시 사유 확인·관리자 해제). 문제 해결 후 공정 완료 스캔 시 중단 자동 해제. 현황 CSV에 이슈여부(TRUE/FALSE)·이슈사유·이슈공정 추가. ※ Supabase 컬럼 추가 SQL 1회 실행 필요(harness_orders_알람컬럼추가.sql)'},
+  {v:'v6.13',d:'2026-07', t:'제조 요청 — 작업중단(Alarm) 기능 신규. 스캔 화면 공정 선택 하단에 [⛔ 작업중단/불가] 버튼 상시 표시 — 공정 선택 → 중단(사유 입력) → QR 스캔 순서 지원(스캔 후 누르는 방식도 유지), 현황판에 상태 컬럼 추가(현황판↔QR출력 사이, 빨강=중단·초록=정상, 클릭 시 사유 확인·관리자 해제). 문제 해결 후 공정 완료 스캔 시 중단 자동 해제. 현황 CSV에 이슈여부(TRUE/FALSE)·이슈사유·이슈공정 추가. ※ Supabase 컬럼 추가 SQL 1회 실행 필요(harness_orders_알람컬럼추가.sql)'},
   {v:'v6.12',d:'2026-07', t:'스캔 화면 레이아웃 정리: 검사 버튼이 2칸을 차지해 그리드가 깨지던 문제 수정(모든 공정 버튼 균일 크기), 모바일 제목 글자 늘어짐(letter-spacing) 해소, 긴 공정명 줄바꿈 안정화, 스캔 안내문 정리, 미사용 코드 제거'},
   {v:'v6.11',d:'2026-07', t:'공정구분 개선: A형도 체크박스로 편집 가능(기본 공정 직접 추가/삭제, 출도만 잠금), 모든 형에서 전체 공정(합집합) 선택 가능(B형 납땜 등 포함). 아이콘 팔레트 선택(격자 16종, 클릭 순환 폐지), 공정 추가 폼에서도 아이콘 즉시 선택'},
   {v:'v6.10',d:'2026-07', t:'기본 공정 5단계(출도→재단→제작→검사→포장)로 확정, 납땜&조립 등 추가는 공정 설정에서 사용자가 직접 관리. 납땜&조립 자동 삽입은 최초 1회만(삭제 시 유지). 세분화(B형) 9단계 사전 등록. 공정 아이콘 클릭 변경(16종)'},
