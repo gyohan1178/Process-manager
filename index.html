@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.13</title>
+<title>하네스 공정관리 v6.14</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -502,7 +502,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.13</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.14</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,7 +639,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.13 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.14 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1414,6 +1414,27 @@ var HS={
   alarmPending:null,   // ★ 작업중단 사유 입력 후 스캔 대기
 };
 
+// ── 저장 실패 경고 (모바일 포함 전 화면 상단 고정) ──
+var _syncErr=false;
+function showSyncWarn(msg){
+  _syncErr=true;
+  var el=document.getElementById('sync-warn');
+  if(!el){
+    el=document.createElement('div');el.id='sync-warn';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9998;background:#d8443c;color:#fff;padding:10px 14px;font-size:13px;font-weight:800;text-align:center;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer';
+    el.onclick=function(){ hsLoad(); };
+    document.body.appendChild(el);
+  }
+  el.innerHTML='⚠ '+(msg||'서버 저장 실패 — 이 기록은 아직 저장되지 않았습니다')+'<br><span style="font-size:11px;font-weight:600;opacity:.9">네트워크 확인 후 여기를 눌러 다시 시도하세요</span>';
+  el.style.display='block';
+  setBadge('err');
+}
+function clearSyncWarn(){
+  if(!_syncErr)return;
+  _syncErr=false;
+  var el=document.getElementById('sync-warn');if(el)el.style.display='none';
+  setBadge('ok');
+}
 function setBadge(s){
   var el=document.getElementById('sb-conn-badge');if(!el)return;
   var map={
@@ -1445,6 +1466,7 @@ async function hsSaveOrders(){
     }));
     if(res.error){
       console.warn('orders sync err',res.error);
+      if(!(res.error.message&&res.error.message.includes('column')))showSyncWarn('도면 정보 저장 실패 — 서버에 반영되지 않았습니다');
       if(res.error.message&&res.error.message.includes('column')){
         await sb.from('harness_orders').upsert(HS.orders.map(function(o){
           return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
@@ -1453,7 +1475,7 @@ async function hsSaveOrders(){
         toast('⚠ DB 컬럼 부족 — rework 컬럼 추가 SQL 실행 필요','warn');
       }
     }
-  }catch(e){console.warn('orders sync err',e);}
+  }catch(e){console.warn('orders sync err',e);showSyncWarn('도면 정보 저장 실패 — 네트워크를 확인하세요');}
 }
 
 async function hsSaveLogs(){
@@ -1470,6 +1492,7 @@ async function hsSaveLogs(){
     }));
     if(res.error){
       console.warn('logs sync err',res.error);
+      if(!(res.error.message&&res.error.message.includes('column')))showSyncWarn('기록 저장 실패 — 서버에 반영되지 않았습니다');
       if(res.error.message&&res.error.message.includes('column')){
         await sb.from('harness_logs').upsert(HS.logs.map(function(l){
           return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -1478,7 +1501,8 @@ async function hsSaveLogs(){
         }));
       }
     }
-  }catch(e){console.warn('logs sync err',e);}
+    else{clearSyncWarn();}
+  }catch(e){console.warn('logs sync err',e);showSyncWarn('기록 저장 실패 — 네트워크를 확인하세요');}
 }
 
 async function hsDeleteOrder(id){
@@ -1814,7 +1838,7 @@ function renderStatus(){
   }
   // ── 모바일: 카드 리스트 (목업 스타일) ──
   if(typeof isMobile!=='undefined'&&isMobile){
-    var cards=orders.map(function(o){
+    var cardHTML=function(o){
       var done=isOrderDone(o);var prog=getOrderProgress(o);
       var tot=getStepsForType(o.step_type).length;
       var due=o.due||'';
@@ -1843,6 +1867,7 @@ function renderStatus(){
             +'<div style="font-size:15px;font-weight:800;color:var(--tx);line-height:1.2">'+(o.customer||'—')+'</div>'
             +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">'
               +'<span style="font-family:var(--mono);font-size:13px;color:var(--tx2);font-weight:700">'+(o.dwg_no||'—')+'</span>'
+              +(o.alarm?'<span title="'+hEsc(o.alarm_reason||'')+'" style="font-size:9px;font-weight:800;padding:1px 7px;border-radius:8px;background:#d8443c;color:#fff">⛔ 중단</span>':'')
               +(o.rework?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(244,63,94,.12);color:#f43f5e;border:1px solid rgba(244,63,94,.25)">⚠ 재작업</span>':'')
               +(o.project?'<span style="font-size:11px;color:var(--tx3)">· '+o.project+'</span>':'')
             +'</div>'
@@ -1854,8 +1879,31 @@ function renderStatus(){
           +(meta.length?'<span style="font-size:11px;color:var(--tx3)">'+meta.join(' · ')+'</span>':'')
         +'</div>':'')
       +'</div>';
-    }).join('');
-    board.innerHTML='<div style="display:flex;flex-direction:column;gap:10px;padding-bottom:8px">'+cards+'</div>';
+    };
+    var inner='';
+    if(_spView==='cust'){
+      // 고객사별: 소제목으로 구분 (섹션 내 정렬 유지)
+      var cs=[],cm={};
+      orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!cm[k]){cm[k]={key:k,items:[]};cs.push(cm[k]);}cm[k].items.push(o);});
+      cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
+      inner=cs.map(function(g){
+        return '<div style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:7px 11px;border-radius:9px;background:var(--blue-lt);color:var(--blue);font-size:13px;font-weight:800">'
+          +'<span>🏢 '+hEsc(g.key)+'</span><span style="font-weight:600;color:var(--tx3);font-size:11px">('+g.items.length+'건)</span></div>'
+          +g.items.map(cardHTML).join('');
+      }).join('');
+    } else if(_spGroup){
+      // 프로젝트 묶기: 프로젝트 소제목으로 구분
+      var ps=[],pm={};
+      orders.forEach(function(o){var k=(o.project||'').trim()||'(미지정)';if(!pm[k]){pm[k]={key:k,items:[]};ps.push(pm[k]);}pm[k].items.push(o);});
+      inner=ps.map(function(g){
+        return '<div style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:7px 11px;border-radius:9px;background:rgba(124,58,237,.1);color:#7c3aed;font-size:13px;font-weight:800">'
+          +'<span>🗂 '+hEsc(g.key)+'</span><span style="font-weight:600;color:var(--tx3);font-size:11px">('+g.items.length+'건)</span></div>'
+          +g.items.map(cardHTML).join('');
+      }).join('');
+    } else {
+      inner=orders.map(cardHTML).join('');
+    }
+    board.innerHTML='<div style="display:flex;flex-direction:column;gap:10px;padding-bottom:8px">'+inner+'</div>';
     return;
   }
   function _he(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -2832,9 +2880,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.13';
+var APP_VER='v6.14';
 var VER_LOG=[
-  {v:'v6.13',d:'2026-07', t:'제조 요청 — 작업중단(Alarm) 기능 신규. 스캔 화면 공정 선택 하단에 [⛔ 작업중단/불가] 버튼 상시 표시 — 공정 선택 → 중단(사유 입력) → QR 스캔 순서 지원(스캔 후 누르는 방식도 유지), 현황판에 상태 컬럼 추가(현황판↔QR출력 사이, 빨강=중단·초록=정상, 클릭 시 사유 확인·관리자 해제). 문제 해결 후 공정 완료 스캔 시 중단 자동 해제. 현황 CSV에 이슈여부(TRUE/FALSE)·이슈사유·이슈공정 추가. ※ Supabase 컬럼 추가 SQL 1회 실행 필요(harness_orders_알람컬럼추가.sql)'},
+  {v:'v6.14',d:'2026-07', t:'[실운영 대비] 저장 실패 경고 신규 — 네트워크 오류로 서버 저장이 실패해도 화면엔 완료로 보이던 문제 해결. 실패 시 상단에 빨간 경고 띠(모바일 포함)를 띄우고, 눌러서 재시도 가능. 복구되면 자동 사라짐. 모바일 현황 고객사별·프로젝트 묶기 동작 수정, 모바일 카드 중단 표시'},
+  {v:'v6.13',d:'2026-07', t:'제조 요청 — 작업중단(Alarm) 기능 신규. 스캔 화면 공정 선택 하단에 [⛔ 작업중단/불가] 버튼 상시 표시 — 공정 선택 → 중단(사유 입력) → QR 스캔 순서 지원(스캔 후 누르는 방식도 유지), 현황판에 상태 컬럼 추가(현황판↔QR출력 사이, 빨강=중단·초록=정상, 클릭 시 사유 확인·관리자 해제). 문제 해결 후 공정 완료 스캔 시 중단 자동 해제. 현황 CSV에 이슈여부(TRUE/FALSE)·이슈사유·이슈공정 추가. 모바일 현황: 🏢고객사별·🗂프로젝트 묶기가 동작하지 않던 문제 수정(카드에 소제목 구분 적용), 카드에 ⛔중단 표시 추가. ※ Supabase 컬럼 추가 SQL 1회 실행 필요(harness_orders_알람컬럼추가.sql)'},
   {v:'v6.12',d:'2026-07', t:'스캔 화면 레이아웃 정리: 검사 버튼이 2칸을 차지해 그리드가 깨지던 문제 수정(모든 공정 버튼 균일 크기), 모바일 제목 글자 늘어짐(letter-spacing) 해소, 긴 공정명 줄바꿈 안정화, 스캔 안내문 정리, 미사용 코드 제거'},
   {v:'v6.11',d:'2026-07', t:'공정구분 개선: A형도 체크박스로 편집 가능(기본 공정 직접 추가/삭제, 출도만 잠금), 모든 형에서 전체 공정(합집합) 선택 가능(B형 납땜 등 포함). 아이콘 팔레트 선택(격자 16종, 클릭 순환 폐지), 공정 추가 폼에서도 아이콘 즉시 선택'},
   {v:'v6.10',d:'2026-07', t:'기본 공정 5단계(출도→재단→제작→검사→포장)로 확정, 납땜&조립 등 추가는 공정 설정에서 사용자가 직접 관리. 납땜&조립 자동 삽입은 최초 1회만(삭제 시 유지). 세분화(B형) 9단계 사전 등록. 공정 아이콘 클릭 변경(16종)'},
