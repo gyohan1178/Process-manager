@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.16</title>
+<title>하네스 공정관리 v6.17</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -502,7 +502,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.16</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.17</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,7 +639,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.16 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.17 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1577,7 +1577,7 @@ function setPage(p){
   if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
-  if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isSuper())){toast('최고관리자만 접근 가능합니다','warn');return;}
+  if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
   ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
@@ -2875,8 +2875,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.16';
+var APP_VER='v6.17';
 var VER_LOG=[
+  {v:'v6.17',d:'2026-07', t:'권한 수정 — 사용자 관리(가입 승인)를 최고관리자 전용에서 관리자 이상 접근으로 변경(메뉴는 보이는데 클릭 시 차단되던 문제 해결). 관리자는 작업자·관리자 승인과 권한 변경 가능, 최고관리자 승격·최고관리자 계정 변경은 여전히 최고관리자 전용. 작업지시서 QR 메뉴 권한 적용(작업자에게 노출되던 문제 수정)'},
   {v:'v6.16',d:'2026-07', t:'가시성 개선. PC 현황판: 납기 임박 배지 주황 채움으로 대비 강화(지연=빨강·임박=주황 흰글씨), 공정타입 배지 색 구분(A회색·B보라·C청록) 및 확대, 도면번호 컬럼 폭 확대, 행 간격. 모바일 카드: 납기 임박 배지 색 통일, 작업중단 건 좌측 빨간 띠로 강조'},
   {v:'v6.15',d:'2026-07', t:'이선영 대리 요청 반영. [중복도면] 같은 도번이라도 프로젝트·호기·PO·오더라인·델라인 중 하나라도 다르면 별개 건으로 인식(엑셀 업로드·출도 스캔·진행판정 전부 적용) — 같은 도번 여러 수량이 첫 건만 인식되던 문제 해결. [검사] 합격/불합격 판정 제거, 검사도 다른 공정처럼 QR 한 번 찍으면 즉시 완료(합불은 비전 OCR이 별도 처리). 로그에 프로젝트·호기 저장'},
   {v:'v6.14',d:'2026-07', t:'[실운영 대비] 저장 실패 경고 신규 — 네트워크 오류로 서버 저장이 실패해도 화면엔 완료로 보이던 문제 해결. 실패 시 상단에 빨간 경고 띠(모바일 포함)를 띄우고, 눌러서 재시도 가능. 복구되면 자동 사라짐. 모바일 현황 고객사별·프로젝트 묶기 동작 수정, 모바일 카드 중단 표시'},
@@ -4608,6 +4609,7 @@ var AUTH={
     show('nav-stamp-single',admin);
     show('nav-qrhist',admin);
     show('nav-users',admin); // 관리자도 사용자 관리(승인) 접근
+    show('nav-workorder',admin);
     var stepBtn=document.querySelector('[onclick="openStepSettings()"]');if(stepBtn)stepBtn.style.display=admin?'':'none';
     var box=document.getElementById('au-userbox');
     var lbl=document.getElementById('au-userlabel');
