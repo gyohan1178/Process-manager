@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.17</title>
+<title>하네스 공정관리 v6.18</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -502,7 +502,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.17</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.18</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,7 +639,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.17 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.18 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1459,6 +1459,7 @@ async function hsSaveOrders(){
               po:o.po||null,ord_ln:o.ord_ln||null,del_ln:o.del_ln||null,
               due:o.due||null,step_type:o.step_type||null,manually_done:o.manually_done||false,
               qr_printed:o.qr_printed||false,qr_printed_at:o.qr_printed_at||null,
+              rev:o.rev||null,
               rework:o.rework||false,rework_at:o.rework_at||null,rework_by:o.rework_by||null,
               rework_cleared_at:o.rework_cleared_at||null,
               alarm:o.alarm||false,alarm_reason:o.alarm_reason||null,alarm_step:o.alarm_step||null,
@@ -1871,6 +1872,7 @@ function renderStatus(){
             +'<div style="font-size:15px;font-weight:800;color:var(--tx);line-height:1.2">'+(o.customer||'—')+'</div>'
             +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">'
               +'<span style="font-family:var(--mono);font-size:13px;color:var(--tx2);font-weight:700">'+(o.dwg_no||'—')+'</span>'
+              +(o.rev?'<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;background:var(--bg);color:var(--tx2);border:1px solid var(--border)">Rev '+hEsc(o.rev)+'</span>':'')
               +(o.alarm?'<span title="'+hEsc(o.alarm_reason||'')+'" style="font-size:9px;font-weight:800;padding:1px 7px;border-radius:8px;background:#d8443c;color:#fff">⛔ 중단</span>':'')
               +(o.rework?'<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(244,63,94,.12);color:#f43f5e;border:1px solid rgba(244,63,94,.25)">⚠ 재작업</span>':'')
               +(o.project?'<span style="font-size:11px;color:var(--tx3)">· '+o.project+'</span>':'')
@@ -1935,6 +1937,7 @@ function renderStatus(){
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(dl||'—')+'</td>'
       +'<td style="font-size:12px;color:var(--tx2)">'+projCell+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
+      +'<td style="text-align:center">'+(o.rev?'<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2)">'+hEsc(o.rev)+'</span>':'<span style="color:var(--tx3);font-size:10px">—</span>')+'</td>'
       +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
       +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;cursor:pointer;white-space:nowrap" onclick="editDueInline(event,\''+o.id+'\',\''+(due||'')+'\')" title="클릭하여 납기 수정">'
@@ -1968,7 +1971,7 @@ function renderStatus(){
     orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!_cm[k]){_cm[k]={key:k,items:[]};_cs.push(_cm[k]);}_cm[k].items.push(o);});
     _cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
     _cs.forEach(function(g){
-      rows+='<tr><td colspan="14" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
+      rows+='<tr><td colspan="15" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
       g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
     });
   } else if(_spGroup){
@@ -1999,6 +2002,7 @@ function renderStatus(){
     {h:'Del Line',key:'del_ln',w:70,al:'center'},
     {h:'프로젝트',key:'project',w:110},
     {h:'도면번호',key:'dwg_no',w:175},
+    {h:'Rev',key:'rev',w:52,al:'center'},
     {h:'호기',key:'unit',w:55,al:'center'},
     {h:'수량',key:'qty',w:55,al:'center'},
     {h:'납기',key:'due',w:88},
@@ -2161,7 +2165,7 @@ function deleteDwg(id){
 
 // ── QR 스캔 ──
 function parseDrawingQR(text){
-  const r={customer:'',project:'',unit:'',dwg_no:'',qty:'',po:'',ord_ln:'',del_ln:'',due:''};
+  const r={customer:'',project:'',unit:'',dwg_no:'',qty:'',po:'',ord_ln:'',del_ln:'',due:'',rev:''};
   if(text.includes('CUST:')||text.includes('DWG:')){
     text.split('|').forEach(function(seg){
       var s=seg.trim();
@@ -2170,6 +2174,7 @@ function parseDrawingQR(text){
       else if(s.startsWith('UNIT:')) r.unit=s.slice(5).trim();
       else if(s.startsWith('DWG:'))  r.dwg_no=s.slice(4).trim();
       else if(s.startsWith('QTY:'))  r.qty=s.slice(4).trim();
+      else if(s.startsWith('REV:'))  r.rev=s.slice(4).trim();
       else if(s.startsWith('PO:'))   r.po=s.slice(3).trim();
       else if(s.startsWith('OL:'))   r.ord_ln=s.slice(3).trim();
       else if(s.startsWith('DL:'))   r.del_ln=s.slice(3).trim();
@@ -2875,8 +2880,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.17';
+var APP_VER='v6.18';
 var VER_LOG=[
+  {v:'v6.18',d:'2026-07', t:'Rev(개정번호) 항목 추가. PO 등록 양식의 도면번호와 호기 사이에 Rev 열 신설(수동 입력, 옵션) — 도면명에 Rev가 없는 건도 관리 가능. 공정현황 표·모바일 카드·현황 CSV·작업지시서 공정 QR에 Rev 표시. ※ Supabase 컬럼 추가 SQL 1회 실행 필요(harness_orders_REV컬럼추가.sql)'},
   {v:'v6.17',d:'2026-07', t:'권한 수정 — 사용자 관리(가입 승인)를 최고관리자 전용에서 관리자 이상 접근으로 변경(메뉴는 보이는데 클릭 시 차단되던 문제 해결). 관리자는 작업자·관리자 승인과 권한 변경 가능, 최고관리자 승격·최고관리자 계정 변경은 여전히 최고관리자 전용. 작업지시서 QR 메뉴 권한 적용(작업자에게 노출되던 문제 수정)'},
   {v:'v6.16',d:'2026-07', t:'가시성 개선. PC 현황판: 납기 임박 배지 주황 채움으로 대비 강화(지연=빨강·임박=주황 흰글씨), 공정타입 배지 색 구분(A회색·B보라·C청록) 및 확대, 도면번호 컬럼 폭 확대, 행 간격. 모바일 카드: 납기 임박 배지 색 통일, 작업중단 건 좌측 빨간 띠로 강조'},
   {v:'v6.15',d:'2026-07', t:'이선영 대리 요청 반영. [중복도면] 같은 도번이라도 프로젝트·호기·PO·오더라인·델라인 중 하나라도 다르면 별개 건으로 인식(엑셀 업로드·출도 스캔·진행판정 전부 적용) — 같은 도번 여러 수량이 첫 건만 인식되던 문제 해결. [검사] 합격/불합격 판정 제거, 검사도 다른 공정처럼 QR 한 번 찍으면 즉시 완료(합불은 비전 OCR이 별도 처리). 로그에 프로젝트·호기 저장'},
@@ -2940,14 +2946,14 @@ function exportCSV(){
   else exportLogCSV();
 }
 function exportBoardCSV(){
-  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','납기','등록일','완료여부','재작업','이슈여부','이슈사유','이슈공정','현황'];
+  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','Rev','호기','수량','납기','등록일','완료여부','재작업','이슈여부','이슈사유','이슈공정','현황'];
   var rows=HS.orders.map(function(o){
     var po=o.po||'', ol=o.ord_ln||'', dl=o.del_ln||'', due=o.due||'';
     var done=isOrderDone(o);
     var prog=getOrderProgress(o);
     var dt=new Date(o.created_at);
     var dtStr=dt.getFullYear()+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0');
-    return [o.customer||'',po,ol,dl,o.project||'',o.dwg_no||'',o.unit||'',o.qty||1,
+    return [o.customer||'',po,ol,dl,o.project||'',o.dwg_no||'',o.rev||'',o.unit||'',o.qty||1,
             due?fmtYYMMDD(due):'',dtStr,done?'완료':'진행중',o.rework?'재작업':'',
             o.alarm?'TRUE':'FALSE',o.alarm?(o.alarm_reason||''):'',o.alarm?(o.alarm_step||''):'',
             prog+'/'+getStepsForType(o.step_type).length];
@@ -3304,6 +3310,7 @@ var WO={
     var f=['DWG:'+(o.dwg_no||'')];
     if(o.customer)f.push('CUST:'+o.customer);
     if(o.project)f.push('PROJ:'+o.project);
+    if(o.rev)f.push('REV:'+o.rev);
     if(o.unit)f.push('UNIT:'+o.unit);
     f.push('QTY:'+(o.qty||1));
     if(o.po)f.push('PO:'+o.po);
@@ -4415,11 +4422,11 @@ function downloadOrderTemplate(){
   loadXLSX(function(){
     var typeOpts=H_STEP_TYPES.map(function(t){return t.code;}).join('/');
     var wb=XLSX.utils.book_new();
-    var headers=[['고객사','프로젝트','도면번호','호기','수량','PO No','Order Line','Del Line','불출일','납기','등록자','공정구분']];
-    var note=[['','','','','','','(옵션)','(옵션)','(옵션) YYYY-MM-DD','YYYY-MM-DD','(옵션)','(옵션) '+typeOpts+' 기본A']];
-    var sample=[['Axcelis','CXE Ultra','1600791_M_00','#1',2,'PO-2026-001','10','1','2026-05-28','2026-06-30','','A'],['Edwards Korea','DF Project','1614190_E_00','2',1,'PO-2026-002','20','1','2026-05-28','2026-07-15','','B']];
+    var headers=[['고객사','프로젝트','도면번호','Rev','호기','수량','PO No','Order Line','Del Line','불출일','납기','등록자','공정구분']];
+    var note=[['','','','(옵션)','','','','(옵션)','(옵션)','(옵션) YYYY-MM-DD','YYYY-MM-DD','(옵션)','(옵션) '+typeOpts+' 기본A']];
+    var sample=[['Axcelis','CXE Ultra','1600791_M_00','00','#1',2,'PO-2026-001','10','1','2026-05-28','2026-06-30','','A'],['Edwards Korea','DF Project','1614190_E_00','01','2',1,'PO-2026-002','20','1','2026-05-28','2026-07-15','','B']];
     var ws=XLSX.utils.aoa_to_sheet([...headers,...note,...sample]);
-    ws['!cols']=[{wch:12},{wch:14},{wch:20},{wch:6},{wch:6},{wch:14},{wch:11},{wch:9},{wch:13},{wch:13},{wch:8},{wch:8}];
+    ws['!cols']=[{wch:12},{wch:14},{wch:20},{wch:7},{wch:6},{wch:6},{wch:14},{wch:11},{wch:9},{wch:13},{wch:13},{wch:8},{wch:8}];
     XLSX.utils.book_append_sheet(wb,ws,'PO등록양식');XLSX.writeFile(wb,'하네스_PO등록양식.xlsx');toast('양식 다운로드 완료','ok');
   });
 }
@@ -4436,7 +4443,7 @@ async function handleOrderExcel(input){
           var hdr=rows[0].map(function(h){return String(h).trim().toLowerCase();});
           var col=function(keys){for(var k of keys){var i=hdr.findIndex(function(h){return h.includes(k);});if(i>=0)return i;}return -1;};
           var cCust=col(['고객사','customer','납품처']);var cProj=col(['프로젝트','project']);var cDwg=col(['도면번호','dwg','drawing']);
-          var cUnit=col(['호기','unit']);var cQty=col(['수량','qty','quantity']);var cPo=col(['po no','po','발주번호']);
+          var cRev=col(['rev','리비전','개정']);var cUnit=col(['호기','unit']);var cQty=col(['수량','qty','quantity']);var cPo=col(['po no','po','발주번호']);
           var cOl=col(['order line','ord line','ol']);var cDl=col(['del line','dl']);var cIss=col(['불출일','issue']);
           var cDue=col(['납기','due','duedate']);var cType=col(['공정구분','공정타입','type','step type']);
           if(cDwg<0){toast('도면번호 컬럼을 찾을 수 없습니다','err');return;}
@@ -4451,9 +4458,9 @@ async function handleOrderExcel(input){
             if(dueISO&&!/^\d{4}-\d{2}-\d{2}$/.test(dueISO))dueISO='';
             var typeVal=cType>=0?String(r[cType]||'').trim().toUpperCase():'A';
             if(!typeVal||!H_STEP_TYPES.find(function(t){return t.code===typeVal;}))typeVal='A';
-            if(existing){if(dueISO&&!existing.due)existing.due=dueISO;skipped++;}
+            if(existing){if(dueISO&&!existing.due)existing.due=dueISO;if(cRev>=0&&!existing.rev){var _rv=String(r[cRev]||'').trim();if(_rv)existing.rev=_rv;}skipped++;}
             else{
-              var newOrder={id:hsGenId(),dwg_no:dwgNo,customer:cCust>=0?String(r[cCust]||'').trim():'',project:cProj>=0?String(r[cProj]||'').trim():'',unit:cUnit>=0?String(r[cUnit]||'').trim():'',qty:cQty>=0?parseInt(r[cQty])||1:1,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',due:dueISO,step_type:typeVal,manually_done:false,created_at:new Date().toISOString()};
+              var newOrder={id:hsGenId(),dwg_no:dwgNo,rev:cRev>=0?String(r[cRev]||'').trim():'',customer:cCust>=0?String(r[cCust]||'').trim():'',project:cProj>=0?String(r[cProj]||'').trim():'',unit:cUnit>=0?String(r[cUnit]||'').trim():'',qty:cQty>=0?parseInt(r[cQty])||1:1,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',due:dueISO,step_type:typeVal,manually_done:false,created_at:new Date().toISOString()};
               HS.orders.push(newOrder);added++;
             }
           }
