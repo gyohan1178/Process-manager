@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.20</title>
+<title>하네스 공정관리 v6.21</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -502,7 +502,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.20</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.21</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,7 +639,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.20 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.21 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1479,12 +1479,14 @@ async function hsSaveOrders(){
   }catch(e){console.warn('orders sync err',e);showSyncWarn('도면 정보 저장 실패 — 네트워크를 확인하세요');}
 }
 
-async function hsSaveLogs(){
+async function hsSaveLogs(only){
   invalidateLogIdx();
   safeCache('hs_logs',HS.logs);
   const sb=getSB();if(!sb)return;
+  // only(배열)가 주어지면 해당 건만 전송 — 스캔 1건에 전체 로그를 보내지 않도록
+  const _rows=(Array.isArray(only)&&only.length)?only:HS.logs;
   try{
-    const res=await sb.from('harness_logs').upsert(HS.logs.map(function(l){
+    const res=await sb.from('harness_logs').upsert(_rows.map(function(l){
       return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
               unit:l.unit||null,qty:l.qty||1,worker:l.worker||null,process:l.process,
               po:l.po||null,ord_ln:l.ord_ln||null,del_ln:l.del_ln||null,
@@ -1495,7 +1497,7 @@ async function hsSaveLogs(){
       console.warn('logs sync err',res.error);
       if(!(res.error.message&&res.error.message.includes('column')))showSyncWarn('기록 저장 실패 — 서버에 반영되지 않았습니다');
       if(res.error.message&&res.error.message.includes('column')){
-        await sb.from('harness_logs').upsert(HS.logs.map(function(l){
+        await sb.from('harness_logs').upsert(_rows.map(function(l){
           return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
                   unit:l.unit||null,qty:l.qty||1,worker:l.worker||null,process:l.process,
                   started_at:l.started_at||null,ended_at:l.ended_at||null,duration_min:l.duration_min||null};
@@ -1532,7 +1534,7 @@ async function hsLoad(){
   const sb=getSB();
   if(!sb){setBadge('err');return;}
   try{
-    const timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},8000);});
+    const timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);});
     // Supabase 기본 1000행 제한 돌파: range 페이지네이션으로 전량 로드
     async function fetchAll(table, orderCol){
       var all=[],page=0,SZ=1000;
@@ -2245,7 +2247,7 @@ function autoAction(){
       if(!confirm('['+HS.selStep+'] 이미 완료된 공정입니다.\n다시 처리(재작업)할까요?')) return;
       var rt=new Date().toISOString();
       doneLog.started_at=rt;doneLog.ended_at=rt;doneLog.duration_min=0;doneLog.worker=worker;
-      hsSaveLogs();
+      hsSaveLogs([doneLog]);
       renderScanSteps();renderScanActions();renderScanLog();renderScanStepIndicator();renderStatus();
       scanFlash('ok',HS.selStep+' 재처리',HS.job.dwg_no);
       return;
@@ -2264,7 +2266,7 @@ function autoAction(){
     const now=new Date().toISOString();
     var _nl={id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,worker:worker,process:HS.selStep,started_at:now,ended_at:now,duration_min:0};
     HS.logs.unshift(_nl);
-    hsSaveLogs();
+    hsSaveLogs([_nl]);
     // 문제 해결 후 작업완료 → 작업중단 자동 해제
     (function(){var _o=HS.orders.find(function(x){return orderMatch(x,HS.job);})||HS.orders.find(function(x){return x.dwg_no===HS.job.dwg_no;});
       if(_o&&_o.alarm)clearAlarm(_o,worker);})();
@@ -2297,8 +2299,9 @@ function workerStart(auto){
   if(!worker){ toast('작업자 이름을 입력하세요','err'); return; }
   const already=HS.logs.find(function(l){return !l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
   if(already){ toast('이미 진행 중입니다 — 다시 스캔하면 완료','warn'); return; }
-  HS.logs.unshift({id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,worker:worker,process:HS.selStep,started_at:new Date().toISOString(),ended_at:null,duration_min:null});
-  hsSaveLogs();
+  var _sl={id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,worker:worker,process:HS.selStep,started_at:new Date().toISOString(),ended_at:null,duration_min:null};
+  HS.logs.unshift(_sl);
+  hsSaveLogs([_sl]);
   renderScanSteps(); renderScanActions(); renderScanLog(); renderScanStepIndicator();renderStatus();
   scanFlash('ok',HS.selStep+' 시작',HS.job.dwg_no+' · '+worker);
 }
@@ -2316,7 +2319,7 @@ function workerEnd(auto){
   }
   log.ended_at=new Date().toISOString();
   log.duration_min=Math.round((new Date(log.ended_at)-new Date(log.started_at))/60000);
-  hsSaveLogs();
+  hsSaveLogs([log]);
   renderScanSteps(); renderScanActions(); renderScanLog(); renderScanStepIndicator();renderStatus();
   flashScanFeedback('end');
   toast('✅ ['+HS.selStep+'] 완료 — '+log.duration_min+'분 소요');
@@ -2898,8 +2901,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.20';
+var APP_VER='v6.21';
 var VER_LOG=[
+  {v:'v6.21',d:'2026-08', t:'[운영 안정화] 스캔 저장 방식 개선 — 기존에는 스캔 1건마다 전체 기록을 서버로 전송해 데이터가 쌓일수록 느려지고 실패 가능성이 높았으나, 변경된 건만 전송하도록 수정(기록 500건 기준 501행→1행). 데이터 증가 대비 최초 로딩 대기시간 확대(8초→20초)'},
   {v:'v6.20',d:'2026-08', t:'[긴급] 오프라인 표시 오류 수정. 데이터가 늘어나 브라우저 임시저장(localStorage) 용량을 초과하면 예외가 발생해 서버 연결이 끊긴 것처럼 표시되던 문제를 해결. 임시저장 실패 시 축소 저장 후 건너뛰도록 변경(서버 데이터·기능에는 영향 없음)'},
   {v:'v6.19',d:'2026-08', t:'생산관리 요청 반영. ① 작업지시서 병합 PDF를 도면번호 오름차순으로 자동 정렬(작은 번호→큰 번호, 숫자 구간은 수치 비교) — 출력 순서가 불규칙하던 문제 해결. ② 작업지시서 파일명이 도번_REV 형식(작업지시서_1600831_L_00.pdf)이어도 수정 없이 자동 매칭'},
   {v:'v6.18',d:'2026-07', t:'Rev(개정번호) 항목 추가. PO 등록 양식의 도면번호와 호기 사이에 Rev 열 신설(수동 입력, 옵션) — 도면명에 Rev가 없는 건도 관리 가능. 공정현황 표·모바일 카드·현황 CSV·작업지시서 공정 QR에 Rev 표시. ※ Supabase 컬럼 추가 SQL 1회 실행 필요(harness_orders_REV컬럼추가.sql)'},
