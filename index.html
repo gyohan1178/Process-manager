@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.25</title>
+<title>하네스 공정관리 v6.26</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -503,7 +503,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.25</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.26</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -640,7 +640,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.25 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.26 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1438,6 +1438,26 @@ function clearSyncWarn(){
   var el=document.getElementById('sync-warn');if(el)el.style.display='none';
   setBadge('ok');
 }
+// ── 현황 자동 새로고침: 8초마다 건수만 확인, 변화가 있으면 전체 갱신 ──
+var _autoPoll={t:null,sig:''};
+function startAutoRefresh(){
+  if(_autoPoll.t)return;
+  _autoPoll.t=setInterval(async function(){
+    try{
+      if(document.hidden)return;                    // 백그라운드 탭이면 건너뜀
+      var pg=document.querySelector('.page:not(.hidden)');
+      if(!pg||pg.id!=='pg-status')return;           // 공정현황 화면일 때만
+      if(_selOrders&&_selOrders.size)return;        // 일괄 선택 작업 중이면 방해 금지
+      var sb=getSB();if(!sb)return;
+      var r1=await sb.from('harness_orders').select('id',{count:'exact',head:true});
+      var r2=await sb.from('harness_logs').select('id',{count:'exact',head:true});
+      if(r1.error||r2.error)return;
+      var sig=r1.count+':'+r2.count;
+      if(_autoPoll.sig&&sig!==_autoPoll.sig){ hsLoad(); }
+      _autoPoll.sig=sig;
+    }catch(e){}
+  },8000);
+}
 function setBadge(s){
   var el=document.getElementById('sb-conn-badge');if(!el)return;
   var map={
@@ -1572,6 +1592,7 @@ async function hsLoad(){
       }),
     ]);
     setBadge('ok');
+    startAutoRefresh();
     renderStatus();
   }catch(e){
     console.warn('Supabase load failed:',e.message||e);
@@ -2942,8 +2963,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.25';
+var APP_VER='v6.26';
 var VER_LOG=[
+  {v:'v6.26',d:'2026-08', t:'현장 피드백 반영. ① 공정현황 자동 새로고침 — 8초마다 변경 여부를 가볍게 확인해 다른 사람의 등록·스캔이 자동 반영(현황 화면 활성 시에만, 선택 작업 중엔 대기). ② 작업지시서 공정 QR 발행도 QR 이력에 기록(병합·개별 모두). ③ 카메라 첫 스캔 인식 개선(연속 초점 요청). ④ 깨진 데이터 정리 SQL 보강(�·괄호시작 등 추가 패턴)'},
   {v:'v6.25',d:'2026-08', t:'[긴급] 바코드 스캐너 한글 깨짐 대응 — 일부 스캐너가 QR의 한글(프로젝트·호기)을 깨뜨려 읽으면서(예: 단품→閒) 미등록으로 오인해 깨진 중복 건이 생성되고 매칭이 어긋나던 문제 해결. 공정 QR에 주문 고유번호(영숫자)를 추가해 한글 깨짐과 무관하게 정확히 매칭하고, 스캔 정보를 등록 원본으로 자동 보정. 구형 QR도 도번+PO+라인 조합으로 방어. ※기존 깨진 데이터는 정리 SQL 제공, QR 재출력 권장'},
   {v:'v6.24',d:'2026-08', t:'가입자 분리 — 로그인 계정이 타 시스템(구매자재 포털 등)과 공용이라 다른 시스템 가입자가 하네스 승인 대기 목록에 함께 뜨던 문제 해결. 하네스 가입자 명단(harness_members)을 별도로 두고, 하네스에서 가입한 사람만 승인 목록에 표시. 타 시스템 가입자는 접힌 목록에서 필요 시에만 승인 가능. ※ SQL 1회 실행 필요(harness_members_가입자분리.sql)'},
   {v:'v6.23',d:'2026-08', t:'생산관리 요청 반영. ① 작업지시서 출력 순서를 도면번호 내림차순 기본으로 변경(인쇄 시 도면 순서와 일치, [⇅] 버튼으로 오름차순 전환 가능). 화면 목록도 실제 출력 순서대로 표시. ② [📑 개별 PDF 일괄 받기] 신규 — 도번_REV 파일명으로 각각 저장되며 ZIP 하나로 내려받음(누락·긴급건 확인 용이)'},
@@ -3497,7 +3519,8 @@ var WO={
         var nm=WO.fileNameOf(t);
         if(useZip)zip.file(nm,bytes);
         else{ WO.download(bytes,nm); await new Promise(function(r){setTimeout(r,250);}); }
-        if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();hsSaveOrders([t.order]);}
+        if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();hsSaveOrders([t.order]);
+          addQRHistoryEntry({drawingNo:t.order.dwg_no,customer:t.order.customer,project:t.order.project,unit:t.order.unit,qty:t.order.qty,po:t.order.po,qrSize:'공정'},nm);}
       }
       if(useZip){
         var blob=await zip.generateAsync({type:'blob'});
@@ -3532,7 +3555,8 @@ var WO={
           pg.drawImage(png,{x:cx-qs/2, y:cyb-qs/2+ph*0.01, width:qs, height:qs});
         });
         // 출력 표시
-        if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();}
+        if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();
+          addQRHistoryEntry({drawingNo:t.order.dwg_no,customer:t.order.customer,project:t.order.project,unit:t.order.unit,qty:t.order.qty,po:t.order.po,qrSize:'공정'},'작업지시서_공정QR_병합.pdf');}
       }
       hsSaveOrders&&hsSaveOrders();
       var bytes=await merged.save();
@@ -4069,7 +4093,7 @@ function toggleCamera(){
   if(btn)btn.textContent='⏳ 로딩 중...';
   loadQrLib(function(){
     if(!reader)return;reader.style.display='block';_camScanner=new Html5Qrcode('cam-reader');
-    _camScanner.start({facingMode:'environment'},{fps:20,qrbox:{width:280,height:280},aspectRatio:1.0,videoConstraints:{facingMode:{exact:'environment'},width:{ideal:1280,min:640},height:{ideal:720,min:480}}},
+    _camScanner.start({facingMode:'environment'},{fps:20,qrbox:{width:280,height:280},aspectRatio:1.0,videoConstraints:{facingMode:{exact:'environment'},width:{ideal:1280,min:640},height:{ideal:720,min:480},focusMode:'continuous',advanced:[{focusMode:'continuous'}]}},
       function(text){
         const now=Date.now();if(text===_lastScan&&now-_lastScanTime<1500)return;_lastScan=text;_lastScanTime=now;
         handleQRInput(text);if(navigator.vibrate)navigator.vibrate(60);
