@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.30</title>
+<title>하네스 공정관리 v6.32</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -503,7 +503,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.30</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.32</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -640,7 +640,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.30 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.32 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -2999,8 +2999,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.30';
+var APP_VER='v6.32';
 var VER_LOG=[
+  {v:'v6.32',d:'2026-08', t:'카메라 첫 스캔 무반응 수정 — 이전 스캔 기억이 남아 첫 인식이 중복으로 오인·무시되던 문제(카메라 시작 시 기억 초기화) 및 인식 직후 0.9초 인식 일시중지로 같은 QR 연사 중복 처리 방지'},
+  {v:'v6.31',d:'2026-08', t:'카메라 첫 스캔 체감 개선 — 뒤집힌 QR 디코드 시도 제거로 프레임당 인식 처리 절반 경감, 카메라 시작 시 준비 안내 표시. ※ 첫 스캔 지연의 본질은 카메라 초점·노출 안정화(기기 특성)로 완전 제거는 불가'},
   {v:'v6.30',d:'2026-08', t:'카메라 스캔 반응 저하 조치 — v6.26에서 시도한 연속 초점 강제 설정이 일부 기기에서 인식을 오히려 느리게 만들어 제거(이전 카메라 설정으로 원복). 공정 차단 오류는 v6.29에서 수정됨(재단·포장 등 정상 공정 차단은 구버전 캐시가 원인이므로 반드시 강력 새로고침 필요)'},
   {v:'v6.29',d:'2026-08', t:'[긴급수정] v6.28의 공정 검증이 공정명 비교 필드를 잘못 참조해 B형 등 구성에 실제로 있는 공정(포장 등)까지 "없는 공정"으로 차단하던 오류 수정'},
   {v:'v6.28',d:'2026-08', t:'스캔 매칭·공정 검증 보강. ① 도면번호만으로 등록 건이 1건이면 매칭 성립(PO 표기 차이·구형 QR로 기록이 현황판에 반영되지 않던 문제 구제). ② 해당 도면의 공정 구성(A/B/C형)에 없는 공정을 선택하고 스캔하면 차단하고 안내 표시(잘못된 공정 기록 방지)'},
@@ -4132,20 +4134,26 @@ function toggleCamera(){
   if(proto!=='https:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'){showCamError('카메라 사용은 HTTPS 환경이 필요합니다.');return;}
   if(btn)btn.textContent='⏳ 로딩 중...';
   loadQrLib(function(){
-    if(!reader)return;reader.style.display='block';_camScanner=new Html5Qrcode('cam-reader');
-    _camScanner.start({facingMode:'environment'},{fps:20,qrbox:{width:280,height:280},aspectRatio:1.0,videoConstraints:{facingMode:{exact:'environment'},width:{ideal:1280,min:640},height:{ideal:720,min:480}}},
+    if(!reader)return;reader.style.display='block';_lastScan='';_lastScanTime=0;toast('📷 카메라 준비 중 — 1초 뒤 QR을 대주세요','ok');_camScanner=new Html5Qrcode('cam-reader');
+    _camScanner.start({facingMode:'environment'},{fps:20,qrbox:{width:280,height:280},aspectRatio:1.0,disableFlip:true,videoConstraints:{facingMode:{exact:'environment'},width:{ideal:1280,min:640},height:{ideal:720,min:480}}},
       function(text){
         const now=Date.now();if(text===_lastScan&&now-_lastScanTime<1500)return;_lastScan=text;_lastScanTime=now;
+        try{if(_camScanner&&_camScanner.pause)_camScanner.pause(true);}catch(e){}
         handleQRInput(text);if(navigator.vibrate)navigator.vibrate(60);
-        if(!HS.timeMode){HS.job=null;renderScanJobArea();renderScanActions();renderScanStepIndicator();}else{stopCamera();}
+        if(!HS.timeMode){HS.job=null;renderScanJobArea();renderScanActions();renderScanStepIndicator();
+          setTimeout(function(){try{if(_camScanner&&_camScanner.resume)_camScanner.resume();}catch(e){}},900);
+        }else{stopCamera();}
       },function(){}).then(function(){if(btn){btn.textContent='⏹ 카메라 중지';btn.classList.add('active');}}).catch(function(err){
         const msg2=err&&err.message||String(err);
         if(msg2.includes('Overconstrained')||msg2.includes('constraint')){
           _camScanner=new Html5Qrcode('cam-reader');
-          _camScanner.start({facingMode:'environment'},{fps:15,qrbox:{width:260,height:260}},function(text){
+          _camScanner.start({facingMode:'environment'},{fps:15,qrbox:{width:260,height:260},disableFlip:true},function(text){
             const now2=Date.now();if(text===_lastScan&&now2-_lastScanTime<1500)return;_lastScan=text;_lastScanTime=now2;
+            try{if(_camScanner&&_camScanner.pause)_camScanner.pause(true);}catch(e){}
             handleQRInput(text);if(navigator.vibrate)navigator.vibrate(60);
-            if(!HS.timeMode){HS.job=null;renderScanJobArea();renderScanActions();renderScanStepIndicator();}else{stopCamera();}
+            if(!HS.timeMode){HS.job=null;renderScanJobArea();renderScanActions();renderScanStepIndicator();
+              setTimeout(function(){try{if(_camScanner&&_camScanner.resume)_camScanner.resume();}catch(e){}},900);
+            }else{stopCamera();}
           },function(){}).then(function(){if(btn){btn.textContent='⏹ 카메라 중지';btn.classList.add('active');}}).catch(function(){
             if(reader)reader.style.display='none';if(btn){btn.textContent='📷 카메라로 스캔';btn.classList.remove('active');}_camScanner=null;
             showCamError('카메라를 시작할 수 없습니다. 브라우저 권한을 확인하세요.');});
