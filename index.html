@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.27</title>
+<title>하네스 공정관리 v6.28</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -503,7 +503,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.27</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.28</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -640,7 +640,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.27 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.28 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -2284,6 +2284,11 @@ function resolveScanJob(job){
       o=pool[0];
     }
   }
+  // 4) 도번만으로 등록 건이 딱 1건이면 그 건으로 (PO 표기 차이·구형 QR 구제)
+  if(!o&&job.dwg_no){
+    var only=HS.orders.filter(function(x){return (x.dwg_no||'')===(job.dwg_no||'');});
+    if(only.length===1)o=only[0];
+  }
   if(o){
     job.oid=o.id;
     job.dwg_no=o.dwg_no;job.customer=o.customer||'';job.project=o.project||'';
@@ -2308,6 +2313,18 @@ function handleQRInput(text){
     const job=parseDrawingQR(text);
     if(!job){ toast('도면 QR을 인식할 수 없습니다','err'); return; }
     resolveScanJob(job);   // 스캐너가 한글(프로젝트·호기)을 깨뜨려도 등록된 주문 원본으로 교체
+    // 이 도면의 공정 구성에 없는 공정을 선택한 채 스캔하면 차단 + 안내
+    if(job.oid&&HS.selStep&&HS.selStep!=='출도'){
+      var _ord=HS.orders.find(function(x){return x.id===job.oid;});
+      if(_ord){
+        var _steps=getStepsForType(_ord.step_type||'A')||[];
+        if(_steps.length&&!_steps.some(function(s){return s.name===HS.selStep;})){
+          scanFlash('err','이 도면에 없는 공정',(_ord.dwg_no||'')+' ('+(_ord.step_type||'A')+'형)에는 ['+HS.selStep+'] 공정이 없습니다');
+          toast('⚠️ '+(_ord.step_type||'A')+'형 구성에 없는 공정입니다: '+HS.selStep,'warn');
+          return;
+        }
+      }
+    }
     HS.job=job;
     toast('📐 '+job.dwg_no);
     renderScanJobArea(); renderScanSteps(); renderScanActions(); renderScanStepIndicator();
@@ -2982,8 +2999,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.27';
+var APP_VER='v6.28';
 var VER_LOG=[
+  {v:'v6.28',d:'2026-08', t:'스캔 매칭·공정 검증 보강. ① 도면번호만으로 등록 건이 1건이면 매칭 성립(PO 표기 차이·구형 QR로 기록이 현황판에 반영되지 않던 문제 구제). ② 해당 도면의 공정 구성(A/B/C형)에 없는 공정을 선택하고 스캔하면 차단하고 안내 표시(잘못된 공정 기록 방지)'},
   {v:'v6.27',d:'2026-08', t:'현장 요청 3건. ① 검색에 PO 번호·REV 포함(도면번호/PO/고객사/프로젝트/호기). ② 현황판 행 아무 곳이나 클릭하면 선택 토글(체크박스 외 빈 영역 클릭, 배지·링크 등 자체 동작 요소는 기존대로). ③ 프로젝트 확장 등 화면 갱신 시 스크롤 위치가 튀던 문제 수정(위치 보존)'},
   {v:'v6.26',d:'2026-08', t:'현장 피드백 반영. ① 공정현황 자동 새로고침 — 8초마다 변경 여부를 가볍게 확인해 다른 사람의 등록·스캔이 자동 반영(현황 화면 활성 시에만, 선택 작업 중엔 대기). ② 작업지시서 공정 QR 발행도 QR 이력에 기록(병합·개별 모두). ③ 카메라 첫 스캔 인식 개선(연속 초점 요청). ④ 깨진 데이터 정리 SQL 보강(�·괄호시작 등 추가 패턴)'},
   {v:'v6.25',d:'2026-08', t:'[긴급] 바코드 스캐너 한글 깨짐 대응 — 일부 스캐너가 QR의 한글(프로젝트·호기)을 깨뜨려 읽으면서(예: 단품→閒) 미등록으로 오인해 깨진 중복 건이 생성되고 매칭이 어긋나던 문제 해결. 공정 QR에 주문 고유번호(영숫자)를 추가해 한글 깨짐과 무관하게 정확히 매칭하고, 스캔 정보를 등록 원본으로 자동 보정. 구형 QR도 도번+PO+라인 조합으로 방어. ※기존 깨진 데이터는 정리 SQL 제공, QR 재출력 권장'},
