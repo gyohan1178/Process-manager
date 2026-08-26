@@ -1663,20 +1663,6 @@ function orderMatch(o, ref){
   return (o.po||'')===(ref.po||'')&&(o.ord_ln||'')===(ref.ord_ln||'')&&(o.del_ln||'')===(ref.del_ln||'')
     &&(o.project||'')===(ref.project||'')&&(o.unit||'')===(ref.unit||'');
 }
-// v6.34 — 엑셀 업로드 중복 판별용. 합치키가 어긋나도 PO(+라인)까지 같으면 같은 건으로 본다.
-// ※ 스캔 매칭(orderMatch)은 이선영 대리 확정 규칙 그대로 유지 — 업로드 경로에서만 사용
-function orderDupFind(ref){
-  var e=HS.orders.find(function(o){return orderMatch(o,ref);});
-  if(e)return e;
-  var _po=String(ref.po||'').trim();
-  if(!_po)return null;
-  return HS.orders.find(function(o){
-    return (o.dwg_no||'')===(ref.dwg_no||'')
-      && String(o.po||'').trim()===_po
-      && String(o.ord_ln||'').trim()===String(ref.ord_ln||'').trim()
-      && String(o.del_ln||'').trim()===String(ref.del_ln||'').trim();
-  })||null;
-}
 function getStepSt(ref, stepId){
   var pool=logsFor((ref&&typeof ref==='object')?ref.dwg_no:ref);
   var logs=pool.filter(function(l){return logMatch(l,ref)&&l.process===stepId;});
@@ -3015,7 +3001,7 @@ var Analytics={
 // ════════════════════════════════════════
 var APP_VER='v6.34';
 var VER_LOG=[
-  {v:'v6.34',d:'2026-08', t:'[중요] 작업지시서를 PO별로 발행하도록 수정 — 같은 도번에 PO가 여러 건이면 지시서 1장을 넣어도 PO 건수만큼 자동 분리 발행됩니다(이전에는 납기 빠른 1건에만 QR이 붙어, 다른 PO용 지시서에도 같은 QR이 찍혀 실적이 한쪽에 몰렸습니다). ① 분리 발행된 파일은 파일명에 PO를 덧붙여 구분(도번_REV_PO), 단건이면 기존 이름 그대로. ② 공정 QR 아래에 PO/수량/납기를 사람이 읽을 수 있게 인쇄 — QR을 못 읽어도 어느 PO용 지시서인지 눈으로 확인 가능. ③ 화면 목록에 "PO분리 1/2" 표시와 발행 장수 안내 추가. 같은 도번의 PO 분리 건은 정렬 방향(⇅ 오름/내림)과 무관하게 항상 납기 빠른 순으로 출력(이전에는 내림차순일 때 납기 늦은 PO가 먼저 인쇄됨). ④ Excel PO 업로드 중복 방지 — 프로젝트·호기 표기만 다르고 도번+PO+라인이 같으면 새로 만들지 않고 기존 건의 빈 항목(REV·납기·고객사 등)만 채워 갱신, 결과를 "신규/갱신/중복"으로 구분 표시. 수량이 다르면 기존 수량을 유지하고 별도 경고. ※ 현장 안내 필요: 같은 도면이라도 PO가 다르면 지시서를 새로 발행해 사용해야 합니다'},
+  {v:'v6.34',d:'2026-08', t:'이력 관리에 PO No 열 추가(도면번호와 공정 사이, 제목 클릭 시 PO 정렬). 이력 검색에 PO·프로젝트 포함'},
   {v:'v6.33',d:'2026-08', t:'첫 스캔 무시 체감 수정 — 완료 알림이 카메라 화면 아래에 가려 안 보이던 문제(알림을 최상위 표시) 및 인식 직후 영상이 까맣게 얼던 현상 제거(영상은 유지, 인식만 잠시 중지)'},
   {v:'v6.32',d:'2026-08', t:'카메라 첫 스캔 무반응 수정 — 이전 스캔 기억이 남아 첫 인식이 중복으로 오인·무시되던 문제(카메라 시작 시 기억 초기화) 및 인식 직후 0.9초 인식 일시중지로 같은 QR 연사 중복 처리 방지'},
   {v:'v6.31',d:'2026-08', t:'카메라 첫 스캔 체감 개선 — 뒤집힌 QR 디코드 시도 제거로 프레임당 인식 처리 절반 경감, 카메라 시작 시 준비 안내 표시. ※ 첫 스캔 지연의 본질은 카메라 초점·노출 안정화(기기 특성)로 완전 제거는 불가'},
@@ -3147,7 +3133,7 @@ function renderLogMgmt(){
   const board=document.getElementById('sp-log');if(!board)return;
   const q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
   let logs=[...HS.logs];
-  if(q)logs=logs.filter(function(l){return (l.dwg_no||'').toLowerCase().includes(q)||(l.worker||'').toLowerCase().includes(q)||(l.process||'').toLowerCase().includes(q)||(l.customer||'').toLowerCase().includes(q);});
+  if(q)logs=logs.filter(function(l){return (l.dwg_no||'').toLowerCase().includes(q)||(l.worker||'').toLowerCase().includes(q)||(l.process||'').toLowerCase().includes(q)||(l.customer||'').toLowerCase().includes(q)||(l.po||'').toLowerCase().includes(q)||(l.project||'').toLowerCase().includes(q);});
   logs.sort(function(a,b){
     var k=_lgSort.key,va,vb;
     if(k==='started_at'||k==='ended_at'){va=a[k]?new Date(a[k]).getTime():0;vb=b[k]?new Date(b[k]).getTime():0;}
@@ -3171,6 +3157,7 @@ function renderLogMgmt(){
     return '<tr>'
       +'<td><input type="checkbox" class="log-chk" data-lid="'+l.id+'" '+chk+' onchange="toggleLogSel(this.dataset.lid,this.checked)"></td>'
       +'<td style="font-family:var(--mono);font-weight:600;font-size:12px">'+(l.dwg_no||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2)">'+hEsc(l.po||'—')+'</td>'
       +'<td><span style="background:'+step.color+'18;color:'+step.color+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">'+step.icon+' '+l.process+'</span>'+resBadge+'</td>'
       +'<td>'+(l.worker||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;white-space:nowrap">'+fmt(l.started_at)+'</td>'
@@ -3190,7 +3177,7 @@ function renderLogMgmt(){
     +'</div>'
     +'<div style="flex:1;min-height:0;overflow:auto;border:1px solid var(--border);border-radius:var(--r2);background:var(--white)"><table class="log-table" style="width:100%">'
     +(function(){
-      var hs=[['dwg_no','도면번호'],['process','공정'],['worker','작업자'],['started_at','시작'],['ended_at','완료'],['duration_min','소요']];
+      var hs=[['dwg_no','도면번호'],['po','PO No'],['process','공정'],['worker','작업자'],['started_at','시작'],['ended_at','완료'],['duration_min','소요']];
       var cells=hs.map(function(hh){
         var arr=_lgSort.key===hh[0]?(_lgSort.dir==='asc'?' ▲':' ▼'):'';
         return '<th style="cursor:pointer;user-select:none" onclick="setLgSort(\''+hh[0]+'\')">'+hh[1]+'<span style="color:'+(_lgSort.key===hh[0]?'var(--blue)':'var(--tx3)')+'">'+arr+'</span></th>';
@@ -3433,12 +3420,8 @@ var WO={
       var f=arr[i]; if(!/\.pdf$/i.test(f.name))continue;
       var bytes=new Uint8Array(await f.arrayBuffer());
       var dwg=WO.extractDwg(f.name);
-      var orders=WO.matchAll(dwg);
-      if(!orders.length){WO.files.push({name:f.name,dwg:dwg,bytes:bytes,order:null,status:'nomatch'});continue;}
-      for(var k=0;k<orders.length;k++){
-        WO.files.push({name:f.name,dwg:dwg,bytes:bytes,order:orders[k],status:'ok',
-                       multi:orders.length>1,seq:k+1,total:orders.length});
-      }
+      var order=WO.match(dwg);
+      WO.files.push({name:f.name,dwg:dwg,bytes:bytes,order:order,status:order?'ok':'nomatch'});
     }
     WO.render();
   },
@@ -3447,25 +3430,24 @@ var WO={
     n=n.replace(/^작업지시서[_\-\s]*/,'');   // 접두어 제거
     return n.trim();
   },
-  // v6.34 — 해당 도번의 미완료 수주를 '전건' 반환 (PO 여러 건이면 지시서도 PO별로 발행)
-  matchAll:function(dwg){
-    if(!dwg)return [];
+  match:function(dwg){
+    if(!dwg)return null;
     var pick=function(list){
-      if(!list.length)return [];
+      if(!list.length)return null;
       var act=list.filter(function(o){return !isOrderDone(o);});
-      var pool=(act.length?act:list).slice();
+      var pool=act.length?act:list;
       pool.sort(function(a,b){return (normDueToISO(a.due)||'9999')<(normDueToISO(b.due)||'9999')?-1:1;});
-      return pool;
+      return pool[0];
     };
     // 1) 도면번호 정확히 일치
     var r=pick(HS.orders.filter(function(o){return (o.dwg_no||'').trim()===dwg;}));
-    if(r.length)return r;
+    if(r)return r;
     // 2) 파일명이 도번_REV 형태 — 등록된 REV와 조합해 일치
     r=pick(HS.orders.filter(function(o){
       var d=(o.dwg_no||'').trim(), v=(o.rev||'').trim();
       return d&&v&&(d+'_'+v)===dwg;
     }));
-    if(r.length)return r;
+    if(r)return r;
     // 3) 파일명이 도번_XX 형태 — 도번으로 시작하고 뒤가 REV 형식이면 인정 (가장 긴 도번 우선)
     var cands=HS.orders.filter(function(o){
       var d=(o.dwg_no||'').trim();
@@ -3478,9 +3460,8 @@ var WO={
       var top=(cands[0].dwg_no||'').length;
       return pick(cands.filter(function(o){return (o.dwg_no||'').length===top;}));
     }
-    return [];
+    return null;
   },
-  match:function(dwg){var a=WO.matchAll(dwg);return a.length?a[0]:null;},
   woPayload:function(o){
     var f=['DWG:'+(o.dwg_no||'')];
     if(o.customer)f.push('CUST:'+o.customer);
@@ -3506,8 +3487,7 @@ var WO={
       var ok=f.status==='ok';
       var badge=ok?'<span style="font-size:11px;font-weight:700;color:var(--green);background:rgba(13,171,106,.12);padding:2px 9px;border-radius:10px">✔ 매칭</span>'
         :'<span style="font-size:11px;font-weight:700;color:#d8443c;background:rgba(216,68,60,.1);padding:2px 9px;border-radius:10px">✕ 미등록 도번</span>';
-      var info=ok?(f.order.customer||'')+' · '+(f.order.po||'-')+' · '+(f.order.qty||1)+'개 · 납기 '+(f.order.due?fmtYYMMDD(f.order.due):'-'):'등록된 수주정보에 없음';
-      if(ok&&f.multi)badge='<span style="font-size:11px;font-weight:700;color:#b26a00;background:rgba(214,140,0,.14);padding:2px 9px;border-radius:10px">PO분리 '+f.seq+'/'+f.total+'</span>';
+      var info=ok?(f.order.customer||'')+' · '+(f.order.po||'-')+' · 납기 '+(f.order.due?fmtYYMMDD(f.order.due):'-'):'등록된 수주정보에 없음';
       return '<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--white)">'
         +'<div style="flex:1;min-width:0"><div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx)">'+f.dwg+'</div>'
         +'<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+info+'</div></div>'
@@ -3515,10 +3495,7 @@ var WO={
         +'<button onclick="WO.remove('+i+')" style="border:none;background:none;color:var(--tx3);font-size:16px;cursor:pointer">✕</button>'
       +'</div>';
     }).join('');
-    var _mN=WO.files.filter(function(f){return f.multi;}).length;
-    var _src=[];WO.files.forEach(function(f){if(_src.indexOf(f.name)<0)_src.push(f.name);});
-    el.innerHTML='<div style="font-size:12px;color:var(--tx3);margin-bottom:8px">파일 '+_src.length+'개 → 발행 '+WO.files.length+'장 · 매칭 '+okN+'개'+(WO.files.length-okN>0?' · 미매칭 '+(WO.files.length-okN)+'개':'')
-      +(_mN>0?'<br><span style="color:#b26a00;font-weight:700">※ 같은 도번에 PO가 여러 건이라 '+_mN+'장이 PO별로 분리 발행됩니다</span>':'')+'</div>'
+    el.innerHTML='<div style="font-size:12px;color:var(--tx3);margin-bottom:8px">총 '+WO.files.length+'개 · 매칭 '+okN+'개'+(WO.files.length-okN>0?' · 미매칭 '+(WO.files.length-okN)+'개':'')+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:8px">'+rows+'</div>';
     var act=document.getElementById('wo-actions');act.style.display=okN>0?'flex':'none';
     var sb=document.getElementById('wo-sort-btn');
@@ -3530,7 +3507,7 @@ var WO={
   sortedTargets:function(){
     var targets=WO.files.filter(function(f){return f.status==='ok';});
     var natKey=function(s){return String(s||'').match(/(\d+|\D+)/g)||[];};
-    var dcmp=function(a,b){
+    targets.sort(function(a,b){
       var A=natKey(a.order&&a.order.dwg_no||a.dwg),B=natKey(b.order&&b.order.dwg_no||b.dwg);
       for(var i=0;i<Math.max(A.length,B.length);i++){
         var x=A[i],y=B[i];
@@ -3540,20 +3517,10 @@ var WO={
         if(nx&&ny){ if(+x!==+y)return +x-+y; }
         else if(x!==y){ return x<y?-1:1; }
       }
-      return 0;
-    };
-    targets.sort(function(a,b){
-      // 1) 도번 — ⇅ 버튼 방향 적용
-      var c=dcmp(a,b);
-      if(c!==0)return (WO.sortDir==='desc')?-c:c;
-      // 2) 같은 도번 — REV 순
-      var rv=String((a.order&&a.order.rev)||'').localeCompare(String((b.order&&b.order.rev)||''));
-      if(rv!==0)return rv;
-      // 3) v6.34 — 같은 도번의 PO 분리 건은 정렬 방향과 무관하게 항상 납기 빠른 순
-      var da=normDueToISO(a.order&&a.order.due)||'9999', db=normDueToISO(b.order&&b.order.due)||'9999';
-      if(da!==db)return da<db?-1:1;
-      return String((a.order&&a.order.po)||'').localeCompare(String((b.order&&b.order.po)||''));
+      // 도번이 같으면 REV 순
+      return String((a.order&&a.order.rev)||'').localeCompare(String((b.order&&b.order.rev)||''));
     });
+    if(WO.sortDir==='desc')targets.reverse();
     return targets;
   },
   // 파일명: 도번_REV (도번에 이미 REV가 붙어 있으면 중복 제거)
@@ -3562,40 +3529,12 @@ var WO={
     var d=(o.dwg_no||f.dwg||'').trim();
     var v=(o.rev||'').trim();
     if(v&&d.slice(-(v.length+1))!=='_'+v)d=d+'_'+v;
-    // v6.34 — 같은 도번이 PO 여러 건으로 갈릴 때만 PO를 덧붙여 구분(단건은 기존 이름 유지)
-    if(f.multi){
-      var sfx=String(o.po||'').trim()||('건'+(f.seq||1));
-      if(o.ord_ln)sfx+='-'+String(o.ord_ln).trim();
-      d=d+'_'+sfx;
-    }
     return d.replace(/[\\/:*?"<>|]/g,'_')+'.pdf';
-  },
-  // v6.34 — QR 아래 사람이 읽는 PO/수량/납기 (Helvetica라 영숫자만)
-  infoLine:function(o){
-    if(!o)return '';
-    var p=[];
-    if(o.po)p.push('PO '+String(o.po).trim());
-    if(o.ord_ln)p.push('OL '+String(o.ord_ln).trim());
-    p.push('QTY '+(o.qty||1));
-    if(o.due)p.push('DUE '+normDueToISO(o.due));
-    return p.join('  /  ').replace(/[^\x20-\x7E]/g,'');
-  },
-  drawInfo:function(pg,o,font){
-    if(!font||!o)return;
-    var txt=WO.infoLine(o); if(!txt)return;
-    var pw=pg.getWidth(), ph=pg.getHeight();
-    var qs=ph*0.20, cx=pw*0.850, cyb=ph*0.281;
-    var y=cyb-qs/2+ph*0.01-12, sz=9;
-    var w=font.widthOfTextAtSize(txt,sz);
-    var lim=pw*0.27;
-    if(w>lim){sz=Math.max(6,sz*lim/w);w=font.widthOfTextAtSize(txt,sz);}
-    try{pg.drawText(txt,{x:cx-w/2,y:y,size:sz,font:font});}catch(e){}
   },
   // 대상 PDF에 공정 QR 삽입 → 바이트 반환
   buildOne:async function(t){
-    var{PDFDocument,StandardFonts}=PDFLib;
+    var{PDFDocument}=PDFLib;
     var out=await PDFDocument.create();
-    var fnt=null; try{fnt=await out.embedFont(StandardFonts.Helvetica);}catch(e){}
     var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
     var png=await out.embedPng(WO.dataURLtoBytes(makeQRPng(WO.woPayload(t.order),500)));
     var pages=await out.copyPages(src,src.getPageIndices());
@@ -3604,7 +3543,6 @@ var WO={
       var pw=pg.getWidth(), ph=pg.getHeight();
       var qs=ph*0.20, cx=pw*0.850, cyb=ph*0.281;
       pg.drawImage(png,{x:cx-qs/2, y:cyb-qs/2+ph*0.01, width:qs, height:qs});
-      WO.drawInfo(pg,t.order,fnt);
     });
     return await out.save();
   },
@@ -3644,9 +3582,8 @@ var WO={
     if(targets.length===0){toast('매칭된 파일이 없습니다','warn');return;}
     toast('공정 QR 삽입 중... ('+targets.length+'개)','ok');
     try{
-      var{PDFDocument,StandardFonts}=PDFLib;
+      var{PDFDocument}=PDFLib;
       var merged=await PDFDocument.create();
-      var fnt=null; try{fnt=await merged.embedFont(StandardFonts.Helvetica);}catch(e){}
       for(var i=0;i<targets.length;i++){
         var t=targets[i];
         var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
@@ -3661,7 +3598,6 @@ var WO={
           var qs=ph*0.20;
           var cx=pw*0.850, cyb=ph*0.281;
           pg.drawImage(png,{x:cx-qs/2, y:cyb-qs/2+ph*0.01, width:qs, height:qs});
-          WO.drawInfo(pg,t.order,fnt);
         });
         // 출력 표시
         if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();
@@ -4754,30 +4690,18 @@ async function handleOrderExcel(input){
           var cOl=col(['order line','ord line','ol']);var cDl=col(['del line','dl']);var cIss=col(['불출일','issue']);
           var cDue=col(['납기','due','duedate']);var cType=col(['공정구분','공정타입','type','step type']);
           if(cDwg<0){toast('도면번호 컬럼을 찾을 수 없습니다','err');return;}
-          var added=0,skipped=0,stepLog=0,updated=0,conflicts=[];
+          var added=0,skipped=0,stepLog=0;
           for(var ri=1;ri<rows.length;ri++){
             var r=rows[ri];var dwgNo=String(r[cDwg]||'').trim();if(!dwgNo)continue;
             var poVal=cPo>=0?String(r[cPo]||'').trim():'';
             var _proj=cProj>=0?String(r[cProj]||'').trim():'';
             var _unit=cUnit>=0?String(r[cUnit]||'').trim():'';
-            var _ref={dwg_no:dwgNo,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',project:_proj,unit:_unit};
-            var existing=orderDupFind(_ref);
+            var existing=HS.orders.find(function(o){return orderMatch(o,{dwg_no:dwgNo,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',project:_proj,unit:_unit});});
             var dueISO=cDue>=0?normDueToISO(r[cDue]):'';
             if(dueISO&&!/^\d{4}-\d{2}-\d{2}$/.test(dueISO))dueISO='';
             var typeVal=cType>=0?String(r[cType]||'').trim().toUpperCase():'A';
             if(!typeVal||!H_STEP_TYPES.find(function(t){return t.code===typeVal;}))typeVal='A';
-            if(existing){
-              var _ch=0;
-              var _fill=function(k,v){v=String(v==null?'':v).trim();if(v&&!String(existing[k]||'').trim()){existing[k]=v;_ch++;}};
-              if(cRev>=0)_fill('rev',r[cRev]);
-              if(cCust>=0)_fill('customer',r[cCust]);
-              if(cProj>=0)_fill('project',r[cProj]);
-              if(cUnit>=0)_fill('unit',r[cUnit]);
-              if(dueISO&&!existing.due){existing.due=dueISO;_ch++;}
-              var _q=cQty>=0?(parseInt(r[cQty])||0):0;
-              if(_q&&existing.qty&&_q!==existing.qty)conflicts.push(dwgNo+'('+(poVal||'PO없음')+') '+existing.qty+'→'+_q);
-              if(_ch)updated++; else skipped++;
-            }
+            if(existing){if(dueISO&&!existing.due)existing.due=dueISO;if(cRev>=0&&!existing.rev){var _rv=String(r[cRev]||'').trim();if(_rv)existing.rev=_rv;}skipped++;}
             else{
               var newOrder={id:hsGenId(),dwg_no:dwgNo,rev:cRev>=0?String(r[cRev]||'').trim():'',customer:cCust>=0?String(r[cCust]||'').trim():'',project:cProj>=0?String(r[cProj]||'').trim():'',unit:cUnit>=0?String(r[cUnit]||'').trim():'',qty:cQty>=0?parseInt(r[cQty])||1:1,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',due:dueISO,step_type:typeVal,manually_done:false,created_at:new Date().toISOString()};
               HS.orders.push(newOrder);added++;
@@ -4787,11 +4711,7 @@ async function handleOrderExcel(input){
           var sb=getSB();
           if(sb){var newOrders=HS.orders.filter(function(o){return !o._synced;});if(newOrders.length)sb.from('harness_orders').upsert(newOrders).then(function(){}).catch(function(){});}
           renderStatus();renderOrderStampList();
-          var msg='신규 '+added+'건 등록';
-          if(updated>0)msg+=' · 기존 '+updated+'건 갱신';
-          if(skipped>0)msg+=' · 중복 '+skipped+'건 무시';
-          toast(msg,'ok');
-          if(conflicts.length)setTimeout(function(){toast('⚠ 수량이 다른 건 '+conflicts.length+'건 — '+conflicts.slice(0,3).join(' / ')+(conflicts.length>3?' 외':'')+' (기존 수량 유지, 확인 필요)','warn');},1400);
+          var msg='신규 '+added+'건 등록';if(skipped>0)msg+=', '+skipped+'건 중복 유지';toast(msg,'ok');
         }catch(ex){toast('파일 처리 오류: '+ex.message,'err');console.error(ex);}
       };
       reader.readAsArrayBuffer(file);
