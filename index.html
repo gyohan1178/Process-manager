@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.38</title>
+<title>하네스 공정관리 v6.39</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -506,7 +506,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.38</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.39</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,12 +639,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-dwgqr" onclick="setPage('dwgqr')"><span class="sn-ic">📐</span> 도면 QR <span style="font-size:8px;background:rgba(23,85,244,.2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
+      <button class="sn-item" id="nav-stock" onclick="setPage('stock')"><span class="sn-ic">📦</span> 재고 현황 <span style="font-size:8px;background:rgba(5,150,105,.18);color:var(--green);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
       <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:rgba(217,119,6,.25);color:#fbbf24;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">BETA</span></button>
       <button class="sn-item" id="nav-users" onclick="setPage('users')" style="display:none"><span class="sn-ic">👥</span> 사용자 관리</button>
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.38 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.39 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -1183,6 +1184,54 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       </thead>
       <tbody id="qrHistList">
         <tr><td colspan="9" style="padding:32px;text-align:center;color:var(--tx3)">저장된 이력이 없습니다</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<div id="pg-stock" class="page hidden" style="padding:20px;overflow-y:auto">
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
+    <div style="font-size:20px;font-weight:800;color:var(--tx)">📦 재고 현황</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">포장 완료를 입고, 출하 완료를 출고로 잡아 <b>도면번호별</b>로 합산합니다. 같은 도번이 여러 PO로 나뉘어도 한 줄로 모입니다.</div>
+  </div>
+
+  <div id="stk-warn" style="display:none;margin-bottom:12px;padding:11px 14px;border-radius:var(--r);background:#fef2f2;border:1.5px solid #fecaca;color:var(--red);font-size:12px;font-weight:600;line-height:1.6"></div>
+
+  <div id="stk-kpi" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px"></div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px">
+    <input id="stk-q" class="po-inp" placeholder="도면번호 · 고객사 · 프로젝트 검색" style="width:260px" oninput="STK.setQ(this.value)">
+    <button id="stk-hz" onclick="STK.toggleZero()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">재고 0 숨기기</button>
+    <button id="stk-hm" onclick="STK.toggleMinus()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">마이너스만 보기</button>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <span id="stk-cnt" style="font-size:12px;color:var(--tx3)"></span>
+      <button onclick="STK.exportCSV()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">📥 CSV</button>
+      <button onclick="document.getElementById('stkXlsx').click()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:12px;font-weight:700;cursor:pointer">📤 기초재고 업로드</button>
+      <input type="file" id="stkXlsx" accept=".xlsx,.xls,.csv" style="display:none" onchange="STK.importXlsx(this)">
+      <button onclick="STK.template()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">⬇ 양식</button>
+      <button onclick="STK.reload()" title="다시 불러오기" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">↻</button>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6">기초재고 · 비고 칸을 <b>더블클릭</b>하면 바로 고칠 수 있습니다. Enter 저장 · Esc 취소. 기초재고는 이 시스템으로 잡기 전에 이미 있던 수량입니다.</div>
+
+  <div style="overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white)">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:var(--bg2);border-bottom:2px solid var(--border)">
+          <th onclick="STK.setSort('dwg')" style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">도면번호 <span id="stk-s-dwg"></span></th>
+          <th onclick="STK.setSort('cust')" style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">고객사 · 프로젝트 <span id="stk-s-cust"></span></th>
+          <th onclick="STK.setSort('ordn')" style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">등록건 <span id="stk-s-ordn"></span></th>
+          <th onclick="STK.setSort('open')" style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">기초재고 <span id="stk-s-open"></span></th>
+          <th onclick="STK.setSort('pack')" style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">포장입고 <span id="stk-s-pack"></span></th>
+          <th onclick="STK.setSort('ship')" style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">출하 <span id="stk-s-ship"></span></th>
+          <th onclick="STK.setSort('cur')" style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">현재고 <span id="stk-s-cur"></span></th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">비고</th>
+        </tr>
+      </thead>
+      <tbody id="stk-body">
+        <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--tx3)">불러오는 중…</td></tr>
       </tbody>
     </table>
   </div>
@@ -1795,15 +1844,15 @@ function hsGenId(){ return Date.now().toString(36)+Math.random().toString(36).sl
 
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb) nb.classList.toggle('on', id===p);
     const mn=document.getElementById('mn-'+id);
@@ -1816,6 +1865,7 @@ function setPage(p){
   if(p==='stamp') renderOrderStampList();
   if(p==='qrhist') renderQRHistory();
   if(p==='users') Users.render();
+  if(p==='stock') STK.open();
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -3190,8 +3240,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.38';
+var APP_VER='v6.39';
 var VER_LOG=[
+  {v:'v6.39',d:'2026-08', t:'[재고 현황] 메뉴 신설 — 포장 완료를 입고, 출하 완료를 출고로 잡아 도면번호별 현재고를 자동 계산(현재고 = 기초재고 + 포장입고 − 출하). 기초재고·비고는 표에서 더블클릭으로 직접 수정, 엑셀 일괄 업로드·CSV 내보내기 지원. 출하가 포장보다 많은 마이너스 재고는 빨강으로 표시해 데이터 오류를 드러냄. 관리자 전용'},
   {v:'v6.38',d:'2026-08', t:'[도면 QR] 메뉴 신설 — 작업지시서 QR과 별도 탭으로 분리. 도면 탭은 모서리 위치 선택(좌상·우상·좌하·우하) 전용이며, 파일 목록·머릿말/꼬리말 설정을 작업지시서 탭과 독립적으로 관리. 두 탭 모두 건별 선택·선택 요약·개별 ZIP 출력 지원'},
   {v:'v6.37',d:'2026-08', t:'작업지시서·도면 QR 화면에 건별 선택 기능과 선택 요약 패널 추가 — 올린 파일 중 필요한 건만 체크해 출력할 수 있고, 올린 파일·매칭됨·미등록 도번·출력 대상 건수를 만들기 전에 확인할 수 있음. 목록에 출력 순번과 Rev·PO·납기 표시'},
   {v:'v6.36',d:'2026-08', t:'① 머릿말·꼬리말 신규 — 출력물 위·아래에 프로젝트·도번·페이지번호 등을 넣어 도면과 대조하기 쉽게 함(항목 버튼으로 조합, 미리보기 제공, 한글 지원). 병합 PDF는 전체 통산 페이지 번호 적용. ② 작업지시서 QR 화면 전면 정리 — 1.파일 2.QR위치 3.머릿말·꼬리말 4.만들기 단계별 카드 구성, 화면 설명문 추가(사내 UI 규칙 적용)'},
@@ -4536,6 +4587,319 @@ function toast(msg,type){
   D.tTx.textContent=msg;D.tIc.textContent=type==='ok'?'✓':type==='err'?'✕':'⚠';
   D.toast.className='toast '+type;clearTimeout(_tt);_tt=setTimeout(function(){D.toast.classList.add('hide');},4000);
 }
+
+// ════════════════════════════════
+// 재고 현황  (v6.39)
+//   포장 완료 = 입고 / 출하 완료 = 출고
+//   현재고 = 기초재고 + 포장입고 − 출하
+//   집계 단위는 도면번호. 완료 판정은 건별(합치키)로 하고 수량만 더한다.
+// ════════════════════════════════
+var STK={
+  base:{},            // dwg_no -> {opening_qty, memo}
+  loaded:false,
+  err:'',
+  q:'',
+  hideZero:false,
+  onlyMinus:false,
+  sort:{key:'dwg',dir:'asc'},
+  _rows:[],
+  _edit:null,
+
+  open:function(){
+    STK.render();
+    if(!STK.loaded) STK.load();
+  },
+  reload:function(){ STK.loaded=false; STK.load(); },
+
+  // ── 기초재고 불러오기 ──
+  load:async function(){
+    var sb=getSB();
+    if(!sb){ STK.err='서버에 연결되지 않았습니다. 잠시 뒤 ↻ 를 누르세요.'; STK.render(); return; }
+    try{
+      var r=await sb.from('harness_stock').select('dwg_no,opening_qty,memo');
+      if(r.error){
+        STK.err=(r.error.code==='42P01'||/does not exist|schema cache/i.test(r.error.message||''))
+          ? 'harness_stock 표가 아직 없습니다 — 같이 드린 SQL 을 Supabase 에서 먼저 실행하세요. (기초재고 0 으로 보입니다)'
+          : '기초재고 불러오기 실패: '+r.error.message;
+        STK.base={};
+      }else{
+        STK.err='';
+        var m={};
+        (r.data||[]).forEach(function(x){ m[String(x.dwg_no||'').trim()]={opening_qty:Number(x.opening_qty)||0,memo:x.memo||''}; });
+        STK.base=m; STK.loaded=true;
+      }
+    }catch(e){ STK.err='기초재고 불러오기 실패: '+(e.message||e); }
+    STK.render();
+  },
+
+  // ── 집계 ──
+  calc:function(){
+    var agg={};
+    for(var i=0;i<HS.orders.length;i++){
+      var o=HS.orders[i];
+      var d=String(o.dwg_no||'').trim(); if(!d) continue;
+      var a=agg[d];
+      if(!a){ a=agg[d]={dwg:d,cust:o.customer||'',proj:o.project||'',rev:o.rev||'',ordn:0,pack:0,ship:0,waiting:0}; }
+      a.ordn++;
+      if(!a.cust&&o.customer) a.cust=o.customer;
+      if(!a.proj&&o.project)  a.proj=o.project;
+      if(!a.rev &&o.rev)      a.rev=o.rev;
+      var q=Number(o.qty)||1;
+      var packed=(getStepSt(o,'포장').s==='done');
+      var shipped=(getStepSt(o,'출하').s==='done');
+      if(packed) a.pack+=q; else a.waiting+=q;
+      if(shipped) a.ship+=q;
+    }
+    var out=[];
+    for(var k in agg){
+      var a=agg[k];
+      var b=STK.base[k]||{};
+      a.open=Number(b.opening_qty)||0;
+      a.memo=b.memo||'';
+      a.cur=a.open+a.pack-a.ship;
+      out.push(a);
+    }
+    return out;
+  },
+
+  setQ:function(v){ STK.q=String(v||'').trim().toLowerCase(); STK.render(); },
+  toggleZero:function(){ STK.hideZero=!STK.hideZero; STK.render(); },
+  toggleMinus:function(){ STK.onlyMinus=!STK.onlyMinus; STK.render(); },
+  setSort:function(k){
+    if(STK.sort.key===k) STK.sort.dir=(STK.sort.dir==='asc'?'desc':'asc');
+    else { STK.sort.key=k; STK.sort.dir=(k==='dwg'||k==='cust')?'asc':'desc'; }
+    STK.render();
+  },
+
+  render:function(){
+    var body=document.getElementById('stk-body'); if(!body) return;
+    var all=STK.calc();
+    STK._rows=all;
+
+    // 경고 띄
+    var w=document.getElementById('stk-warn');
+    if(w){ if(STK.err){ w.textContent='⚠ '+STK.err; w.style.display='block'; } else w.style.display='none'; }
+
+    // 지표
+    var kpi=document.getElementById('stk-kpi');
+    if(kpi){
+      var tot=all.length;
+      var have=all.filter(function(r){return r.cur>0;}).length;
+      var zero=all.filter(function(r){return r.cur===0;}).length;
+      var minus=all.filter(function(r){return r.cur<0;}).length;
+      var sumCur=all.reduce(function(s,r){return s+(r.cur>0?r.cur:0);},0);
+      kpi.innerHTML=
+        STK._card('총 품목수',tot,'등록된 도면번호 종류','')+
+        STK._card('재고 보유',have,'합계 '+STK._n(sumCur)+'수량','green')+
+        STK._card('재고 없음',zero,'다 나갔거나 아직 포장 전','')+
+        STK._card('마이너스',minus,minus?'출하가 포장보다 많음 · 확인 필요':'이상 없음','red');
+    }
+
+    // 걸러내기
+    var rows=all;
+    if(STK.q){
+      rows=rows.filter(function(r){
+        return (r.dwg+' '+r.cust+' '+r.proj+' '+r.rev).toLowerCase().indexOf(STK.q)>=0;
+      });
+    }
+    if(STK.hideZero) rows=rows.filter(function(r){return r.cur!==0;});
+    if(STK.onlyMinus) rows=rows.filter(function(r){return r.cur<0;});
+
+    var k=STK.sort.key, dir=(STK.sort.dir==='asc'?1:-1);
+    rows=rows.slice().sort(function(a,b){
+      var va,vb;
+      if(k==='dwg'){ va=a.dwg; vb=b.dwg; }
+      else if(k==='cust'){ va=(a.cust+a.proj); vb=(b.cust+b.proj); }
+      else { va=a[k]||0; vb=b[k]||0; }
+      if(typeof va==='string') return va.localeCompare(vb)*dir;
+      return (va-vb)*dir;
+    });
+
+    ['dwg','cust','ordn','open','pack','ship','cur'].forEach(function(c){
+      var el=document.getElementById('stk-s-'+c);
+      if(el) el.textContent=(STK.sort.key===c)?(STK.sort.dir==='asc'?'\u25B2':'\u25BC'):'';
+    });
+
+    var cnt=document.getElementById('stk-cnt');
+    if(cnt) cnt.textContent=rows.length+' / '+all.length+'품목';
+    var hz=document.getElementById('stk-hz'); if(hz){ hz.style.borderColor=STK.hideZero?'var(--blue)':'var(--border)'; hz.style.color=STK.hideZero?'var(--blue)':'var(--tx2)'; hz.style.background=STK.hideZero?'var(--blue-lt)':'var(--bg)'; }
+    var hm=document.getElementById('stk-hm'); if(hm){ hm.style.borderColor=STK.onlyMinus?'var(--red)':'var(--border)'; hm.style.color=STK.onlyMinus?'var(--red)':'var(--tx2)'; hm.style.background=STK.onlyMinus?'#fef2f2':'var(--bg)'; }
+
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--tx3)">'+
+        (all.length?'조건에 맞는 품목이 없습니다':'등록된 도면이 없습니다')+'</td></tr>';
+      return;
+    }
+
+    var mono='font-family:var(--mono);text-align:right;white-space:nowrap';
+    body.innerHTML=rows.map(function(r){
+      var neg=(r.cur<0), zero=(r.cur===0);
+      var curCol=neg?'color:var(--red);font-weight:800':(zero?'color:var(--tx3)':'color:var(--green);font-weight:800');
+      var sub=[r.cust,r.proj].filter(Boolean).join(' · ');
+      return '<tr style="border-bottom:1px solid var(--border)'+(neg?';background:#fef2f2':'')+'">'+
+        '<td style="padding:9px 12px;font-family:var(--mono);font-weight:700;color:var(--tx);white-space:nowrap">'+STK._esc(r.dwg)+
+          (r.rev?'<span style="margin-left:6px;font-size:10px;font-weight:700;color:var(--purple);background:var(--purple-lt);padding:1px 6px;border-radius:8px">REV '+STK._esc(r.rev)+'</span>':'')+'</td>'+
+        '<td style="padding:9px 12px;color:var(--tx2)">'+(sub?STK._esc(sub):'<span style="color:var(--tx3)">—</span>')+'</td>'+
+        '<td style="padding:9px 12px;'+mono+';color:var(--tx3)">'+r.ordn+'</td>'+
+        '<td ondblclick="STK.edit(this,\''+STK._q(r.dwg)+'\',\'open\')" title="더블클릭해 수정" style="padding:9px 12px;'+mono+';color:var(--tx2);cursor:cell;background:#fafbff">'+STK._n(r.open)+'</td>'+
+        '<td style="padding:9px 12px;'+mono+';color:var(--tx2)">'+STK._n(r.pack)+'</td>'+
+        '<td style="padding:9px 12px;'+mono+';color:var(--tx2)">'+STK._n(r.ship)+'</td>'+
+        '<td style="padding:9px 12px;'+mono+';'+curCol+'">'+STK._n(r.cur)+'</td>'+
+        '<td ondblclick="STK.edit(this,\''+STK._q(r.dwg)+'\',\'memo\')" title="더블클릭해 수정" style="padding:9px 12px;color:var(--tx3);cursor:cell;background:#fafbff;min-width:120px">'+(r.memo?STK._esc(r.memo):'<span style="opacity:.5">—</span>')+'</td>'+
+      '</tr>';
+    }).join('');
+  },
+
+  _card:function(label,val,note,tone){
+    var c=tone==='red'?['#fef2f2','#fecaca','var(--red)']
+        : tone==='green'?['var(--green-lt)','#a7f3d0','var(--green)']
+        : ['var(--bg2)','var(--border)','var(--tx)'];
+    return '<div style="background:'+c[0]+';border:1.5px solid '+c[1]+';border-radius:var(--r2);padding:14px 16px">'+
+      '<div style="font-size:12px;color:var(--tx3);font-weight:600">'+label+'</div>'+
+      '<div style="font-size:26px;font-weight:800;color:'+c[2]+';line-height:1.25;font-family:var(--mono)">'+STK._n(val)+'</div>'+
+      (note?'<div style="font-size:11px;color:var(--tx3);margin-top:2px">'+note+'</div>':'')+
+    '</div>';
+  },
+  _n:function(v){ return String(Number(v)||0).replace(/\B(?=(\d{3})+(?!\d))/g,','); },
+  _esc:function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); },
+  _q:function(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); },
+
+  // ── 셀 직접 수정 ──
+  edit:function(td,dwg,field){
+    if(typeof AUTH!=='undefined'&&!AUTH.isAdmin()){ toast('관리자만 수정할 수 있습니다','warn'); return; }
+    if(STK._edit) return;
+    var b=STK.base[dwg]||{opening_qty:0,memo:''};
+    var cur=(field==='open')?(Number(b.opening_qty)||0):(b.memo||'');
+    var old=td.innerHTML;
+    STK._edit=dwg+'|'+field;
+    td.innerHTML='';
+    var inp=document.createElement('input');
+    inp.value=String(cur);
+    if(field==='open'){ inp.type='number'; inp.style.textAlign='right'; }
+    inp.style.cssText+=';width:100%;box-sizing:border-box;border:1.5px solid var(--blue);border-radius:6px;padding:4px 6px;font-size:12px;font-family:'+(field==='open'?'var(--mono)':'var(--sans)')+';outline:none';
+    td.appendChild(inp);
+    inp.focus(); inp.select();
+    var done=false;
+    function cancel(){ if(done)return; done=true; STK._edit=null; td.innerHTML=old; }
+    async function commit(){
+      if(done)return; done=true; STK._edit=null;
+      var v=inp.value;
+      var patch={};
+      if(field==='open'){
+        var n=parseInt(v,10); if(isNaN(n)) n=0;
+        if(n===(Number(b.opening_qty)||0)){ td.innerHTML=old; return; }
+        patch.opening_qty=n; patch.memo=b.memo||'';
+      }else{
+        var t=String(v||'').trim();
+        if(t===(b.memo||'')){ td.innerHTML=old; return; }
+        patch.memo=t; patch.opening_qty=Number(b.opening_qty)||0;
+      }
+      td.innerHTML='<span style="color:var(--tx3)">저장 중…</span>';
+      var ok=await STK.save(dwg,patch);
+      if(!ok){ td.innerHTML=old; return; }
+      STK.render();
+    }
+    inp.onkeydown=function(e){
+      if(e.key==='Enter'){ e.preventDefault(); commit(); }
+      else if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+    };
+    inp.onblur=function(){ commit(); };
+  },
+
+  save:async function(dwg,patch){
+    var sb=getSB();
+    if(!sb){ toast('서버 연결 없음 — 저장되지 않았습니다','err'); return false; }
+    var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||HS.worker||'';
+    var row={dwg_no:dwg,opening_qty:Number(patch.opening_qty)||0,memo:patch.memo||null,
+             updated_at:new Date().toISOString(),updated_by:who||null};
+    var r=await sb.from('harness_stock').upsert(row,{onConflict:'dwg_no'});
+    if(r.error){ toast('저장 실패: '+r.error.message,'err'); console.warn('stock save err',r.error); return false; }
+    STK.base[dwg]={opening_qty:row.opening_qty,memo:row.memo||''};
+    toast('저장되었습니다','ok');
+    return true;
+  },
+
+  // ── CSV ──
+  exportCSV:function(){
+    var rows=STK._rows.slice().sort(function(a,b){return a.dwg.localeCompare(b.dwg);}).map(function(r){
+      return [r.dwg,r.rev||'',r.cust||'',r.proj||'',r.ordn,r.open,r.pack,r.ship,r.cur,r.memo||''];
+    });
+    downloadCSV(['도면번호','Rev','고객사','프로젝트','등록건','기초재고','포장입고','출하','현재고','비고'],
+      rows,'하네스재고_'+fmtDate(new Date()));
+    toast('재고 CSV 내보내기 완료 ('+rows.length+'품목)','ok');
+  },
+
+  // ── 기초재고 양식 ──
+  template:function(){
+    loadXLSX(function(){
+      var wb=XLSX.utils.book_new();
+      var aoa=[['도면번호','기초재고','비고'],
+               ['1600791_M_00',5,'2026-08 실사 기준'],
+               ['1614190_E_00',0,'']];
+      var ws=XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols']=[{wch:22},{wch:10},{wch:24}];
+      XLSX.utils.book_append_sheet(wb,ws,'기초재고');
+      XLSX.writeFile(wb,'하네스_기초재고양식.xlsx');
+      toast('양식 다운로드 완료','ok');
+    });
+  },
+
+  // ── 기초재고 일괄 업로드 ──
+  importXlsx:function(input){
+    if(typeof AUTH!=='undefined'&&!AUTH.isAdmin()){ toast('관리자만 업로드할 수 있습니다','warn'); input.value=''; return; }
+    var file=input.files[0]; if(!file) return; input.value='';
+    loadXLSX(function(){
+      var reader=new FileReader();
+      reader.onload=async function(ev){
+        try{
+          var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+          var ws=wb.Sheets[wb.SheetNames[0]];
+          var grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+          if(!grid.length){ toast('데이터가 없습니다','err'); return; }
+          var hdr=(grid[0]||[]).map(function(x){return String(x).trim().toLowerCase();});
+          function col(keys,def){
+            for(var i=0;i<keys.length;i++){
+              var j=hdr.findIndex(function(x){return x.indexOf(keys[i])>=0;});
+              if(j>=0) return j;
+            }
+            return def;
+          }
+          var cD=col(['도면번호','도번','dwg','drawing','pn','item'],0);
+          var cQ=col(['기초재고','재고','qty','수량','stock'],1);
+          var cM=col(['비고','memo','note'],-1);
+          var hasHdr=/[a-z\uac00-\ud7a3]/.test(String(grid[0][cD]||''))&&isNaN(parseFloat(grid[0][cQ]));
+          var start=hasHdr?1:0;
+          var map={};
+          for(var i=start;i<grid.length;i++){
+            var r=grid[i]||[];
+            var d=String(r[cD]||'').trim(); if(!d) continue;
+            var n=parseInt(String(r[cQ]||'').replace(/,/g,''),10); if(isNaN(n)) n=0;
+            map[d]={dwg_no:d,opening_qty:n,memo:(cM>=0?String(r[cM]||'').trim():'')||null};
+          }
+          var list=Object.keys(map).map(function(k){return map[k];});
+          if(!list.length){ toast('읽을 수 있는 행이 없습니다 (도면번호 열 확인)','err'); return; }
+          if(!confirm(list.length+'개 도번의 기초재고를 덮어씁니다.\n기존 값은 업로드 값으로 바뀝니다. 계속할까요?')) return;
+          var sb=getSB();
+          if(!sb){ toast('서버 연결 없음','err'); return; }
+          var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||HS.worker||'';
+          var now=new Date().toISOString();
+          var ok=0;
+          for(var s=0;s<list.length;s+=500){
+            var chunk=list.slice(s,s+500).map(function(x){
+              return {dwg_no:x.dwg_no,opening_qty:x.opening_qty,memo:x.memo,updated_at:now,updated_by:who||null};
+            });
+            var res=await sb.from('harness_stock').upsert(chunk,{onConflict:'dwg_no'});
+            if(res.error){ toast('업로드 실패: '+res.error.message,'err'); console.warn(res.error); break; }
+            ok+=chunk.length;
+          }
+          if(ok){ toast('기초재고 '+ok+'건 반영','ok'); STK.reload(); }
+        }catch(ex){ toast('파일 처리 오류: '+ex.message,'err'); console.error(ex); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  },
+};
+
 function debounce(fn,ms){let t;return function(){var a=arguments,ctx=this;clearTimeout(t);t=setTimeout(function(){fn.apply(ctx,a);},ms);};}
 // ════════════════════════════════════════
 // 카메라 QR 스캔
@@ -5157,7 +5521,7 @@ var MOB_SHEET=[
   {ic:'📷',nm:'QR 스캔',role:'all',page:'scan',fn:function(){setPage('scan');}}
 ];
 var _mobVisible=[];
-var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR'};
+var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황'};
 function buildMobSheet(){
   var grid=document.getElementById('mob-sheet-grid');if(!grid)return;
   var admin=(typeof AUTH!=='undefined'&&AUTH.isAdmin&&AUTH.isAdmin());
@@ -5279,6 +5643,7 @@ var AUTH={
     function show(id,on){var el=document.getElementById(id);if(el)el.style.display=on?'':'none';}
     show('nav-log',admin);
     show('nav-analytics',admin);
+    show('nav-stock',admin);
     show('nav-stamp',admin);
     show('nav-stamp-single',admin);
     show('nav-qrhist',admin);
