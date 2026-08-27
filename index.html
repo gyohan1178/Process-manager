@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.40</title>
+<title>하네스 공정관리 v6.46</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -506,7 +506,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.40</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.46</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -639,13 +639,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button class="sn-item" id="nav-dwgqr" onclick="setPage('dwgqr')"><span class="sn-ic">📐</span> 도면 QR <span style="font-size:8px;background:rgba(23,85,244,.2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
+      <button class="sn-item" id="nav-issue" onclick="setPage('issue')"><span class="sn-ic">⚠️</span> 공정 이슈 <span id="nav-issue-badge" style="display:none;font-size:9px;background:#dc2626;color:#fff;padding:1px 6px;border-radius:9px;margin-left:2px;font-weight:800"></span></button>
       <button class="sn-item" id="nav-stock" onclick="setPage('stock')"><span class="sn-ic">📦</span> 재고 현황 <span style="font-size:8px;background:rgba(5,150,105,.18);color:var(--green);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
       <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:rgba(217,119,6,.25);color:#fbbf24;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">BETA</span></button>
       <button class="sn-item" id="nav-users" onclick="setPage('users')" style="display:none"><span class="sn-ic">👥</span> 사용자 관리</button>
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.40 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.46 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -824,9 +825,45 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           </div>
         </div>
 
-        <!-- 1. 파일 -->
+        <!-- 1. PO 엑셀 + 도면 폴더 -->
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">1. 파일 올리기</div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">1. PO 엑셀 + 도면 폴더 <span style="font-size:11px;font-weight:700;color:#6c5ce7;background:#f3f0ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:20px;margin-left:6px">자동</span></div>
+          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
+            AXCELIS PO 엑셀을 올리면 <b>수주로 등록</b>하고, 도면 폴더에서 도번·REV가 맞는 파일을 자동으로 찾습니다.
+            등록이 되어야 공정현황에서 <b>PO접수 &rarr; 출도</b> 진행 여부를 볼 수 있습니다.
+          </div>
+
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:14px">
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">프로젝트명 <span style="font-weight:500;color:var(--tx3)">(엑셀에 없는 값입니다)</span></div>
+              <input type="text" id="dq-xl-proj" placeholder="예) OHT CST V3.0 — 비워도 됩니다"
+                style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;font-family:var(--sans)">
+            </div>
+            <div style="min-width:150px">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">공정 타입</div>
+              <select id="dq-xl-type" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--sans);background:#fff"></select>
+            </div>
+          </div>
+          <div style="font-size:11.5px;color:var(--tx3);margin-top:7px;line-height:1.6">
+            REV는 <b>SRev</b>를 씁니다. SRev 도면이 폴더에 없으면 BRev 도면으로 대체하고 주황색으로 표시합니다. 둘 다 없으면 출력에서 빠집니다.
+          </div>
+
+          <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
+            <button class="btn btn-pr" onclick="document.getElementById('dq-xl-file').click()">📋 PO 엑셀 올리기</button>
+            <input type="file" id="dq-xl-file" accept=".xlsx,.xls" style="display:none" onchange="DQ.readExcel(this)">
+            <button class="btn btn-outline" onclick="document.getElementById('dq-folder').click()">📁 도면 폴더 선택</button>
+            <input type="file" id="dq-folder" webkitdirectory directory multiple style="display:none" onchange="DQ.pickFolder(this)">
+            <button class="btn btn-outline" style="margin-left:auto" onclick="DQ.clearAuto()">엑셀·폴더 비우기</button>
+          </div>
+          <div style="font-size:11.5px;color:var(--tx3);margin-top:9px;line-height:1.6">
+            폴더는 <b>브라우저를 새로고침하면 다시 골라야 합니다</b>. 폴더 안 PDF는 파일명만 먼저 읽고, 실제 도면은 매칭된 것만 불러옵니다.
+          </div>
+          <div id="dq-auto-info" style="margin-top:12px"></div>
+        </div>
+
+        <!-- 2. 파일 -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. 도면 PDF 직접 올리기 <span style="font-size:11px;font-weight:500;color:var(--tx3)">(엑셀을 쓰지 않을 때)</span></div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             파일명은 <b>1631500_D_01.pdf</b>(도번 또는 도번_REV) 형식이면 인식됩니다. 여러 개를 한 번에 올릴 수 있습니다.
           </div>
@@ -842,7 +879,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
         <!-- 2. QR 위치 -->
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. QR 삽입 위치</div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">3. QR 삽입 위치</div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             도면 여백 중 QR을 넣을 모서리를 고릅니다. 도면 내용을 가리지 않는 위치로 선택하세요.
           </div>
@@ -867,7 +904,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
         <!-- 3. 머릿말/꼬리말 -->
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">3. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">4. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             페이지 위·아래에 프로젝트명이나 페이지 번호를 넣습니다. 출력물을 도면과 대조할 때 사용합니다.
           </div>
@@ -923,7 +960,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
         <!-- 4. 만들기 -->
         <div id="wo-actionsD" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">4. 만들기</div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">5. 만들기</div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             출력 순서는 도면번호 기준이며, 버튼으로 오름/내림을 바꿀 수 있습니다.
           </div>
@@ -1214,6 +1251,112 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </div>
 
 
+<div id="pg-issue" class="page hidden" style="padding:20px;overflow-y:auto">
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
+    <div style="font-size:20px;font-weight:800;color:var(--tx)">⚠️ 공정 이슈</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">
+      납기를 넘겼거나, 출하 준비 시간이 모자라거나, 한 공정에 오래 멈춰 있는 건을 모읍니다.
+      날짜는 <b>주말과 등록한 공휴일을 빼고</b> 셉니다.
+    </div>
+  </div>
+
+  <div id="alm-kpi" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px"></div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px">
+    <div id="alm-tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <span id="alm-cnt" style="font-size:12px;color:var(--tx3)"></span>
+      <button onclick="ALMUI.exportXlsx()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--green);background:var(--green-lt);color:var(--green);font-size:12px;font-weight:700;cursor:pointer">📗 엑셀</button>
+      <button onclick="ALMUI.openSettings()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--purple);background:var(--purple-lt);color:var(--purple);font-size:12px;font-weight:700;cursor:pointer">⚙ 기준 설정</button>
+      <button onclick="resetColW('issue',document.getElementById('alm-table'))" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">열 너비 초기화</button>
+      <button onclick="ALMUI.refresh()" title="다시 계산" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">↻</button>
+    </div>
+  </div>
+  <div id="alm-rule" style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6"></div>
+
+  <div style="overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white)">
+    <table id="alm-table" style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:var(--bg2);border-bottom:2px solid var(--border)">
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">종류</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">도면번호</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">고객사 · 프로젝트</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">호기</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">다음 공정</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">납기</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">출하 목표</th>
+          <th style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap">지연</th>
+          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2)">내용</th>
+        </tr>
+      </thead>
+      <tbody id="alm-body"><tr><td colspan="9" style="padding:32px;text-align:center;color:var(--tx3)">계산 중…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 기준 설정 -->
+<div id="alm-set-ovl" class="hidden" style="position:fixed;inset:0;z-index:4000;background:rgba(15,28,54,.55);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;padding:24px 26px;box-shadow:var(--sh2)">
+    <div style="font-size:17px;font-weight:800;color:var(--tx)">⚙ 이슈 기준 설정</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:4px;line-height:1.6">
+      여기서 정한 값으로 공정 이슈를 판정합니다. 주말은 자동으로 빠집니다.
+    </div>
+
+    <div style="margin-top:18px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">출하 여유일</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin:3px 0 7px;line-height:1.6">납기 <b>며칠(영업일) 전</b>에 출하가 끝나 있어야 하는지. 이 날을 넘기면 경고합니다.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="alm-lead" min="0" max="30" style="width:90px;height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono);text-align:right">
+        <span style="font-size:12.5px;color:var(--tx2)">영업일</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">공정 정체 기준</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin:3px 0 7px;line-height:1.6">마지막 스캔 뒤 <b>며칠(영업일)</b> 움직임이 없으면 방치로 봅니다.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="alm-stuck" min="1" max="60" style="width:90px;height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono);text-align:right">
+        <span style="font-size:12.5px;color:var(--tx2)">영업일</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">이 날짜부터 보기 <span style="font-weight:500;color:var(--tx3)">(비워도 됩니다)</span></div>
+      <div style="font-size:11.5px;color:var(--tx3);margin:3px 0 7px;line-height:1.6">납기가 이 날짜보다 이른 건은 이슈에서 뺍니다. 출하 공정이 생기기 전(v6.35 이전) 옛 자료를 걸러낼 때 씁니다.</div>
+      <input type="date" id="alm-from" style="height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono)">
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">공휴일</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin:3px 0 7px;line-height:1.6">회사가 쉬는 날을 넣으면 영업일 계산에서 빠집니다. 임시공휴일·창립기념일도 넣으세요.</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="date" id="alm-hol-new" style="height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono)">
+        <button onclick="ALMUI.addHoliday()" style="height:36px;padding:0 14px;border-radius:8px;border:1.5px solid var(--purple);background:var(--purple-lt);color:var(--purple);font-size:12.5px;font-weight:700;cursor:pointer">+ 추가</button>
+      </div>
+      <div id="alm-hol-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:22px">
+      <button onclick="ALMUI.saveSettings()" style="flex:1;height:42px;border-radius:9px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:800;cursor:pointer">저장</button>
+      <button onclick="ALMUI.closeSettings()" style="height:42px;padding:0 20px;border-radius:9px;border:1.5px solid var(--border);background:#fff;color:var(--tx2);font-size:14px;font-weight:700;cursor:pointer">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로그인 직후 알람 -->
+<div id="alm-pop" class="hidden" style="position:fixed;inset:0;z-index:4500;background:rgba(15,28,54,.6);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;max-width:460px;width:100%;padding:26px;box-shadow:var(--sh2);border-top:6px solid #dc2626">
+    <div style="font-size:44px;text-align:center;line-height:1">🚨</div>
+    <div id="alm-pop-title" style="font-size:19px;font-weight:800;color:#dc2626;text-align:center;margin-top:8px"></div>
+    <div id="alm-pop-body" style="font-size:13px;color:var(--tx2);margin-top:14px;line-height:1.8"></div>
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button onclick="ALMUI.closePop(true)" style="flex:1;height:44px;border-radius:9px;border:none;background:#dc2626;color:#fff;font-size:14px;font-weight:800;cursor:pointer">이슈 보기</button>
+      <button onclick="ALMUI.closePop(false)" style="height:44px;padding:0 18px;border-radius:9px;border:1.5px solid var(--border);background:#fff;color:var(--tx2);font-size:14px;font-weight:700;cursor:pointer">나중에</button>
+    </div>
+  </div>
+</div>
+
 <div id="pg-stock" class="page hidden" style="padding:20px;overflow-y:auto">
   <div style="margin-bottom:14px">
     <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
@@ -1231,17 +1374,20 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <button id="stk-hm" onclick="STK.toggleMinus()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">마이너스만 보기</button>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
       <span id="stk-cnt" style="font-size:12px;color:var(--tx3)"></span>
+      <button onclick="STK.exportXlsx()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--green);background:var(--green-lt);color:var(--green);font-size:12px;font-weight:700;cursor:pointer">📗 엑셀</button>
       <button onclick="STK.exportCSV()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">📥 CSV</button>
       <button onclick="document.getElementById('stkXlsx').click()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:12px;font-weight:700;cursor:pointer">📤 기초재고 업로드</button>
       <input type="file" id="stkXlsx" accept=".xlsx,.xls,.csv" style="display:none" onchange="STK.importXlsx(this)">
       <button onclick="STK.template()" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">⬇ 양식</button>
+      <button id="stk-undo" onclick="STK.undo()" title="직전 일괄 업로드를 되돌립니다" style="display:none;padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--amber);background:var(--amber-lt);color:var(--amber);font-size:12px;font-weight:700;cursor:pointer">되돌리기</button>
+      <button onclick="resetColW('stock',document.getElementById('stk-table'))" title="열 너비를 원래대로" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">열 너비 초기화</button>
       <button onclick="STK.reload()" title="다시 불러오기" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">↻</button>
     </div>
   </div>
-  <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6">기초재고 · 비고 칸을 <b>더블클릭</b>하면 바로 고칠 수 있습니다. Enter 저장 · Esc 취소. 기초재고는 이 시스템으로 잡기 전에 이미 있던 수량입니다.</div>
+  <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6"><b>열 경계를 끌어</b> 너비를 바꿀 수 있습니다 (두 번 누르면 그 열만 원래대로). 기초재고 · 비고 칸을 <b>더블클릭</b>하면 바로 고칠 수 있습니다. Enter 저장 · Esc 취소. 기초재고는 이 시스템으로 잡기 전에 이미 있던 수량입니다.</div>
 
   <div style="overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white)">
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <table id="stk-table" style="width:100%;border-collapse:collapse;font-size:12px">
       <thead>
         <tr style="background:var(--bg2);border-bottom:2px solid var(--border)">
           <th onclick="STK.setSort('dwg')" style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap;cursor:pointer">도면번호 <span id="stk-s-dwg"></span></th>
@@ -1274,7 +1420,25 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </nav>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// 인터넷이 끊겨 pdf.js 를 못 받아도 여기서 터지지 않게 감싼다.
+// 예전에는 이 한 줄에서 예외가 나 스크립트가 멈추고 로그인 화면조차 안 떴다.
+try{
+  if(window.pdfjsLib&&pdfjsLib.GlobalWorkerOptions)
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}catch(e){ console.warn('pdf.js 초기화 건너뜀', e); }
+
+// 어떤 라이브러리가 없는지 확인한다. 없으면 그 기능만 막고 앱은 돈다.
+var LIBS={pdfjsLib:'도면 미리보기', PDFLib:'PDF 만들기', JSZip:'ZIP 묶기', qrcode:'QR 그리기', XLSX:'엑셀'};
+function libMissing(){
+  var m=[];
+  for(var k in LIBS){ if(typeof window[k]==='undefined')m.push(LIBS[k]); }
+  return m;
+}
+function needLib(name){
+  if(typeof window[name]!=='undefined')return true;
+  toast('인터넷이 끊겨 '+(LIBS[name]||name)+' 기능을 쓸 수 없습니다. 연결 후 새로고침하세요','err');
+  return false;
+}
 
 var _csvData={};
 var _csvCols={};
@@ -1689,7 +1853,7 @@ function showSyncWarn(msg){
   if(!el){
     el=document.createElement('div');el.id='sync-warn';
     el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9998;background:#d8443c;color:#fff;padding:10px 14px;font-size:13px;font-weight:800;text-align:center;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer';
-    el.onclick=function(){ hsLoad(); };
+    el.onclick=function(){ outboxFlush(false).then(function(){ hsLoad(); }); };
     document.body.appendChild(el);
   }
   el.innerHTML='⚠ '+(msg||'서버 저장 실패 — 이 기록은 아직 저장되지 않았습니다')+'<br><span style="font-size:11px;font-weight:600;opacity:.9">네트워크 확인 후 여기를 눌러 다시 시도하세요</span>';
@@ -1736,56 +1900,63 @@ function setBadge(s){
   el.style.cursor=(s==='err'||s==='pause')?'pointer':'default';
 }
 
+// 서버로 보낼 행 모양. 저장과 대기열 재전송이 같은 함수를 쓴다.
+function hsOrderRow(o){
+  return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
+          unit:o.unit||null,qty:o.qty||1,created_at:o.created_at,
+          po:o.po||null,ord_ln:o.ord_ln||null,del_ln:o.del_ln||null,
+          due:o.due||null,step_type:o.step_type||null,manually_done:o.manually_done||false,
+          qr_printed:o.qr_printed||false,qr_printed_at:o.qr_printed_at||null,
+          rev:o.rev||null,
+          rework:o.rework||false,rework_at:o.rework_at||null,rework_by:o.rework_by||null,
+          rework_cleared_at:o.rework_cleared_at||null,
+          alarm:o.alarm||false,alarm_reason:o.alarm_reason||null,alarm_step:o.alarm_step||null,
+          alarm_at:o.alarm_at||null,alarm_by:o.alarm_by||null,
+          alarm_cleared_at:o.alarm_cleared_at||null,alarm_cleared_by:o.alarm_cleared_by||null,
+          field_reg:o.field_reg||false,field_reg_at:o.field_reg_at||null,field_reg_by:o.field_reg_by||null};
+}
+function hsLogRow(l){
+  return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
+          unit:l.unit||null,qty:l.qty||1,worker:l.worker||null,process:l.process,
+          po:l.po||null,ord_ln:l.ord_ln||null,del_ln:l.del_ln||null,
+          started_at:l.started_at||null,ended_at:l.ended_at||null,duration_min:l.duration_min||null,
+          result:l.result||null};
+}
 async function hsSaveOrders(only){
   safeCache('hs_orders',HS.orders);
-  const sb=getSB();if(!sb)return;
+  const sb=getSB();
+  if(!sb){ if(Array.isArray(only)&&only.length)outboxPut('orders',only); return; }
   // only(배열)가 주어지면 해당 건만 전송
   const _rows=(Array.isArray(only)&&only.length)?only:HS.orders;
   try{
-    const res=await sb.from('harness_orders').upsert(_rows.map(function(o){
-      return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
-              unit:o.unit||null,qty:o.qty||1,created_at:o.created_at,
-              po:o.po||null,ord_ln:o.ord_ln||null,del_ln:o.del_ln||null,
-              due:o.due||null,step_type:o.step_type||null,manually_done:o.manually_done||false,
-              qr_printed:o.qr_printed||false,qr_printed_at:o.qr_printed_at||null,
-              rev:o.rev||null,
-              rework:o.rework||false,rework_at:o.rework_at||null,rework_by:o.rework_by||null,
-              rework_cleared_at:o.rework_cleared_at||null,
-              alarm:o.alarm||false,alarm_reason:o.alarm_reason||null,alarm_step:o.alarm_step||null,
-              alarm_at:o.alarm_at||null,alarm_by:o.alarm_by||null,
-              alarm_cleared_at:o.alarm_cleared_at||null,alarm_cleared_by:o.alarm_cleared_by||null};
-    }));
+    const res=await sb.from('harness_orders').upsert(_rows.map(hsOrderRow));
     if(res.error){
       console.warn('orders sync err',res.error);
-      if(!(res.error.message&&res.error.message.includes('column')))showSyncWarn('도면 정보 저장 실패 — 서버에 반영되지 않았습니다');
+      if(!(res.error.message&&res.error.message.includes('column')))outboxPut('orders',_rows);
       if(res.error.message&&res.error.message.includes('column')){
         await sb.from('harness_orders').upsert(_rows.map(function(o){
           return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
                   unit:o.unit||null,qty:o.qty||1,created_at:o.created_at};
         }));
-        toast('⚠ DB 컬럼 부족 — rework 컬럼 추가 SQL 실행 필요','warn');
+        toast('⚠ DB 컬럼 부족 — 컬럼 추가 SQL 실행 필요 (rework / field_reg)','warn');
       }
     }
-  }catch(e){console.warn('orders sync err',e);showSyncWarn('도면 정보 저장 실패 — 네트워크를 확인하세요');}
+    else{ outboxDrop('orders',_rows); }
+  }catch(e){console.warn('orders sync err',e);outboxPut('orders',_rows);}
 }
 
 async function hsSaveLogs(only){
   invalidateLogIdx();
   safeCache('hs_logs',HS.logs);
-  const sb=getSB();if(!sb)return;
+  const sb=getSB();
+  if(!sb){ if(Array.isArray(only)&&only.length)outboxPut('logs',only); return; }
   // only(배열)가 주어지면 해당 건만 전송 — 스캔 1건에 전체 로그를 보내지 않도록
   const _rows=(Array.isArray(only)&&only.length)?only:HS.logs;
   try{
-    const res=await sb.from('harness_logs').upsert(_rows.map(function(l){
-      return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
-              unit:l.unit||null,qty:l.qty||1,worker:l.worker||null,process:l.process,
-              po:l.po||null,ord_ln:l.ord_ln||null,del_ln:l.del_ln||null,
-              started_at:l.started_at||null,ended_at:l.ended_at||null,duration_min:l.duration_min||null,
-              result:l.result||null};
-    }));
+    const res=await sb.from('harness_logs').upsert(_rows.map(hsLogRow));
     if(res.error){
       console.warn('logs sync err',res.error);
-      if(!(res.error.message&&res.error.message.includes('column')))showSyncWarn('기록 저장 실패 — 서버에 반영되지 않았습니다');
+      if(!(res.error.message&&res.error.message.includes('column')))outboxPut('logs',_rows);
       if(res.error.message&&res.error.message.includes('column')){
         await sb.from('harness_logs').upsert(_rows.map(function(l){
           return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -1794,8 +1965,8 @@ async function hsSaveLogs(only){
         }));
       }
     }
-    else{clearSyncWarn();}
-  }catch(e){console.warn('logs sync err',e);showSyncWarn('기록 저장 실패 — 네트워크를 확인하세요');}
+    else{ outboxDrop('logs',_rows); clearSyncWarn(); }
+  }catch(e){console.warn('logs sync err',e);outboxPut('logs',_rows);}
 }
 
 async function hsDeleteOrder(id){
@@ -1808,6 +1979,414 @@ async function hsDeleteLog(id){
   const sb=getSB();if(!sb)return;
   try{ await sb.from('harness_logs').delete().eq('id',id); }catch(e){}
 }
+
+
+
+// ════════════════════════════════════════
+// 공정 이슈 · 납기 알람 (v6.46)
+//   영업에서 "납기 지났는데 방치된 건" 을 잡아 달라고 요청.
+//   요청일(납기) 며칠 전에는 출하가 끝나 있어야 출하 준비 시간이 남는다.
+//   그 여유일과 공정 정체 기준일을 설정으로 두고, 주말·공휴일을 빼고 센다.
+// ════════════════════════════════════════
+var ALM={
+  leadDays:3,      // 납기 며칠(영업일) 전에 출하 완료되어 있어야 하는가
+  stuckDays:5,     // 같은 공정에 며칠(영업일) 이상 머물면 정체로 보는가
+  holidays:[],     // 'YYYY-MM-DD' 목록. 주말은 따로 계산한다
+  startFrom:''     // 이 날짜보다 납기가 이른 건은 보지 않는다 (옛 자료 걸러내기)
+};
+function almLoad(){
+  try{
+    var s=JSON.parse(localStorage.getItem('hs_alarm')||'null');
+    if(s&&typeof s==='object'){
+      ALM.leadDays=Number(s.leadDays)||3;
+      ALM.stuckDays=Number(s.stuckDays)||5;
+      ALM.holidays=Array.isArray(s.holidays)?s.holidays:[];
+      ALM.startFrom=s.startFrom||'';
+    }
+  }catch(e){}
+}
+almLoad();
+function almSave(){
+  try{ localStorage.setItem('hs_alarm',JSON.stringify(ALM)); }catch(e){}
+  var sb=getSB();
+  if(sb){
+    sb.from('harness_settings').upsert({key:'h_alarm',value:JSON.stringify(ALM)})
+      .then(function(r){ if(r&&r.error)toast('설정 저장 실패: '+r.error.message,'err'); })
+      .catch(function(e){ toast('설정 저장 실패','err'); });
+  }
+  _almCache=null;
+}
+
+// ── 영업일 계산 ──
+function almToday(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function almIsBiz(iso){
+  var d=new Date(iso+'T00:00:00');
+  var w=d.getDay();
+  if(w===0||w===6)return false;                 // 일·토
+  return ALM.holidays.indexOf(iso)<0;
+}
+function almShift(iso,days){                     // days 영업일 뒤(+)/앞(-)
+  if(!iso)return '';
+  var d=new Date(iso+'T00:00:00');
+  if(isNaN(d))return '';
+  var step=days<0?-1:1, left=Math.abs(days), guard=0;
+  while(left>0&&guard++<2000){
+    d.setDate(d.getDate()+step);
+    var s=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    if(almIsBiz(s))left--;
+  }
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+}
+function almBizBetween(fromISO,toISO){           // from 다음날부터 to 까지의 영업일 수
+  if(!fromISO||!toISO)return 0;
+  var a=new Date(fromISO+'T00:00:00'), b=new Date(toISO+'T00:00:00');
+  if(isNaN(a)||isNaN(b))return 0;
+  var sign=(b<a)?-1:1;
+  if(sign<0){ var t=a; a=b; b=t; }
+  var n=0, guard=0;
+  while(a<b&&guard++<4000){
+    a.setDate(a.getDate()+1);
+    var s=a.getFullYear()+'-'+('0'+(a.getMonth()+1)).slice(-2)+'-'+('0'+a.getDate()).slice(-2);
+    if(almIsBiz(s))n++;
+  }
+  return n*sign;
+}
+
+// ── 이슈 판정 ──
+//   한 건이 여러 이슈에 걸릴 수 있다. 가장 급한 것부터 보여 준다.
+var ALM_KINDS={
+  overdue:{label:'납기 지남', color:'#dc2626', bg:'#fef2f2', bd:'#fecaca', rank:1},
+  target :{label:'출하준비 늦음', color:'#b45309', bg:'#fffbeb', bd:'#fde68a', rank:2},
+  stuck  :{label:'공정 정체', color:'#7c3aed', bg:'#f5f3ff', bd:'#ddd6fe', rank:3},
+  stopped:{label:'작업중단', color:'#be123c', bg:'#fff1f2', bd:'#fecdd3', rank:4},
+  field  :{label:'현장 등록', color:'#2563eb', bg:'#eff6ff', bd:'#bfdbfe', rank:5}
+};
+var _almCache=null, _almCacheN=-1;
+function almIssues(){
+  var sig=HS.orders.length+'|'+HS.logs.length+'|'+ALM.leadDays+'|'+ALM.stuckDays+'|'+ALM.holidays.length+'|'+ALM.startFrom;
+  if(_almCache&&_almCacheN===sig)return _almCache;
+  var today=almToday(), out=[];
+  for(var i=0;i<HS.orders.length;i++){
+    var o=HS.orders[i];
+    var due=normDueToISO(o.due)||'';
+    if(ALM.startFrom&&due&&due<ALM.startFrom)continue;
+    var done=isOrderDone(o);
+    var kinds=[];
+
+    // 납기·출하준비 — 아직 출하가 안 끝난 건만 본다
+    if(!done&&due){
+      if(due<today){
+        kinds.push({kind:'overdue', days:almBizBetween(due,today),
+                    msg:'납기 '+fmtYYMMDD(due)+' 에서 '+almBizBetween(due,today)+'영업일 지남'});
+      }else{
+        var target=almShift(due,-ALM.leadDays);
+        if(target&&target<=today){
+          kinds.push({kind:'target', days:almBizBetween(target,today),
+                      msg:'출하 목표 '+target+' (납기 '+ALM.leadDays+'영업일 전) 을 넘김'});
+        }
+      }
+    }
+    // 공정 정체 — 마지막으로 움직인 날로부터
+    if(!done){
+      var last='', logs=logsFor(o.dwg_no);
+      for(var j=0;j<logs.length;j++){
+        var l=logs[j]; if(!logMatch(l,o))continue;
+        var t=(l.ended_at||l.started_at||'').slice(0,10);
+        if(t&&t>last)last=t;
+      }
+      var since=last||(o.created_at||'').slice(0,10);
+      if(since){
+        var gap=almBizBetween(since,today);
+        if(gap>=ALM.stuckDays){
+          kinds.push({kind:'stuck', days:gap,
+                      msg:(last?'마지막 스캔 '+last:'등록 '+since)+' 이후 '+gap+'영업일 멈춤'});
+        }
+      }
+    }
+    if(o.alarm)kinds.push({kind:'stopped', days:0, msg:o.alarm_reason||'작업중단'});
+    if(o.field_reg)kinds.push({kind:'field', days:0,
+      msg:'현장에서 등록됨'+(o.field_reg_by?' ('+o.field_reg_by+')':'')});
+
+    if(kinds.length){
+      kinds.sort(function(a,b){return ALM_KINDS[a.kind].rank-ALM_KINDS[b.kind].rank;});
+      out.push({order:o, due:due, done:done, step:(function(){ var s=(typeof nextStepName==='function')?nextStepName(o,o.step_type):null; return s?(s.id||s.name||''):''; })(),
+                kinds:kinds, top:kinds[0]});
+    }
+  }
+  out.sort(function(a,b){
+    var r=ALM_KINDS[a.top.kind].rank-ALM_KINDS[b.top.kind].rank;
+    if(r)return r;
+    return (b.top.days||0)-(a.top.days||0);
+  });
+  _almCache=out; _almCacheN=sig;
+  return out;
+}
+function almCount(kind){
+  var all=almIssues();
+  if(!kind)return all.length;
+  var n=0;
+  all.forEach(function(x){ if(x.kinds.some(function(k){return k.kind===kind;}))n++; });
+  return n;
+}
+// 사이드바 빨간 건수 배지
+function almPaintBadge(){
+  var el=document.getElementById('nav-issue-badge'); if(!el)return;
+  var urgent=almCount('overdue');
+  if(urgent>0){ el.textContent=urgent; el.style.display=''; }
+  else{
+    var any=almCount();
+    if(any>0){ el.textContent=any; el.style.display=''; el.style.background='#f59e0b'; }
+    else el.style.display='none';
+  }
+}
+
+
+// ── 공정 이슈 화면 ──
+var ALMUI={
+  filter:'',
+  open:function(){ ALMUI.render(); },
+  refresh:function(){ _almCache=null; ALMUI.render(); toast('다시 계산했습니다','ok'); },
+  setFilter:function(k){ ALMUI.filter=(ALMUI.filter===k?'':k); ALMUI.render(); },
+
+  render:function(){
+    var body=document.getElementById('alm-body'); if(!body)return;
+    var all=almIssues();
+    almPaintBadge();
+
+    // 지표
+    var kpi=document.getElementById('alm-kpi');
+    if(kpi){
+      kpi.innerHTML=Object.keys(ALM_KINDS).map(function(k){
+        var d=ALM_KINDS[k], n=almCount(k);
+        var on=(ALMUI.filter===k);
+        return '<div onclick="ALMUI.setFilter(\''+k+'\')" style="cursor:pointer;background:'+(n?d.bg:'var(--bg2)')+';'
+          +'border:'+(on?'2.5px':'1.5px')+' solid '+(n?d.bd:'var(--border)')+';border-radius:var(--r2);padding:13px 15px">'
+          +'<div style="font-size:12px;color:var(--tx3);font-weight:600">'+d.label+'</div>'
+          +'<div style="font-size:25px;font-weight:800;line-height:1.25;font-family:var(--mono);color:'+(n?d.color:'var(--tx3)')+'">'+n+'</div>'
+          +'<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+(on?'이것만 보는 중':(n?'눌러서 추리기':'없음'))+'</div>'
+        +'</div>';
+      }).join('');
+    }
+
+    // 기준 안내
+    var rule=document.getElementById('alm-rule');
+    if(rule){
+      rule.innerHTML='기준 — 납기 <b>'+ALM.leadDays+'영업일</b> 전까지 출하 완료 · 마지막 스캔 뒤 <b>'+ALM.stuckDays+'영업일</b> 이상 멈추면 정체'
+        +(ALM.holidays.length?' · 공휴일 '+ALM.holidays.length+'일 등록됨':' · <span style="color:var(--amber);font-weight:700">공휴일 미등록</span>')
+        +(ALM.startFrom?' · '+ALM.startFrom+' 이후 납기만':'');
+    }
+
+    var rows=all;
+    if(ALMUI.filter)rows=rows.filter(function(x){ return x.kinds.some(function(k){return k.kind===ALMUI.filter;}); });
+    var cnt=document.getElementById('alm-cnt');
+    if(cnt)cnt.textContent=rows.length+' / '+all.length+'건';
+
+    setTimeout(function(){ makeResizable(document.getElementById('alm-table'),'issue'); },0);
+
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="9" style="padding:36px;text-align:center;color:var(--tx3)">'
+        +(all.length?'이 종류의 이슈는 없습니다':'<span style="font-size:30px">✅</span><br><br>이슈가 없습니다')+'</td></tr>';
+      return;
+    }
+    ALMUI._rows=rows;
+    body.innerHTML=rows.map(function(x){
+      var o=x.order, d=ALM_KINDS[x.top.kind];
+      var target=x.due?almShift(x.due,-ALM.leadDays):'';
+      var badges=x.kinds.map(function(k){
+        var c=ALM_KINDS[k.kind];
+        return '<span style="font-size:10.5px;font-weight:700;color:'+c.color+';background:'+c.bg+';border:1px solid '+c.bd+';padding:1px 7px;border-radius:20px;white-space:nowrap">'+c.label+'</span>';
+      }).join(' ');
+      var urgent=(x.top.kind==='overdue');
+      return '<tr style="border-bottom:1px solid var(--border)'+(urgent?';background:#fef2f2':'')+'">'
+        +'<td style="padding:9px 12px;white-space:nowrap">'+badges+'</td>'
+        +'<td style="padding:9px 12px;font-family:var(--mono);font-weight:700;color:var(--tx);white-space:nowrap">'+hEsc(o.dwg_no||'')
+          +(o.rev?'<span style="margin-left:5px;font-size:10px;font-weight:700;color:var(--purple)">Rev '+hEsc(o.rev)+'</span>':'')+'</td>'
+        +'<td style="padding:9px 12px;color:var(--tx2)">'+hEsc([o.customer,o.project].filter(Boolean).join(' · ')||'—')+'</td>'
+        +'<td style="padding:9px 12px;color:var(--tx2);white-space:nowrap">'+hEsc(o.unit||'—')+'</td>'
+        +'<td style="padding:9px 12px;color:var(--tx2);white-space:nowrap">'+hEsc(x.step||(x.done?'완료':'—'))+'</td>'
+        +'<td style="padding:9px 12px;font-family:var(--mono);white-space:nowrap;'+(urgent?'color:var(--red);font-weight:700':'color:var(--tx2)')+'">'+(x.due?fmtYYMMDD(x.due):'—')+'</td>'
+        +'<td style="padding:9px 12px;font-family:var(--mono);color:var(--tx3);white-space:nowrap">'+(target||'—')+'</td>'
+        +'<td style="padding:9px 12px;font-family:var(--mono);text-align:right;white-space:nowrap;color:'+d.color+';font-weight:800">'
+          +(x.top.days?x.top.days+'일':'—')+'</td>'
+        +'<td style="padding:9px 12px;color:var(--tx3);line-height:1.6">'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</td>'
+      +'</tr>';
+    }).join('');
+  },
+
+  exportXlsx:function(){
+    var rows=ALMUI._rows||almIssues();
+    if(!rows.length){ toast('내보낼 이슈가 없습니다','warn'); return; }
+    if(!needLib('XLSX'))return;
+    loadXLSX(function(){
+      var aoa=[['종류','도면번호','Rev','고객사','프로젝트','호기','다음 공정','납기','출하 목표','지연(영업일)','내용']];
+      rows.forEach(function(x){
+        var o=x.order;
+        aoa.push([x.kinds.map(function(k){return ALM_KINDS[k.kind].label;}).join(','),
+          o.dwg_no||'',o.rev||'',o.customer||'',o.project||'',o.unit||'',x.step||'',
+          x.due||'',x.due?almShift(x.due,-ALM.leadDays):'',x.top.days||0,
+          x.kinds.map(function(k){return k.msg;}).join(' · ')]);
+      });
+      var ws=XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols']=[{wch:18},{wch:16},{wch:6},{wch:12},{wch:20},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:46}];
+      ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:10}})};
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'공정이슈');
+      XLSX.writeFile(wb,'하네스_공정이슈_'+fmtDate(new Date())+'.xlsx');
+      toast('엑셀 내보내기 완료 ('+rows.length+'건)','ok');
+    });
+  },
+
+  // ── 기준 설정 ──
+  openSettings:function(){
+    document.getElementById('alm-lead').value=ALM.leadDays;
+    document.getElementById('alm-stuck').value=ALM.stuckDays;
+    document.getElementById('alm-from').value=ALM.startFrom||'';
+    ALMUI.paintHolidays();
+    document.getElementById('alm-set-ovl').classList.remove('hidden');
+  },
+  closeSettings:function(){ document.getElementById('alm-set-ovl').classList.add('hidden'); },
+  paintHolidays:function(){
+    var el=document.getElementById('alm-hol-list'); if(!el)return;
+    if(!ALM.holidays.length){ el.innerHTML='<span style="font-size:11.5px;color:var(--tx3)">등록된 공휴일이 없습니다 — 주말만 빠집니다</span>'; return; }
+    el.innerHTML=ALM.holidays.slice().sort().map(function(d,i){
+      return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-family:var(--mono);'
+        +'background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:3px 8px 3px 10px">'+d
+        +'<button onclick="ALMUI.delHoliday(\''+d+'\')" style="border:none;background:none;color:var(--tx3);cursor:pointer;font-size:13px;line-height:1;padding:0 2px">✕</button></span>';
+    }).join('');
+  },
+  addHoliday:function(){
+    var v=(document.getElementById('alm-hol-new')||{}).value||'';
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ toast('날짜를 고르세요','warn'); return; }
+    if(ALM.holidays.indexOf(v)>=0){ toast('이미 있습니다','warn'); return; }
+    ALM.holidays.push(v); ALMUI.paintHolidays();
+    document.getElementById('alm-hol-new').value='';
+  },
+  delHoliday:function(d){
+    ALM.holidays=ALM.holidays.filter(function(x){return x!==d;});
+    ALMUI.paintHolidays();
+  },
+  saveSettings:function(){
+    var l=parseInt((document.getElementById('alm-lead')||{}).value,10);
+    var s=parseInt((document.getElementById('alm-stuck')||{}).value,10);
+    if(isNaN(l)||l<0||l>30){ toast('출하 여유일은 0~30 사이로 넣으세요','err'); return; }
+    if(isNaN(s)||s<1||s>60){ toast('공정 정체 기준은 1~60 사이로 넣으세요','err'); return; }
+    ALM.leadDays=l; ALM.stuckDays=s;
+    ALM.startFrom=(document.getElementById('alm-from')||{}).value||'';
+    almSave();
+    ALMUI.closeSettings();
+    ALMUI.render();
+    toast('기준을 저장했습니다','ok');
+  },
+
+  // ── 로그인 직후 알람 ──
+  popIfUrgent:function(){
+    var n=almCount('overdue');
+    almPaintBadge();
+    if(!n)return;
+    var today=almToday();
+    try{ if(localStorage.getItem('hs_alm_seen')===today)return; }catch(e){}   // 하루 한 번만
+    var list=almIssues().filter(function(x){return x.top.kind==='overdue';}).slice(0,5);
+    document.getElementById('alm-pop-title').textContent='납기가 지난 건이 '+n+'건 있습니다';
+    document.getElementById('alm-pop-body').innerHTML=list.map(function(x){
+      return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
+        +'<b style="font-family:var(--mono);min-width:104px">'+hEsc(x.order.dwg_no||'')+'</b>'
+        +'<span style="color:var(--tx3);flex:1">'+hEsc(x.order.project||x.order.customer||'')+'</span>'
+        +'<b style="color:#dc2626;white-space:nowrap">'+x.top.days+'일 지남</b></div>';
+    }).join('')+(n>5?'<div style="margin-top:8px;color:var(--tx3);font-size:12px">외 '+(n-5)+'건</div>':'');
+    document.getElementById('alm-pop').classList.remove('hidden');
+  },
+  closePop:function(go){
+    document.getElementById('alm-pop').classList.add('hidden');
+    try{ localStorage.setItem('hs_alm_seen',almToday()); }catch(e){}
+    if(go)setPage('issue');
+  }
+};
+
+// ════════════════════════════════════════
+// 미전송 대기열 (v6.44)
+//   서버 저장이 실패한 기록을 담아 두었다가 연결되면 다시 보낸다.
+//   담아 두지 않으면, 다시 연결됐을 때 서버 자료가 로컬을 덮어써
+//   오프라인에서 찍은 스캔이 흔적 없이 사라진다.
+// ════════════════════════════════════════
+var OUTBOX_KEY='hs_outbox';
+function outboxGet(){
+  try{
+    var b=JSON.parse(localStorage.getItem(OUTBOX_KEY)||'null');
+    if(!b||typeof b!=='object')b={};
+    return {logs:b.logs||[], orders:b.orders||[]};
+  }catch(e){ return {logs:[],orders:[]}; }
+}
+function outboxSet(b){
+  try{ localStorage.setItem(OUTBOX_KEY,JSON.stringify(b)); }
+  catch(e){ console.warn('대기열 저장 실패',e); }
+}
+function outboxCount(){ var b=outboxGet(); return b.logs.length+b.orders.length; }
+function outboxPut(kind, rows){
+  if(!rows||!rows.length)return;
+  var b=outboxGet(), arr=b[kind]||[];
+  rows.forEach(function(r){
+    var i=-1;
+    for(var j=0;j<arr.length;j++){ if(arr[j].id===r.id){ i=j; break; } }
+    if(i>=0)arr[i]=r; else arr.push(r);
+  });
+  if(arr.length>1000)arr=arr.slice(-1000);   // 끝없이 불어나지 않게
+  b[kind]=arr; outboxSet(b);
+  showSyncWarn('기록 '+outboxCount()+'건이 아직 서버에 저장되지 않았습니다');
+}
+function outboxDrop(kind, rows){
+  if(!rows||!rows.length)return;
+  var b=outboxGet();
+  var ids={}; rows.forEach(function(r){ ids[r.id]=1; });
+  b[kind]=(b[kind]||[]).filter(function(x){ return !ids[x.id]; });
+  outboxSet(b);
+  if(!outboxCount())clearSyncWarn();
+}
+// 대기열을 다시 보낸다. 성공한 것만 빼낸다.
+var _flushing=false;
+async function outboxFlush(quiet){
+  if(_flushing)return false;
+  if(!outboxCount())return true;
+  var sb=getSB();
+  if(!sb){ if(!quiet)toast('서버에 연결되지 않았습니다','warn'); return false; }
+  _flushing=true;
+  var b=outboxGet(), sent=0, failed=false;
+  try{
+    if(b.orders.length){
+      var r1=await sb.from('harness_orders').upsert(b.orders.map(hsOrderRow));
+      if(r1.error){ failed=true; console.warn('대기열 주문 전송 실패',r1.error); }
+      else { sent+=b.orders.length; outboxDrop('orders',b.orders); }
+    }
+    if(b.logs.length){
+      var r2=await sb.from('harness_logs').upsert(b.logs.map(hsLogRow));
+      if(r2.error){ failed=true; console.warn('대기열 기록 전송 실패',r2.error); }
+      else { sent+=b.logs.length; outboxDrop('logs',b.logs); }
+    }
+  }catch(e){ failed=true; console.warn('대기열 전송 실패',e); }
+  _flushing=false;
+  if(sent&&!quiet)toast('밀린 기록 '+sent+'건을 서버에 보냈습니다','ok');
+  if(!outboxCount())clearSyncWarn();
+  else if(failed&&!quiet)toast('아직 '+outboxCount()+'건이 남았습니다','warn');
+  return !failed;
+}
+// 서버에서 받은 자료 위에, 아직 못 보낸 기록을 다시 얹는다
+function outboxMerge(){
+  var b=outboxGet();
+  b.orders.forEach(function(o){
+    if(!HS.orders.some(function(x){return x.id===o.id;}))HS.orders.unshift(o);
+  });
+  b.logs.forEach(function(l){
+    if(!HS.logs.some(function(x){return x.id===l.id;}))HS.logs.unshift(l);
+  });
+  if(b.logs.length)invalidateLogIdx();
+}
+// 연결이 돌아오면 알아서 다시 보낸다
+window.addEventListener('online',function(){
+  toast('인터넷이 다시 연결됐습니다','ok');
+  setTimeout(function(){ outboxFlush(true); },1200);
+});
+window.addEventListener('offline',function(){
+  showSyncWarn('인터넷 연결이 끊겼습니다 — 기록은 이 기기에 남고, 연결되면 자동으로 보냅니다');
+});
 
 async function hsLoad(){
   HS.orders=JSON.parse(localStorage.getItem('hs_orders')||'[]');
@@ -1844,6 +2423,10 @@ async function hsLoad(){
     const [d1,d2]=await Promise.race([dataP,timeout]);
     HS.orders=d1||[];
     HS.logs=d2||[];
+    // 아직 서버에 못 보낸 기록을 다시 얹는다.
+    //   이걸 안 하면 오프라인에서 찍은 스캔이 서버 자료에 덮여 사라진다.
+    outboxMerge();
+    outboxFlush(true);
     if(migrateLogSteps())hsSaveLogs();
     safeCache('hs_orders',HS.orders);
     safeCache('hs_logs',HS.logs);
@@ -1854,10 +2437,16 @@ async function hsLoad(){
       sb.from('harness_settings').select('value').eq('key','h_step_types').single().then(function(sRes2){
         if(sRes2.data&&sRes2.data.value){var rt=JSON.parse(sRes2.data.value);if(Array.isArray(rt)&&rt.length){H_STEP_TYPES=rt;localStorage.setItem('hs_step_types',JSON.stringify(H_STEP_TYPES));}}
       }),
+      sb.from('harness_settings').select('value').eq('key','h_alarm').single().then(function(sRes3){
+        if(sRes3.data&&sRes3.data.value){
+          try{ localStorage.setItem('hs_alarm',sRes3.data.value); almLoad(); _almCache=null; }catch(e){}
+        }
+      }),
     ]);
     setBadge('ok');
     startAutoRefresh();
     renderStatus();
+    try{ if(typeof AUTH!=='undefined'&&AUTH.isAdmin())ALMUI.popIfUrgent(); else almPaintBadge(); }catch(e){}
   }catch(e){
     console.warn('Supabase load failed:',e.message||e);
     if((e.message||'').includes('timeout')){setBadge('pause');toast('서버 응답 없음 — 로컬 데이터로 동작 중','warn');}
@@ -1868,15 +2457,15 @@ function hsGenId(){ return Date.now().toString(36)+Math.random().toString(36).sl
 
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb) nb.classList.toggle('on', id===p);
     const mn=document.getElementById('mn-'+id);
@@ -1890,6 +2479,7 @@ function setPage(p){
   if(p==='qrhist') renderQRHistory();
   if(p==='users') Users.render();
   if(p==='stock') STK.open();
+  if(p==='issue') ALMUI.open();
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -2568,7 +3158,16 @@ function handleQRInput(text){
   if(!text) return;
   if(text.startsWith(QR_PREFIX)){
     const stepId=text.slice(QR_PREFIX.length);
-    const step=H_STEPS.find(function(s){return s.id===stepId;});
+    // 기본(A형)에 없으면 다른 공정 타입(B형 등)에서도 찾는다.
+    //   넘버링·하우징·압착·라벨 은 B형에만 있어 예전에는 '알 수 없는 공정 QR' 이 떴다.
+    let step=H_STEPS.find(function(s){return s.id===stepId;});
+    if(!step){
+      (H_STEP_TYPES||[]).some(function(t){
+        var f=(t.steps||[]).find(function(s){return (s.id||s.name)===stepId;});
+        if(f){ step=f; return true; }
+        return false;
+      });
+    }
     if(!step){ toast('알 수 없는 공정 QR: '+stepId,'err'); return; }
     HS.selStep=stepId;
     toast('🔲 '+stepId+' 공정 선택됨');
@@ -2578,6 +3177,25 @@ function handleQRInput(text){
     const job=parseDrawingQR(text);
     if(!job){ toast('도면 QR을 인식할 수 없습니다','err'); return; }
     resolveScanJob(job);   // 스캐너가 한글(프로젝트·호기)을 깨뜨려도 등록된 주문 원본으로 교체
+    // 등록되지 않은 도면이면 물어보고 등록한다. 막지는 않는다.
+    //   예전에는 그냥 통과시켜 초록불이 뜨고 기록만 남았다.
+    //   그 기록은 주문이 없어 현황판·재고 어디에도 안 나타나 아무도 몰랐다.
+    //   그렇다고 출도부터 하라고 막으면, 앞 공정을 건너뛰는 현장이 막힌다.
+    //   그래서 어느 공정에서든 등록할 수 있게 하고, 확인만 받는다.
+    if(!job.oid&&HS.selStep&&HS.selStep!=='출도'){
+      var _ok=confirm('등록되지 않은 도면입니다.\n\n'
+        +'  도번  '+(job.dwg_no||'')+(job.rev?' (Rev '+job.rev+')':'')+'\n'
+        +(job.po?'  PO   '+job.po+((job.ord_ln||job.del_ln)?'  (라인 '+(job.ord_ln||'-')+'-'+(job.del_ln||'-')+')':'')+'\n':'')
+        +'  수량  '+(job.qty||1)+'\n\n'
+        +'이 QR 내용으로 등록하고 ['+HS.selStep+'] 을 기록할까요?\n'
+        +'(앞 공정을 건너뛰어도 됩니다)');
+      if(!_ok){
+        scanFlash('warn','기록하지 않음',(job.dwg_no||'')+' — 등록을 취소했습니다');
+        HS.job=null;
+        renderScanJobArea(); renderScanSteps(); renderScanActions(); renderScanStepIndicator();
+        return;
+      }
+    }
     // 이 도면의 공정 구성에 없는 공정을 선택한 채 스캔하면 차단 + 안내
     if(job.oid&&HS.selStep&&HS.selStep!=='출도'){
       var _ord=HS.orders.find(function(x){return x.id===job.oid;});
@@ -2598,6 +3216,40 @@ function handleQRInput(text){
   }
 }
 
+// 스캔한 도면이 등록돼 있지 않으면 QR 내용 그대로 등록한다.
+//   앞 공정을 건너뛰고 바로 재단부터 찍는 일이 있으므로
+//   출도에서만 등록하게 두면 현장이 막힌다.
+//   등록만 되면 그 기록이 현황판·재고에 정상으로 잡힌다.
+function ensureOrderForJob(warnIfExists){
+  if(!HS.job)return null;
+  var ex=HS.orders.find(function(o){return orderMatch(o,HS.job);});
+  if(ex){
+    HS.job.oid=ex.id;
+    if(warnIfExists)toast('⚠️ 이미 등록된 도면입니다: '+HS.job.dwg_no,'warn');
+    return ex;
+  }
+  var o=Object.assign({id:hsGenId()},HS.job,
+        {qty:parseInt(HS.job.qty,10)||1,created_at:new Date().toISOString()});
+  delete o.oid;
+  // 고른 공정이 기본(A형)에 없으면 그 공정을 가진 타입으로 잡는다.
+  //   그러지 않으면 B형 도면이 A형으로 등록돼 다음 스캔부터 막힌다.
+  o.step_type='A';
+  if(HS.selStep&&!H_STEPS.some(function(s){return s.id===HS.selStep;})){
+    var t=(H_STEP_TYPES||[]).find(function(t){
+      return (t.steps||[]).some(function(s){return (s.id||s.name)===HS.selStep;});
+    });
+    if(t)o.step_type=t.code;
+  }
+  // 현장에서 찍어 등록된 건이라는 표시. 관리자가 공정 이슈에서 확인한다.
+  o.field_reg=true;
+  o.field_reg_at=new Date().toISOString();
+  o.field_reg_by=(HS.worker||'').trim()||null;
+  HS.orders.unshift(o); hsSaveOrders([o]);
+  HS.job.oid=o.id;
+  _almCache=null;
+  toast('✅ PO 등록: '+HS.job.dwg_no+' (현장 등록으로 남김)','ok');
+  return o;
+}
 function autoAction(){
   if(!HS.job||!HS.selStep) return;
   const worker=(HS.worker||'').trim();
@@ -2616,16 +3268,7 @@ function autoAction(){
       return;
     }
     if(running){ workerEnd(true); return; }
-    if(HS.selStep==='출도'){
-      const exists=HS.orders.find(function(o){return orderMatch(o,HS.job);});
-      if(exists){toast('⚠️ 이미 등록된 도면입니다: '+HS.job.dwg_no,'warn');}
-      else{
-        const newOrder={id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,created_at:new Date().toISOString()};
-        if(HS.job.po)newOrder.po=HS.job.po;if(HS.job.ord_ln)newOrder.ord_ln=HS.job.ord_ln;
-        if(HS.job.del_ln)newOrder.del_ln=HS.job.del_ln;if(HS.job.due)newOrder.due=HS.job.due;
-        HS.orders.unshift(newOrder);hsSaveOrders([newOrder]);toast('✅ PO 등록: '+HS.job.dwg_no,'ok');
-      }
-    }
+    ensureOrderForJob(HS.selStep==='출도');
     const now=new Date().toISOString();
     var _nl={id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,worker:worker,process:HS.selStep,started_at:now,ended_at:now,duration_min:0};
     HS.logs.unshift(_nl);
@@ -2641,16 +3284,7 @@ function autoAction(){
   // 시간기록 모드
   if(running){ workerEnd(true); }
   else {
-    if(HS.selStep==='출도'){
-      const exists2=HS.orders.find(function(o){return orderMatch(o,HS.job);});
-      if(exists2){toast('⚠️ 이미 등록된 도면입니다: '+HS.job.dwg_no,'warn');}
-      else{
-        const newOrd2={id:hsGenId(),...HS.job,qty:parseInt(HS.job.qty)||1,created_at:new Date().toISOString()};
-        if(HS.job.po)newOrd2.po=HS.job.po;if(HS.job.ord_ln)newOrd2.ord_ln=HS.job.ord_ln;
-        if(HS.job.del_ln)newOrd2.del_ln=HS.job.del_ln;if(HS.job.due)newOrd2.due=HS.job.due;
-        HS.orders.unshift(newOrd2);hsSaveOrders([newOrd2]);toast('✅ PO 등록: '+HS.job.dwg_no,'ok');
-      }
-    }
+    ensureOrderForJob(HS.selStep==='출도');
     workerStart(true);
   }
 }
@@ -3264,8 +3898,13 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.40';
+var APP_VER='v6.46';
 var VER_LOG=[
+  {v:'v6.46',d:'2026-08', t:'[공정 이슈] 영업 요청 — 납기가 지났는데 방치된 건에 강력한 알람. 신규 메뉴 [공정 이슈]에서 다섯 가지를 한 곳에 모읍니다: 납기 지남 / 출하준비 늦음 / 공정 정체 / 작업중단 / 현장 등록. 납기 며칠 전까지 출하가 끝나 있어야 하는지(출하 여유일)와, 한 공정에 며칠 이상 멈추면 정체로 볼지(공정 정체 기준)를 설정으로 정합니다. 날짜는 주말과 등록한 공휴일을 빼고 셉니다. 납기 지난 건이 있으면 사이드바에 빨간 건수 배지가 뜨고 하루 한 번 팝업으로 알립니다. 현장에서 미등록 도면을 찍어 등록한 건은 현장 등록으로 표시되어 관리자가 확인할 수 있습니다. 열 너비 조정·엑셀 내보내기 지원. ※ 컬럼 추가 SQL 1회 실행 필요(harness_field_reg)'},
+  {v:'v6.45',d:'2026-08', t:'[스캔] 등록되지 않은 도면을 막지 않고 물어봅니다. v6.44에서 \'출도부터 하세요\'로 막았는데, 앞 공정을 건너뛰고 바로 재단·제작부터 찍는 현장이 막히는 문제가 있었습니다. 이제 어느 공정에서 찍든 QR 내용(도번·Rev·PO·수량)을 보여 주고 확인을 받아 그 자리에서 등록하며, 아니오를 누르면 아무것도 남지 않습니다. 고른 공정이 기본(A형)에 없으면 그 공정을 가진 타입으로 등록하므로, B형 도면을 하우징부터 찍어도 다음 스캔이 막히지 않습니다'},  {v:'v6.44',d:'2026-08', t:'[스캔·오프라인] ① 등록되지 않은 도면을 스캔하면 막습니다 — 예전에는 초록불이 뜨고 기록만 남아, 주문이 없어 현황판에도 재고에도 안 나타났습니다. 출도는 등록하는 공정이므로 그대로 통과합니다. ② B형 전용 공정(넘버링·하우징·압착·라벨) QR이 \'알 수 없는 공정\'으로 뜨던 문제 수정 — 기본 공정에 없으면 다른 공정 타입에서도 찾습니다. ③ 인터넷이 끊겨 pdf.js를 못 받으면 화면이 통째로 안 뜨던 문제 수정. ④ 미전송 대기열 추가 — 서버 저장이 실패한 스캔 기록을 담아 두었다가 연결되면 자동으로 다시 보냅니다. 예전에는 오프라인 스캔이 로컬에만 남고, 다시 연결돼 자료를 불러오는 순간 덮여 사라졌습니다. 상단 빨간 띠에 미전송 건수가 표시되고, 누르면 다시 보냅니다'},
+  {v:'v6.43',d:'2026-08', t:'[재고 현황] ① 표 열 너비를 끌어서 조정할 수 있게 했습니다 (두 번 누르면 그 열만 원래대로, [열 너비 초기화]로 전체 되돌리기). ② 기초재고 엑셀 일괄 업로드에 되돌리기를 붙였습니다 — 업로드 직전 상태를 저장하고 [되돌리기] 버튼으로 복구합니다. ③ 엑셀 내보내기 추가 (필터 포함, 기존 CSV도 유지)'},
+  {v:'v6.42',d:'2026-08', t:'[도면 QR] ① 프로젝트명을 바꿔 같은 엑셀을 다시 올리면 같은 PO가 두 건으로 쌓이던 문제 수정 — 같은 건 판정을 도번+PO+오더라인+납품라인으로 바꾸고, 기존 건의 프로젝트가 비어 있으면 채웁니다. ② PO 엑셀 양식을 열 이름으로 알아보게 정리 — AXCELIS·하네스 양식·일반 양식을 한 함수가 처리하며 새 양식은 프로필만 추가하면 됩니다. ③ 도면 PDF를 미리 다 읽지 않고 만들 때 읽도록 바꿔 메모리 사용을 줄였습니다. ④ 열이 1만6천개인 엑셀에서 앞 40열만 읽도록 해 처리 속도 개선. ⑤ 머릿말에 모르는 토큰을 쓰면 글자가 그대로 인쇄되던 문제 수정'},
+  {v:'v6.41',d:'2026-08', t:'[도면 QR] AXCELIS PO 엑셀을 올리면 수주로 바로 등록하고, 고른 도면 폴더에서 도번·REV가 맞는 파일을 자동으로 찾아 QR을 넣습니다. 등록이 되므로 공정현황에서 PO접수 → 출도 진행을 그대로 볼 수 있습니다. REV는 SRev 우선, 없으면 BRev로 대체하고 주황색 표시, 둘 다 없으면 출력에서 제외합니다. 같은 REV가 여러 판이면 최신 판을 씁니다. 등록 규칙은 기존 엑셀 업로드와 같은 함수를 쓰도록 정리했습니다'},
   {v:'v6.40',d:'2026-08', t:'[도면 QR] ① 출력 용지를 A4로 통일 — 원본이 A0·A1이어도 A4에 맞춰 담으므로 인쇄 시 축소 배율이 도면마다 달라지지 않음. ② QR 크기를 mm로 고정(기본 25mm) — 어느 도면이든 인쇄된 QR 한 변이 항상 같아 스캔 실패를 막음. ③ 머릿말·꼬리말에 항목 이름 표시(도번 160005530 처럼 이름+값) 및 항목 사이 간격 조절(0~30mm) 추가. QR 기본 위치를 우하단으로 변경'},
   {v:'v6.39',d:'2026-08', t:'[재고 현황] 메뉴 신설 — 포장 완료를 입고, 출하 완료를 출고로 잡아 도면번호별 현재고를 자동 계산(현재고 = 기초재고 + 포장입고 − 출하). 기초재고·비고는 표에서 더블클릭으로 직접 수정, 엑셀 일괄 업로드·CSV 내보내기 지원. 출하가 포장보다 많은 마이너스 재고는 빨강으로 표시해 데이터 오류를 드러냄. 관리자 전용'},
   {v:'v6.38',d:'2026-08', t:'[도면 QR] 메뉴 신설 — 작업지시서 QR과 별도 탭으로 분리. 도면 탭은 모서리 위치 선택(좌상·우상·좌하·우하) 전용이며, 파일 목록·머릿말/꼬리말 설정을 작업지시서 탭과 독립적으로 관리. 두 탭 모두 건별 선택·선택 요약·개별 ZIP 출력 지원'},
@@ -3762,11 +4401,15 @@ var WO={
       var i=self.files.indexOf(f);
       var ok=f.status==='ok';
       if(f.sel===undefined)f.sel=ok;
-      var badge=ok?'<span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 9px;border-radius:20px">매칭</span>'
-        :'<span style="font-size:11px;font-weight:700;color:#e0505f;background:#fdeef0;border:1px solid #f7d4d9;padding:2px 9px;border-radius:20px">미등록 도번</span>';
+      var badge=ok
+        ?(f.warn
+          ?'<span style="font-size:11px;font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;padding:2px 9px;border-radius:20px">REV 대체</span>'
+          :'<span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 9px;border-radius:20px">매칭</span>')
+        :'<span style="font-size:11px;font-weight:700;color:#e0505f;background:#fdeef0;border:1px solid #f7d4d9;padding:2px 9px;border-radius:20px">'+hEsc(f.badge||'미등록 도번')+'</span>';
       var o=f.order||{};
       var line2=ok?[(o.rev?'Rev '+o.rev:''),(o.customer||''),(o.po||'-'),(o.due?'납기 '+fmtYYMMDD(o.due):'')].filter(Boolean).join(' · ')
-                  :'등록된 수주정보에 없습니다';
+                  :(f.note||'등록된 수주정보에 없습니다');
+      if(ok&&f.note)line2+=' · '+f.note;
       return '<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid #f0f2f6;'+(ok?'':'background:#fffafa')+'">'
         +'<input type="checkbox" '+(f.sel?'checked':'')+(ok?'':' disabled')+' onchange="self.toggleSel('+i+',this.checked)" style="width:15px;height:15px;cursor:pointer">'
         +'<div style="width:26px;font-size:11px;color:var(--tx3);text-align:right">'+(ok?(ord+1):'-')+'</div>'
@@ -3810,7 +4453,7 @@ var WO={
   toggleSel:function(i,on){ var self=this; if(self.files[i])self.files[i].sel=on; self.render(); },
   selAll:function(on){ var self=this; self.files.forEach(function(f){ if(f.status==='ok')f.sel=on; }); self.render(); },
   remove:function(i){ var self=this;self.files.splice(i,1);self.render();},
-  clear:function(){ var self=this;self.files=[];self.render();},
+  clear:function(){ var self=this;self.files=[];self.render();if(self.paintAuto&&self.xlRows){self.xlRows=[];self.paintAuto();}},
   mode:'wo',        // 'wo'=작업지시서(공정칸 고정) · 'dwg'=도면(모서리 선택)
   dwgPos:'tr',      // 도면 모드 QR 위치: tl·tr·bl·br
   dwgSize:0.13,     // 페이지 높이 대비 QR 크기
@@ -3887,6 +4530,11 @@ var WO={
     var v=(o.rev||'').trim();
     if(v&&d.slice(-(v.length+1))!=='_'+v)d=d+'_'+v;
     return d.replace(/[\\/:*?"<>|]/g,'_')+'.pdf';
+  },
+  // 파일 손잡이만 들고 있다가 필요할 때 읽는다 (도면 QR 폴더 방식)
+  ensureBytes:async function(t){
+    if(!t.bytes&&t.file){ t.bytes=new Uint8Array(await t.file.arrayBuffer()); }
+    return t.bytes;
   },
   // 대상 PDF에 공정 QR 삽입 → 바이트 반환
   buildOne:async function(t){
@@ -4005,7 +4653,7 @@ var WO={
       var _pgNo=0,_pgTotal=0;
       if(self.footer.on&&/\{전체\}/.test(self.footer.text)){
         for(var k=0;k<targets.length;k++){
-          try{ _pgTotal+=(await PDFDocument.load(targets[k].bytes,{ignoreEncryption:true})).getPageCount(); }catch(e){}
+          try{ _pgTotal+=(await PDFDocument.load(await self.ensureBytes(targets[k]),{ignoreEncryption:true})).getPageCount(); }catch(e){}
         }
       }
       for(var i=0;i<targets.length;i++){
@@ -4061,8 +4709,9 @@ DQ.ns='D';
 DQ.files=[];
 DQ.mode='dwg';                 // 도면 탭은 항상 도면 모드
 DQ.dwgPos='tr';
-DQ.header={on:false,text:'{프로젝트}  {도번}'};
-DQ.footer={on:false,text:'{페이지} / {전체}'};
+// 기본 문구는 HTML 입력칸(wo-hd-txD·wo-ft-txD)과 반드시 같아야 한다
+DQ.header={on:false,text:'{프로젝트} {도번} {REV}'};
+DQ.footer={on:false,text:'{페이지} / {전체} {수량} {납기}'};
 DQ.setMode=function(){};       // 도면 탭에서는 대상 전환 없음
 DQ.setHF=function(){
   var a=this.$('wo-hd-on'),b=this.$('wo-hd-tx'),c=this.$('wo-ft-on'),d=this.$('wo-ft-tx');
@@ -4140,7 +4789,8 @@ DQ.hfItems=function(text,o,pg,total){
     var glue=s.slice(last,m.index);
     var tokRaw=m[0];
     var tok=tokRaw.toUpperCase()==='{REV}'?'{REV}':tokRaw;
-    var val=self.fillTokens(tokRaw,o,pg,total);
+    var known=Object.prototype.hasOwnProperty.call(DQ_LABEL,tok);
+    var val=known?self.fillTokens(tokRaw,o,pg,total):'';   // 모르는 토큰은 인쇄하지 않는다
     var lab=(self.hfLabel&&DQ_LABEL[tok])?DQ_LABEL[tok]:'';
     if(out.length&&glue.length&&!/^\s*$/.test(glue)){
       // 공백이 아닌 글자로 이어짐 → 앞 덩어리에 붙인다
@@ -4203,7 +4853,7 @@ DQ.buildOne=async function(t){
   var self=this;
   var PDFDocument=PDFLib.PDFDocument;
   var out=await PDFDocument.create();
-  var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
+  var src=await PDFDocument.load(await self.ensureBytes(t),{ignoreEncryption:true});
   var qrPng=await out.embedPng(self.dataURLtoBytes(makeQRPng(self.woPayload(t.order),500)));
   var idxs=src.getPageIndices();
   var topB=self.header.on?self.hfBandMm*MM2PT:0;
@@ -4287,6 +4937,276 @@ setTimeout(function(){
   var rl=document.getElementById('dq-qrmm-lbl'); if(rl)rl.textContent=DQ.qrMm+'mm';
   if(DQ.paintMode)try{DQ.paintMode();}catch(e){}
 },60);
+
+
+// ── 도면 QR — PO 엑셀 등록 + 폴더 자동 매칭 (v6.41) ──
+//   브라우저는 NAS 경로를 직접 못 읽는다. 폴더를 한 번 고르게 해서 그 안을 훑는다.
+DQ.xlRows=[];        // 엑셀에서 읽어 등록까지 끝난 행 (order 참조 포함)
+DQ.dwgIndex=null;    // {도번: [{file,rev,ed,name}]}
+DQ.folderName='';
+DQ.folderCount=0;
+
+// 파일명 도번_REV[_판번호]
+var DQ_FNAME=/^(\d{6,10})[_\-]([A-Za-z]{1,2})(?:[_\-](\d{1,2}))?$/;
+var DQ_MAX_COL=39;   // 엑셀에서 읽을 마지막 열 (0부터)
+
+// ── PO 엑셀 양식 프로필 ──
+//   고객사마다 열 이름이 다르다. 파일마다 함수를 만들지 않고
+//   여기에 한 줄 추가하는 것으로 끝낸다.
+//   need : 이 이름들이 모두 있어야 그 양식으로 본다
+//   map  : 우리 항목 ← 엑셀 열 이름 후보 (앞에 있는 것부터 찾는다)
+var DQ_PROFILES=[
+  { key:'axcelis', name:'AXCELIS PO', customer:'AXCELIS',
+    need:['item','srev'],
+    map:{ dwg:['Item'], rev:['SRev'], rev2:['BRev'],
+          po:['OrderNumber'], ol:['Order Lines'], dl:['Del Line'],
+          qty:['Quantity'], due:['Promise Date'], desc:['Item Desc'] } },
+  { key:'harness', name:'하네스 등록 양식', customer:'',
+    need:['도면번호'],
+    map:{ dwg:['도면번호'], rev:['Rev','REV','리비전'], rev2:[],
+          po:['PO No','PO','발주번호'], ol:['Order Line','오더라인'], dl:['Del Line','납품라인'],
+          qty:['수량'], due:['납기'], desc:['품명'], cust:['고객사'], proj:['프로젝트'], unit:['호기'] } },
+  // 새 양식은 여기에 한 덩어리만 추가하면 된다.
+  { key:'generic', name:'일반', customer:'',
+    need:[],
+    map:{ dwg:['도면번호','품번','Item','PN','Part No','Drawing'],
+          rev:['SRev','Rev','REV','리비전','개정'], rev2:['BRev'],
+          po:['OrderNumber','PO No','PO','발주번호','Order No'],
+          ol:['Order Lines','Order Line','오더라인'], dl:['Del Line','납품라인'],
+          qty:['Quantity','수량','Qty'], due:['Promise Date','납기','Due Date','Required Date'],
+          desc:['Item Desc','품명','Description'], cust:['고객사','Customer'],
+          proj:['프로젝트','Project'], unit:['호기','Unit'] } },
+];
+
+DQ.pickFolder=function(input){
+  var self=DQ;
+  var all=Array.prototype.slice.call(input.files||[]);
+  input.value='';
+  if(!all.length){ toast('폴더에 파일이 없습니다','warn'); return; }
+  var pdfs=all.filter(function(f){ return /\.pdf$/i.test(f.name) && !/^~\$/.test(f.name); });
+  var idx={}, bad=[];
+  pdfs.forEach(function(f){
+    var stem=f.name.replace(/\.pdf$/i,'').trim();
+    var m=DQ_FNAME.exec(stem);
+    if(!m){ bad.push(f.name); return; }
+    var dwg=m[1], rev=m[2].toUpperCase(), ed=parseInt(m[3]||'0',10);
+    (idx[dwg]=idx[dwg]||[]).push({file:f, rev:rev, ed:ed, name:f.name});
+  });
+  self.dwgIndex=idx;
+  self.folderCount=pdfs.length;
+  var rel=(all[0].webkitRelativePath||'').split('/')[0];
+  self.folderName=rel||'(폴더)';
+  self.badNames=bad;
+  toast('폴더 읽음 — PDF '+pdfs.length+'개 · 도번 '+Object.keys(idx).length+'종','ok');
+  self.rematch();
+};
+
+// REV 순위 (A<B<…<Z<AA)
+function dqRevRank(r){
+  r=String(r||'').toUpperCase(); var n=0;
+  for(var i=0;i<r.length;i++)n=n*26+(r.charCodeAt(i)-64);
+  return n;
+}
+
+// 한 행에 맞는 도면 파일 고르기 — SRev 우선 → BRev → 없음
+DQ.pickDrawing=function(row){
+  var idx=this.dwgIndex; if(!idx)return {hit:null,why:'폴더를 아직 고르지 않았습니다'};
+  var cands=idx[row.dwg_no];
+  if(!cands||!cands.length)return {hit:null,why:'폴더에 도면이 없습니다'};
+  var tries=[[row.rev,'',false],[row.brev,'SRev '+(row.rev||'-')+' 도면 없음 → BRev '+(row.brev||'-')+' 사용',true]];
+  for(var i=0;i<tries.length;i++){
+    var rv=String(tries[i][0]||'').toUpperCase(); if(!rv)continue;
+    var same=cands.filter(function(c){ return c.rev===rv; });
+    if(same.length){
+      // 같은 REV 안에서는 판번호가 가장 큰 것 = 최신판
+      var best=same.reduce(function(a,c){ return c.ed>a.ed?c:a; });
+      return {hit:best, why:tries[i][1], warn:tries[i][2]};
+    }
+  }
+  var have=cands.map(function(c){return c.rev;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort().join(',');
+  return {hit:null, why:'REV 안 맞음 (엑셀 S'+(row.rev||'-')+'/B'+(row.brev||'-')+' · 도면 '+have+')'};
+};
+
+// 엑셀 행 × 폴더 → 출력 목록. 실제 PDF 는 매칭된 것만 읽는다.
+DQ.rematch=function(){
+  var self=this;
+  if(!self.xlRows.length){ self.paintAuto(); return; }
+  // 엑셀에서 온 항목만 새로 만든다 (직접 올린 PDF 는 남긴다)
+  self.files=self.files.filter(function(f){ return !f.fromXl; });
+  var okN=0, warnN=0, badN=0;
+  for(var i=0;i<self.xlRows.length;i++){
+    var row=self.xlRows[i];
+    var r=self.pickDrawing(row);
+    var ent={fromXl:true, name:(r.hit?r.hit.name:row.dwg_no+'.pdf'),
+             dwg:row.dwg_no+(row.rev?'_'+row.rev:''), order:row.order,
+             note:r.why||'', warn:!!r.warn};
+    if(r.hit&&row.order){
+      // 실제 PDF 는 여기서 읽지 않는다. 만들 때 ensureBytes 가 읽는다.
+      ent.file=r.hit.file;
+      ent.status='ok'; ent.sel=true;
+      if(r.warn)warnN++; else okN++;
+    }else{
+      ent.status='nomatch';
+      ent.badge=!row.order?'등록 안 됨'
+        :(/REV 안 맞음/.test(r.why)?'REV 불일치'
+         :(/폴더를 아직/.test(r.why)?'폴더 선택 전':'도면 없음'));
+      badN++;
+    }
+    self.files.push(ent);
+  }
+  self.render();
+  self.paintAuto({ok:okN, warn:warnN, bad:badN});
+};
+
+DQ.paintAuto=function(s){
+  var el=document.getElementById('dq-auto-info'); if(!el)return;
+  var self=this;
+  if(!self.xlRows.length&&!self.dwgIndex){ el.innerHTML=''; return; }
+  function box(lab,n,color,note){
+    return '<div style="flex:1;min-width:110px;background:#fafbfd;border:1px solid var(--border);border-radius:10px;padding:11px 13px">'
+      +'<div style="font-size:11.5px;color:var(--tx3)">'+lab+'</div>'
+      +'<div style="font-size:21px;font-weight:800;margin-top:1px'+(color?';color:'+color:'')+'">'+n+'</div>'
+      +(note?'<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+note+'</div>':'')+'</div>';
+  }
+  var parts='<div style="display:flex;gap:9px;flex-wrap:wrap">';
+  parts+=box('엑셀 행', self.xlRows.length, '', self.xlRows.length?'수주 등록됨':'아직 없음');
+  parts+=box('폴더 PDF', self.folderCount, '', self.dwgIndex?self.folderName:'아직 고르지 않음');
+  if(s){
+    parts+=box('매칭', s.ok, '#12a05f','SRev 일치');
+    if(s.warn)parts+=box('REV 대체', s.warn, '#b45309','BRev 도면 사용');
+    if(s.bad) parts+=box('출력 제외', s.bad, '#e0505f','도면 없음·REV 불일치');
+  }
+  parts+='</div>';
+  if(self.badNames&&self.badNames.length){
+    parts+='<div style="font-size:11.5px;color:var(--tx3);margin-top:9px;line-height:1.6">'
+      +'파일명 규칙(도번_REV_판번호)에 안 맞아 건너뛴 파일 '+self.badNames.length+'개 — '
+      +hEsc(self.badNames.slice(0,3).join(', '))+(self.badNames.length>3?' 외':'')+'</div>';
+  }
+  el.innerHTML=parts;
+};
+
+DQ.clearAuto=function(){
+  var self=DQ;
+  self.xlRows=[]; self.dwgIndex=null; self.folderName=''; self.folderCount=0; self.badNames=[];
+  self.files=self.files.filter(function(f){ return !f.fromXl; });
+  self.render(); self.paintAuto();
+  toast('엑셀·폴더 정보를 비웠습니다','ok');
+};
+
+// ── AXCELIS PO 엑셀 읽기 → 수주 등록 ──
+DQ.readExcel=function(input){
+  var self=DQ;
+  var file=input.files&&input.files[0]; if(!file)return; input.value='';
+  loadXLSX(function(){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        // AXCELIS 파일은 피벗 잔재로 열이 1만6천개까지 늘어나 있다.
+        // 통째로 읽으면 쓸데없이 수십만 칸을 만든다. 앞 40열만 읽는다.
+        var rng=null;
+        try{
+          var rf=XLSX.utils.decode_range(ws['!ref']);
+          if(rf.e.c>DQ_MAX_COL){ rf.e.c=DQ_MAX_COL; rng=XLSX.utils.encode_range(rf); }
+        }catch(e){}
+        var opt={header:1,defval:'',raw:false,dateNF:'yyyy-mm-dd'};
+        if(rng)opt.range=rng;
+        var grid=XLSX.utils.sheet_to_json(ws,opt);
+        if(!grid.length){ toast('데이터가 없습니다','err'); return; }
+        var hdr=(grid[0]||[]).slice(0,DQ_MAX_COL+1).map(function(x){ return String(x||'').trim(); });
+        var low=hdr.map(function(x){ return x.toLowerCase().replace(/\s+/g,''); });
+        function col(names){
+          for(var i=0;i<names.length;i++){                 // 정확히 같은 이름 먼저
+            var k=names[i].toLowerCase().replace(/\s+/g,'');
+            var j=low.indexOf(k); if(j>=0)return j;
+          }
+          for(var a=0;a<names.length;a++){                 // 그다음 부분 일치
+            var k2=names[a].toLowerCase().replace(/\s+/g,'');
+            for(var b=0;b<low.length;b++)if(low[b]&&low[b].indexOf(k2)>=0)return b;
+          }
+          return -1;
+        }
+        // 어느 양식인지 열 이름으로 알아본다
+        var prof=null;
+        for(var pi=0;pi<DQ_PROFILES.length;pi++){
+          var pf=DQ_PROFILES[pi];
+          var okAll=pf.need.every(function(nm){ return col([nm])>=0; });
+          if(okAll&&col(pf.map.dwg)>=0){ prof=pf; break; }
+        }
+        if(!prof){ toast('도면번호(Item·품번) 열을 찾을 수 없습니다','err'); return; }
+        var M=prof.map;
+        var c={item:col(M.dwg), srev:col(M.rev||[]), brev:col(M.rev2||[]),
+               po:col(M.po||[]), ol:col(M.ol||[]), dl:col(M.dl||[]),
+               qty:col(M.qty||[]), due:col(M.due||[]), desc:col(M.desc||[]),
+               cust:col(M.cust||[]), proj:col(M.proj||[]), unit:col(M.unit||[])};
+        if(c.item<0){ toast('도면번호 열을 찾을 수 없습니다','err'); return; }
+
+        var proj=(document.getElementById('dq-xl-proj')||{}).value||'';
+        var typeSel=(document.getElementById('dq-xl-type')||{}).value||'A';
+        var list=[], metas=[];
+        for(var i=1;i<grid.length;i++){
+          var r=grid[i]||[];
+          var dwg=String(r[c.item]||'').replace(/\.0$/,'').trim();
+          if(!dwg||!/^\d{6,10}$/.test(dwg))continue;
+          var due=c.due>=0?normDueToISO(r[c.due]):'';
+          if(due&&!/^\d{4}-\d{2}-\d{2}$/.test(due))due='';
+          var srev=c.srev>=0?String(r[c.srev]||'').trim().toUpperCase():'';
+          var brev=c.brev>=0?String(r[c.brev]||'').trim().toUpperCase():'';
+          var rowCust=c.cust>=0?String(r[c.cust]||'').trim():'';
+          var rowProj=c.proj>=0?String(r[c.proj]||'').trim():'';
+          var rowUnit=c.unit>=0?String(r[c.unit]||'').trim():'';
+          list.push({dwg_no:dwg, rev:srev,
+                     customer:rowCust||prof.customer||'',
+                     project:rowProj||proj.trim(), unit:rowUnit,
+                     qty:c.qty>=0?parseInt(String(r[c.qty]).replace(/,/g,''),10)||1:1,
+                     po:c.po>=0?String(r[c.po]||'').trim():'',
+                     ord_ln:c.ol>=0?String(r[c.ol]||'').replace(/\.0$/,'').trim():'',
+                     del_ln:c.dl>=0?String(r[c.dl]||'').replace(/\.0$/,'').trim():'',
+                     due:due, step_type:typeSel});
+          metas.push({brev:brev, desc:c.desc>=0?String(r[c.desc]||'').trim():''});
+        }
+        if(!list.length){ toast('읽을 수 있는 행이 없습니다 (Item 열 확인)','err'); return; }
+
+        // 같은 건 판정은 도번+PO+오더라인+납품라인 (프로젝트는 뺀다)
+        var already=list.filter(function(n){
+          return HS.orders.some(function(o){
+            return (o.dwg_no||'')===n.dwg_no&&(o.po||'')===(n.po||'')
+                &&(o.ord_ln||'')===(n.ord_ln||'')&&(o.del_ln||'')===(n.del_ln||'');
+          });
+        }).length;
+        var custName=list[0].customer||'(엑셀 값)';
+        var msg=prof.name+' 양식으로 '+list.length+'행을 읽었습니다.\n\n'
+          +'  신규 등록 '+(list.length-already)+'건\n'
+          +'  이미 있는 건 '+already+'건 (덮어쓰지 않습니다)\n\n'
+          +'고객사 '+custName+' · 공정타입 '+typeSel+'형'
+          +(proj.trim()?' · 프로젝트 '+proj.trim():'')+'\n\n등록할까요?';
+        if(!confirm(msg))return;
+
+        var res=hsRegisterOrders(list,{matchBy:'poline'});
+        self.xlRows=list.map(function(n,i){
+          return {dwg_no:n.dwg_no, rev:n.rev, brev:metas[i].brev, desc:metas[i].desc, order:res.orders[i]};
+        }).filter(function(x){ return x.order; });
+        if(typeof renderStatus==='function')renderStatus();
+        if(typeof renderOrderStampList==='function')renderOrderStampList();
+        toast('신규 '+res.added+'건 등록 · 기존 '+res.skipped+'건 유지'
+              +(res.filled?' · 빈 값 '+res.filled+'건 채움':''),'ok');
+        self.rematch();
+      }catch(ex){ toast('파일 처리 오류: '+ex.message,'err'); console.error(ex); }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+// 공정 타입 드롭다운 채우기
+setTimeout(function(){
+  var s=document.getElementById('dq-xl-type'); if(!s)return;
+  try{
+    s.innerHTML=(H_STEP_TYPES||[]).map(function(t){
+      return '<option value="'+t.code+'">'+t.code+'형 — '+(t.label||t.name||'')+'</option>';
+    }).join('')||'<option value="A">A형</option>';
+  }catch(e){ s.innerHTML='<option value="A">A형</option>'; }
+},80);
 
 // 작업지시서 QR / 도면 QR — 같은 로직을 두 탭에서 각각 사용
 function WO_ctx(){
@@ -4806,6 +5726,65 @@ function toast(msg,type){
 }
 
 // ════════════════════════════════
+
+// ── 표 열 너비 끌어서 조정 ──
+//   PM Portal 의 ResizableTable 에 해당하는 것이 단일 HTML 에는 없어 직접 만든다.
+//   저장은 localStorage. 실패해도 표는 그대로 쓸 수 있게 한다.
+function makeResizable(table, key){
+  if(!table||table._resizable)return;
+  table._resizable=true;
+  var ths=table.querySelectorAll('thead th');
+  if(!ths.length)return;
+  table.style.tableLayout='fixed';
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem('hs_colw_'+key)||'{}'); }catch(e){}
+  Array.prototype.forEach.call(ths,function(th,i){
+    if(saved[i])th.style.width=saved[i]+'px';
+    if(i===ths.length-1)return;               // 마지막 열은 남는 폭을 쓴다
+    th.style.position='relative';
+    var grip=document.createElement('div');
+    grip.style.cssText='position:absolute;top:0;right:0;width:7px;height:100%;cursor:col-resize;user-select:none;z-index:2';
+    grip.onmousedown=function(e){
+      e.preventDefault(); e.stopPropagation();
+      var x0=e.clientX, w0=th.getBoundingClientRect().width;
+      var line=document.createElement('div');
+      line.style.cssText='position:absolute;top:0;right:0;width:2px;height:100%;background:var(--purple)';
+      grip.appendChild(line);
+      function move(ev){ th.style.width=Math.max(48,w0+(ev.clientX-x0))+'px'; }
+      function up(){
+        document.removeEventListener('mousemove',move);
+        document.removeEventListener('mouseup',up);
+        if(line.parentNode)line.parentNode.removeChild(line);
+        try{
+          var m={};
+          Array.prototype.forEach.call(ths,function(t,j){
+            var w=t.style.width||(t.getBoundingClientRect().width+'px');
+            m[j]=Math.round(parseFloat(w));
+          });
+          localStorage.setItem('hs_colw_'+key,JSON.stringify(m));
+        }catch(e2){}
+      }
+      document.addEventListener('mousemove',move);
+      document.addEventListener('mouseup',up);
+    };
+    grip.ondblclick=function(e){                 // 두 번 누르면 그 열만 원래대로
+      e.preventDefault(); e.stopPropagation();
+      th.style.width='';
+      try{
+        var m=JSON.parse(localStorage.getItem('hs_colw_'+key)||'{}');
+        delete m[i]; localStorage.setItem('hs_colw_'+key,JSON.stringify(m));
+      }catch(e2){}
+    };
+    th.appendChild(grip);
+  });
+}
+function resetColW(key,table){
+  try{ localStorage.removeItem('hs_colw_'+key); }catch(e){}
+  if(table)Array.prototype.forEach.call(table.querySelectorAll('thead th'),function(t){ t.style.width=''; });
+  toast('열 너비를 원래대로 되돌렸습니다','ok');
+}
+
+// ─────────────
 // 재고 현황  (v6.39)
 //   포장 완료 = 입고 / 출하 완료 = 출고
 //   현재고 = 기초재고 + 포장입고 − 출하
@@ -4907,7 +5886,7 @@ var STK={
       var sumCur=all.reduce(function(s,r){return s+(r.cur>0?r.cur:0);},0);
       kpi.innerHTML=
         STK._card('총 품목수',tot,'등록된 도면번호 종류','')+
-        STK._card('재고 보유',have,'합계 '+STK._n(sumCur)+'수량','green')+
+        STK._card('재고 보유',have,'모두 합쳐 '+STK._n(sumCur),'green')+
         STK._card('재고 없음',zero,'다 나갔거나 아직 포장 전','')+
         STK._card('마이너스',minus,minus?'출하가 포장보다 많음 · 확인 필요':'이상 없음','red');
     }
@@ -4939,6 +5918,8 @@ var STK={
 
     var cnt=document.getElementById('stk-cnt');
     if(cnt) cnt.textContent=rows.length+' / '+all.length+'품목';
+    var ub=document.getElementById('stk-undo');
+    if(ub) ub.style.display=STK.hasSnap()?'inline-block':'none';
     var hz=document.getElementById('stk-hz'); if(hz){ hz.style.borderColor=STK.hideZero?'var(--blue)':'var(--border)'; hz.style.color=STK.hideZero?'var(--blue)':'var(--tx2)'; hz.style.background=STK.hideZero?'var(--blue-lt)':'var(--bg)'; }
     var hm=document.getElementById('stk-hm'); if(hm){ hm.style.borderColor=STK.onlyMinus?'var(--red)':'var(--border)'; hm.style.color=STK.onlyMinus?'var(--red)':'var(--tx2)'; hm.style.background=STK.onlyMinus?'#fef2f2':'var(--bg)'; }
 
@@ -4948,6 +5929,7 @@ var STK={
       return;
     }
 
+    setTimeout(function(){ makeResizable(document.getElementById('stk-table'),'stock'); },0);
     var mono='font-family:var(--mono);text-align:right;white-space:nowrap';
     body.innerHTML=rows.map(function(r){
       var neg=(r.cur<0), zero=(r.cur===0);
@@ -5036,6 +6018,62 @@ var STK={
     return true;
   },
 
+  // ── 일괄 업로드 직전 상태를 담아 둔다 (되돌리기용) ──
+  //   랙 87건을 되돌릴 수 없게 잃은 적이 있어 대량 작업에는 반드시 붙인다.
+  snapKey:'hs_stock_undo',
+  saveSnap:function(note){
+    try{
+      localStorage.setItem(STK.snapKey,JSON.stringify({at:new Date().toISOString(),note:note||'',base:STK.base}));
+    }catch(e){ console.warn('되돌리기 저장 실패',e); return false; }
+    return true;
+  },
+  hasSnap:function(){
+    try{ return !!JSON.parse(localStorage.getItem(STK.snapKey)||'null'); }catch(e){ return false; }
+  },
+  undo:async function(){
+    var s=null;
+    try{ s=JSON.parse(localStorage.getItem(STK.snapKey)||'null'); }catch(e){}
+    if(!s){ toast('되돌릴 기록이 없습니다','warn'); return; }
+    var when=String(s.at||'').slice(0,16).replace('T',' ');
+    if(!confirm('기초재고를 '+when+' 시점으로 되돌립니다.\n'+(s.note?'('+s.note+')\n':'')+'\n지금 값은 사라집니다. 계속할까요?'))return;
+    var sb=getSB();
+    if(!sb){ toast('서버 연결 없음','err'); return; }
+    var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||HS.worker||'';
+    var now=new Date().toISOString();
+    // 되돌린 뒤 없어야 할 도번은 0 으로 둔다. 지우면 또 되돌릴 수 없다.
+    var keys={};
+    Object.keys(STK.base).forEach(function(k){ keys[k]=1; });
+    Object.keys(s.base||{}).forEach(function(k){ keys[k]=1; });
+    var rows=Object.keys(keys).map(function(k){
+      var b=(s.base||{})[k]||{opening_qty:0,memo:''};
+      return {dwg_no:k,opening_qty:Number(b.opening_qty)||0,memo:b.memo||null,updated_at:now,updated_by:who||null};
+    });
+    for(var i=0;i<rows.length;i+=500){
+      var r=await sb.from('harness_stock').upsert(rows.slice(i,i+500),{onConflict:'dwg_no'});
+      if(r.error){ toast('되돌리기 실패: '+r.error.message,'err'); console.warn(r.error); return; }
+    }
+    try{ localStorage.removeItem(STK.snapKey); }catch(e){}
+    toast('되돌렸습니다 ('+rows.length+'건)','ok');
+    STK.reload();
+  },
+
+  // ── 엑셀 내보내기 ──
+  exportXlsx:function(){
+    var rows=STK._rows.slice().sort(function(a,b){return a.dwg.localeCompare(b.dwg);});
+    if(!rows.length){ toast('내보낼 품목이 없습니다','warn'); return; }
+    loadXLSX(function(){
+      var aoa=[['도면번호','Rev','고객사','프로젝트','등록건','기초재고','포장입고','출하','현재고','비고']];
+      rows.forEach(function(r){ aoa.push([r.dwg,r.rev||'',r.cust||'',r.proj||'',r.ordn,r.open,r.pack,r.ship,r.cur,r.memo||'']); });
+      var ws=XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols']=[{wch:18},{wch:6},{wch:12},{wch:18},{wch:8},{wch:10},{wch:10},{wch:8},{wch:10},{wch:24}];
+      ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:9}})};
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'재고현황');
+      XLSX.writeFile(wb,'하네스재고_'+fmtDate(new Date())+'.xlsx');
+      toast('엑셀 내보내기 완료 ('+rows.length+'품목)','ok');
+    });
+  },
+
   // ── CSV ──
   exportCSV:function(){
     var rows=STK._rows.slice().sort(function(a,b){return a.dwg.localeCompare(b.dwg);}).map(function(r){
@@ -5095,7 +6133,10 @@ var STK={
           }
           var list=Object.keys(map).map(function(k){return map[k];});
           if(!list.length){ toast('읽을 수 있는 행이 없습니다 (도면번호 열 확인)','err'); return; }
-          if(!confirm(list.length+'개 도번의 기초재고를 덮어씁니다.\n기존 값은 업로드 값으로 바뀝니다. 계속할까요?')) return;
+          if(!confirm(list.length+'개 도번의 기초재고를 덮어씁니다.\n기존 값은 업로드 값으로 바뀝니다.\n\n바로 전 상태는 저장되므로 [되돌리기] 로 돌아갈 수 있습니다.\n\n계속할까요?')) return;
+          if(!STK.saveSnap('엑셀 일괄 업로드 '+list.length+'건 직전')){
+            if(!confirm('⚠ 되돌리기용 저장에 실패했습니다.\n이대로 진행하면 되돌릴 수 없습니다. 계속할까요?'))return;
+          }
           var sb=getSB();
           if(!sb){ toast('서버 연결 없음','err'); return; }
           var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||HS.worker||'';
@@ -5676,6 +6717,65 @@ function downloadOrderTemplate(){
     XLSX.utils.book_append_sheet(wb,ws,'PO등록양식');XLSX.writeFile(wb,'하네스_PO등록양식.xlsx');toast('양식 다운로드 완료','ok');
   });
 }
+
+// ════════════════════════════════════════
+// 수주 등록 코어 (v6.41)
+//   하네스 양식 엑셀과 AXCELIS PO 엑셀이 같은 함수를 쓴다.
+//   등록 규칙을 한 곳에서만 고치기 위해서다.
+//   list = [{dwg_no,rev,customer,project,unit,qty,po,ord_ln,del_ln,due,step_type}]
+//   반환 = {added, skipped, orders:[입력 순서에 맞춘 주문 객체]}
+// ════════════════════════════════════════
+function hsRegisterOrders(list, opt){
+  opt=opt||{};
+  // matchBy:'poline' — 도번+PO+오더라인+납품라인 만으로 같은 건인지 본다.
+  //   프로젝트·호기는 엑셀에 없어 사람이 채우는 값이라, 합치키에 넣으면
+  //   프로젝트명을 바꿔 다시 올릴 때마다 같은 PO 가 새 건으로 쌓인다.
+  var byLine=(opt.matchBy==='poline');
+  var added=0, skipped=0, touched=[], out=[], filled=0;
+  // 한꺼번에 만들 때 id 가 겹치지 않게 (hsGenId 는 같은 ms 안에서 겹칠 수 있다)
+  var used={};
+  HS.orders.forEach(function(o){ used[o.id]=1; });
+  function uniqId(){
+    for(var i=0;i<50;i++){ var v=hsGenId(); if(!used[v]){ used[v]=1; return v; } }
+    var v2=hsGenId()+Math.random().toString(36).slice(2,5); used[v2]=1; return v2;
+  }
+  (list||[]).forEach(function(n){
+    var dwg=String(n.dwg_no||'').trim();
+    if(!dwg){ out.push(null); return; }
+    var ref={dwg_no:dwg, po:n.po||'', ord_ln:n.ord_ln||'', del_ln:n.del_ln||'',
+             project:n.project||'', unit:n.unit||''};
+    var ex=byLine
+      ? HS.orders.find(function(o){
+          return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
+              && (o.ord_ln||'')===(n.ord_ln||'') && (o.del_ln||'')===(n.del_ln||'');
+        })
+      : HS.orders.find(function(o){ return orderMatch(o,ref); });
+    if(ex){
+      // 이미 있는 건은 덮어쓰지 않는다. 비어 있던 값만 채운다.
+      var chg=false;
+      if(n.due&&!ex.due){ ex.due=n.due; chg=true; }
+      if(n.rev&&!ex.rev){ ex.rev=n.rev; chg=true; }
+      if(byLine){
+        if(n.project&&!ex.project){ ex.project=n.project; chg=true; filled++; }
+        if(n.customer&&!ex.customer){ ex.customer=n.customer; chg=true; }
+      }
+      if(chg)touched.push(ex);
+      skipped++; out.push(ex);
+    }else{
+      var o={id:uniqId(), dwg_no:dwg, rev:String(n.rev||'').trim(),
+             customer:String(n.customer||'').trim(), project:String(n.project||'').trim(),
+             unit:String(n.unit||'').trim(), qty:parseInt(n.qty,10)||1,
+             po:String(n.po||'').trim(), ord_ln:String(n.ord_ln||'').trim(),
+             del_ln:String(n.del_ln||'').trim(), due:n.due||'',
+             step_type:n.step_type||'A', manually_done:false,
+             created_at:new Date().toISOString()};
+      HS.orders.push(o); touched.push(o); added++; out.push(o);
+    }
+  });
+  if(touched.length)hsSaveOrders(touched);
+  return {added:added, skipped:skipped, filled:filled, orders:out};
+}
+
 async function handleOrderExcel(input){
   var file=input.files[0];if(!file)return;input.value='';
   loadXLSX(async function(){
@@ -5693,28 +6793,27 @@ async function handleOrderExcel(input){
           var cOl=col(['order line','ord line','ol']);var cDl=col(['del line','dl']);var cIss=col(['불출일','issue']);
           var cDue=col(['납기','due','duedate']);var cType=col(['공정구분','공정타입','type','step type']);
           if(cDwg<0){toast('도면번호 컬럼을 찾을 수 없습니다','err');return;}
-          var added=0,skipped=0,stepLog=0;
+          var list=[];
           for(var ri=1;ri<rows.length;ri++){
             var r=rows[ri];var dwgNo=String(r[cDwg]||'').trim();if(!dwgNo)continue;
-            var poVal=cPo>=0?String(r[cPo]||'').trim():'';
-            var _proj=cProj>=0?String(r[cProj]||'').trim():'';
-            var _unit=cUnit>=0?String(r[cUnit]||'').trim():'';
-            var existing=HS.orders.find(function(o){return orderMatch(o,{dwg_no:dwgNo,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',project:_proj,unit:_unit});});
             var dueISO=cDue>=0?normDueToISO(r[cDue]):'';
             if(dueISO&&!/^\d{4}-\d{2}-\d{2}$/.test(dueISO))dueISO='';
             var typeVal=cType>=0?String(r[cType]||'').trim().toUpperCase():'A';
             if(!typeVal||!H_STEP_TYPES.find(function(t){return t.code===typeVal;}))typeVal='A';
-            if(existing){if(dueISO&&!existing.due)existing.due=dueISO;if(cRev>=0&&!existing.rev){var _rv=String(r[cRev]||'').trim();if(_rv)existing.rev=_rv;}skipped++;}
-            else{
-              var newOrder={id:hsGenId(),dwg_no:dwgNo,rev:cRev>=0?String(r[cRev]||'').trim():'',customer:cCust>=0?String(r[cCust]||'').trim():'',project:cProj>=0?String(r[cProj]||'').trim():'',unit:cUnit>=0?String(r[cUnit]||'').trim():'',qty:cQty>=0?parseInt(r[cQty])||1:1,po:poVal,ord_ln:cOl>=0?String(r[cOl]||'').trim():'',del_ln:cDl>=0?String(r[cDl]||'').trim():'',due:dueISO,step_type:typeVal,manually_done:false,created_at:new Date().toISOString()};
-              HS.orders.push(newOrder);added++;
-            }
+            list.push({dwg_no:dwgNo,
+              rev:cRev>=0?String(r[cRev]||'').trim():'',
+              customer:cCust>=0?String(r[cCust]||'').trim():'',
+              project:cProj>=0?String(r[cProj]||'').trim():'',
+              unit:cUnit>=0?String(r[cUnit]||'').trim():'',
+              qty:cQty>=0?parseInt(r[cQty],10)||1:1,
+              po:cPo>=0?String(r[cPo]||'').trim():'',
+              ord_ln:cOl>=0?String(r[cOl]||'').trim():'',
+              del_ln:cDl>=0?String(r[cDl]||'').trim():'',
+              due:dueISO, step_type:typeVal});
           }
-          hsSaveOrders();hsSaveLogs();
-          var sb=getSB();
-          if(sb){var newOrders=HS.orders.filter(function(o){return !o._synced;});if(newOrders.length)sb.from('harness_orders').upsert(newOrders).then(function(){}).catch(function(){});}
+          var res=hsRegisterOrders(list);
           renderStatus();renderOrderStampList();
-          var msg='신규 '+added+'건 등록';if(skipped>0)msg+=', '+skipped+'건 중복 유지';toast(msg,'ok');
+          var msg='신규 '+res.added+'건 등록';if(res.skipped>0)msg+=', '+res.skipped+'건 중복 유지';toast(msg,'ok');
         }catch(ex){toast('파일 처리 오류: '+ex.message,'err');console.error(ex);}
       };
       reader.readAsArrayBuffer(file);
@@ -5738,7 +6837,7 @@ var MOB_SHEET=[
   {ic:'📷',nm:'QR 스캔',role:'all',page:'scan',fn:function(){setPage('scan');}}
 ];
 var _mobVisible=[];
-var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황'};
+var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황',issue:'공정 이슈'};
 function buildMobSheet(){
   var grid=document.getElementById('mob-sheet-grid');if(!grid)return;
   var admin=(typeof AUTH!=='undefined'&&AUTH.isAdmin&&AUTH.isAdmin());
@@ -5861,6 +6960,7 @@ var AUTH={
     show('nav-log',admin);
     show('nav-analytics',admin);
     show('nav-stock',admin);
+    show('nav-issue',admin);
     show('nav-stamp',admin);
     show('nav-stamp-single',admin);
     show('nav-qrhist',admin);
