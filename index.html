@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.37</title>
+<title>하네스 공정관리 v6.38</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -506,7 +506,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.37</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.38</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -635,7 +635,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <div class="sb-nav">
       <button class="sn-item on" id="nav-status" onclick="setPage('status');setSpTab('board')"><span class="sn-ic">📊</span> 공정현황</button>
       <button class="sn-item" id="nav-log" onclick="setPage('status');setSpTab('log')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> 이력 관리</button>
-      <button class="sn-item" id="nav-workorder" onclick="setPage('workorder')"><span class="sn-ic">📄</span> 작업지시서 QR <span style="font-size:8px;background:rgba(23,85,244,.2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
+      <button class="sn-item" id="nav-workorder" onclick="setPage('workorder')"><span class="sn-ic">📄</span> 작업지시서 QR</button>
+      <button class="sn-item" id="nav-dwgqr" onclick="setPage('dwgqr')"><span class="sn-ic">📐</span> 도면 QR <span style="font-size:8px;background:rgba(23,85,244,.2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">NEW</span></button>
       <button class="sn-item" id="nav-qrhist" onclick="setPage('qrhist')" style="padding-left:28px;font-size:11px"><span class="sn-ic" style="font-size:12px">📋</span> QR 이력</button>
       <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
       <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:rgba(217,119,6,.25);color:#fbbf24;padding:1px 5px;border-radius:8px;margin-left:2px;font-weight:700">BETA</span></button>
@@ -643,7 +644,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.37 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.38 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -730,9 +731,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <!-- 페이지 헤더 -->
         <div>
           <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.5px">공정 QR</div>
-          <div style="font-size:22px;font-weight:800;color:var(--tx);margin-top:3px">작업지시서 · 도면 QR 삽입</div>
+          <div style="font-size:22px;font-weight:800;color:var(--tx);margin-top:3px">작업지시서 QR 삽입</div>
           <div style="font-size:13px;color:var(--tx3);margin-top:6px;line-height:1.6">
-            PDF를 올리면 파일명(도면번호)으로 등록된 수주정보를 찾아 공정 QR을 자동으로 삽입합니다. 머릿말·꼬리말도 함께 넣을 수 있습니다.
+            작업지시서 PDF를 올리면 파일명으로 등록된 수주정보를 찾아, 공정 칸에 공정 QR을 자동 삽입합니다.
           </div>
         </div>
 
@@ -752,31 +753,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div id="wo-list"></div>
         </div>
 
-        <!-- 2. QR 위치 -->
-        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. QR 삽입 위치</div>
-          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
-            작업지시서는 공정 칸에 고정으로, 도면은 원하는 모서리에 삽입됩니다.
-          </div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px">
-            <div style="display:flex;gap:6px;align-items:center">
-              <span style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-right:2px">대상</span>
-              <button class="btn btn-sm" id="wo-mode-wo" onclick="WO.setMode('wo')">작업지시서</button>
-              <button class="btn btn-sm" id="wo-mode-dwg" onclick="WO.setMode('dwg')">도면</button>
-            </div>
-            <div id="wo-dwgpos" style="display:none;gap:6px;align-items:center">
-              <span style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-right:2px">모서리</span>
-              <button class="btn btn-sm" id="wo-pos-tl" onclick="WO.setPos('tl')">좌상</button>
-              <button class="btn btn-sm" id="wo-pos-tr" onclick="WO.setPos('tr')">우상</button>
-              <button class="btn btn-sm" id="wo-pos-bl" onclick="WO.setPos('bl')">좌하</button>
-              <button class="btn btn-sm" id="wo-pos-br" onclick="WO.setPos('br')">우하</button>
-            </div>
-          </div>
-        </div>
-
         <!-- 3. 머릿말/꼬리말 -->
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">3. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             페이지 위·아래에 프로젝트명이나 페이지 번호를 넣습니다. 출력물을 도면과 대조할 때 사용합니다.
           </div>
@@ -817,7 +796,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
         <!-- 4. 만들기 -->
         <div id="wo-actions" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">4. 만들기</div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">3. 만들기</div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             출력 순서는 도면번호 기준이며, 버튼으로 오름/내림을 바꿀 수 있습니다.
           </div>
@@ -826,6 +805,108 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             <button class="btn btn-outline" onclick="WO.generateEach()" title="도번_REV 이름으로 각각 저장 (ZIP)">📑 개별 PDF 일괄 받기</button>
             <button class="btn btn-outline" id="wo-sort-btn" onclick="WO.toggleSort()" title="출력 순서 전환">⇅ 내림차순</button>
             <button class="btn btn-outline" style="margin-left:auto" onclick="WO.clear()">비우기</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+        <div id="pg-dwgqr" class="page hidden" style="padding:0;overflow-y:auto;background:#f7f8fb">
+      <div style="max-width:1000px;margin:0 auto;padding:22px 24px 40px;display:flex;flex-direction:column;gap:14px">
+
+        <!-- 페이지 헤더 -->
+        <div>
+          <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.5px">공정 QR</div>
+          <div style="font-size:22px;font-weight:800;color:var(--tx);margin-top:3px">도면 QR 삽입</div>
+          <div style="font-size:13px;color:var(--tx3);margin-top:6px;line-height:1.6">
+            도면 PDF를 올리면 파일명(도면번호)으로 등록된 수주정보를 찾아, 지정한 모서리에 공정 QR을 삽입합니다.
+          </div>
+        </div>
+
+        <!-- 1. 파일 -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">1. 파일 올리기</div>
+          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
+            파일명은 <b>1631500_D_01.pdf</b>(도번 또는 도번_REV) 형식이면 인식됩니다. 여러 개를 한 번에 올릴 수 있습니다.
+          </div>
+          <div id="wo-dropD" style="margin-top:14px;border:2px dashed #d7dbe6;border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:#fafbfd;transition:all .15s"
+            onclick="document.getElementById('wo-fileD').click()">
+            <div style="font-size:30px">📄</div>
+            <div style="font-size:14.5px;font-weight:700;color:var(--tx2);margin-top:8px">여기에 끌어놓거나 클릭해서 선택</div>
+            <div id="wo-hint-modeD" style="font-size:12px;color:var(--pr,#6c5ce7);font-weight:600;margin-top:6px"></div>
+            <input type="file" id="wo-fileD" accept="application/pdf" multiple style="display:none" onchange="DQ.add(this.files)">
+          </div>
+          <div id="wo-listD"></div>
+        </div>
+
+        <!-- 2. QR 위치 -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. QR 삽입 위치</div>
+          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
+            도면 여백 중 QR을 넣을 모서리를 고릅니다. 도면 내용을 가리지 않는 위치로 선택하세요.
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px">
+            <div id="wo-dwgposD" style="display:flex;gap:6px;align-items:center">
+              <span style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-right:2px">모서리</span>
+              <button class="btn btn-sm" id="wo-pos-tlD" onclick="DQ.setPos('tl')">좌상</button>
+              <button class="btn btn-sm" id="wo-pos-trD" onclick="DQ.setPos('tr')">우상</button>
+              <button class="btn btn-sm" id="wo-pos-blD" onclick="DQ.setPos('bl')">좌하</button>
+              <button class="btn btn-sm" id="wo-pos-brD" onclick="DQ.setPos('br')">우하</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 머릿말/꼬리말 -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">3. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
+          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
+            페이지 위·아래에 프로젝트명이나 페이지 번호를 넣습니다. 출력물을 도면과 대조할 때 사용합니다.
+          </div>
+
+          <div style="margin-top:14px;background:#f9fafc;border:1px solid #f0f2f6;border-radius:10px;padding:16px 18px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="wo-hd-onD" onchange="DQ.setHF()">
+              <span style="font-size:13px;font-weight:700">머릿말 사용 <span style="font-weight:500;color:var(--tx3)">(왼쪽 위)</span></span>
+            </label>
+            <input type="text" id="wo-hd-txD" value="{프로젝트}  {도번}" oninput="DQ.setHF()"
+              style="width:100%;height:38px;margin-top:9px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--sans);font-size:13px">
+
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px">
+              <input type="checkbox" id="wo-ft-onD" onchange="DQ.setHF()">
+              <span style="font-size:13px;font-weight:700">꼬리말 사용 <span style="font-weight:500;color:var(--tx3)">(아래 가운데)</span></span>
+            </label>
+            <input type="text" id="wo-ft-txD" value="{페이지} / {전체}" oninput="DQ.setHF()"
+              style="width:100%;height:38px;margin-top:9px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--sans);font-size:13px">
+
+            <div style="font-size:12px;color:var(--tx3);margin-top:12px;line-height:1.7">
+              쓸 수 있는 항목 (클릭하면 머릿말에 추가됩니다)<br>
+              <span style="display:inline-flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+                <button class="wo-tok" onclick="DQ.tok('{프로젝트}')">프로젝트</button>
+                <button class="wo-tok" onclick="DQ.tok('{도번}')">도번</button>
+                <button class="wo-tok" onclick="DQ.tok('{REV}')">REV</button>
+                <button class="wo-tok" onclick="DQ.tok('{고객사}')">고객사</button>
+                <button class="wo-tok" onclick="DQ.tok('{PO}')">PO</button>
+                <button class="wo-tok" onclick="DQ.tok('{호기}')">호기</button>
+                <button class="wo-tok" onclick="DQ.tok('{수량}')">수량</button>
+                <button class="wo-tok" onclick="DQ.tok('{납기}')">납기</button>
+                <button class="wo-tok" onclick="DQ.tok('{페이지}')">페이지</button>
+                <button class="wo-tok" onclick="DQ.tok('{전체}')">전체쪽</button>
+              </span>
+            </div>
+            <div id="wo-hf-prevD" style="margin-top:12px;font-size:12px;color:var(--tx2);background:#fff;border:1px solid var(--border-in,#f0f2f6);border-radius:8px;padding:10px 12px;line-height:1.7"></div>
+          </div>
+        </div>
+
+        <!-- 4. 만들기 -->
+        <div id="wo-actionsD" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">4. 만들기</div>
+          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
+            출력 순서는 도면번호 기준이며, 버튼으로 오름/내림을 바꿀 수 있습니다.
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px">
+            <button class="btn btn-pr" onclick="DQ.generate()">🔗 QR 삽입 + 병합 PDF</button>
+            <button class="btn btn-outline" onclick="DQ.generateEach()" title="도번_REV 이름으로 각각 저장 (ZIP)">📑 개별 PDF 일괄 받기</button>
+            <button class="btn btn-outline" id="wo-sort-btnD" onclick="DQ.toggleSort()" title="출력 순서 전환">⇅ 내림차순</button>
+            <button class="btn btn-outline" style="margin-left:auto" onclick="DQ.clear()">비우기</button>
           </div>
         </div>
 
@@ -1714,15 +1795,15 @@ function hsGenId(){ return Date.now().toString(36)+Math.random().toString(36).sl
 
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb) nb.classList.toggle('on', id===p);
     const mn=document.getElementById('mn-'+id);
@@ -3109,8 +3190,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.37';
+var APP_VER='v6.38';
 var VER_LOG=[
+  {v:'v6.38',d:'2026-08', t:'[도면 QR] 메뉴 신설 — 작업지시서 QR과 별도 탭으로 분리. 도면 탭은 모서리 위치 선택(좌상·우상·좌하·우하) 전용이며, 파일 목록·머릿말/꼬리말 설정을 작업지시서 탭과 독립적으로 관리. 두 탭 모두 건별 선택·선택 요약·개별 ZIP 출력 지원'},
   {v:'v6.37',d:'2026-08', t:'작업지시서·도면 QR 화면에 건별 선택 기능과 선택 요약 패널 추가 — 올린 파일 중 필요한 건만 체크해 출력할 수 있고, 올린 파일·매칭됨·미등록 도번·출력 대상 건수를 만들기 전에 확인할 수 있음. 목록에 출력 순번과 Rev·PO·납기 표시'},
   {v:'v6.36',d:'2026-08', t:'① 머릿말·꼬리말 신규 — 출력물 위·아래에 프로젝트·도번·페이지번호 등을 넣어 도면과 대조하기 쉽게 함(항목 버튼으로 조합, 미리보기 제공, 한글 지원). 병합 PDF는 전체 통산 페이지 번호 적용. ② 작업지시서 QR 화면 전면 정리 — 1.파일 2.QR위치 3.머릿말·꼬리말 4.만들기 단계별 카드 구성, 화면 설명문 추가(사내 UI 규칙 적용)'},
   {v:'v6.35',d:'2026-08', t:'① 공정에 [출하] 단계 추가 — 전 공정 타입(A·B형 및 커스텀) 마지막 단계로 자동 반영. ② QR 삽입 대상 선택 기능 — 작업지시서(공정 칸 고정) 또는 도면(모서리 위치 선택: 좌상·우상·좌하·우하)에 QR 삽입 가능. 도면 파일은 파일명(도면번호) 기준으로 자동 매칭'},
@@ -3526,29 +3608,19 @@ function buildContent(e,delivRowIdx){
 // 작업지시서 QR 삽입 (파일명 작업지시서_도번 → 수주정보 매칭 → 공정 QR)
 // ══════════════════════════════════════
 var WO={
-  _init:(function(){try{
-    var m=localStorage.getItem('hs_wo_mode'),p=localStorage.getItem('hs_wo_pos'),hf=localStorage.getItem('hs_wo_hf');
-    setTimeout(function(){
-      if(m)WO.mode=m; if(p)WO.dwgPos=p;
-      if(hf){try{var o=JSON.parse(hf);if(o.h)WO.header=o.h;if(o.f)WO.footer=o.f;}catch(e){}}
-      var a=document.getElementById('wo-hd-on'),b=document.getElementById('wo-hd-tx'),
-          c=document.getElementById('wo-ft-on'),d=document.getElementById('wo-ft-tx');
-      if(a)a.checked=WO.header.on; if(b)b.value=WO.header.text;
-      if(c)c.checked=WO.footer.on; if(d)d.value=WO.footer.text;
-      WO.paintMode&&WO.paintMode(); WO.previewHF&&WO.previewHF();
-    },0);
-  }catch(e){}return 1;})(),
+  _init:1,
   files:[],  // {name, dwg, bytes, order, status}
   add:async function(fileList){
+    var self=this;
     var arr=Array.prototype.slice.call(fileList||[]);
     for(var i=0;i<arr.length;i++){
       var f=arr[i]; if(!/\.pdf$/i.test(f.name))continue;
       var bytes=new Uint8Array(await f.arrayBuffer());
-      var dwg=WO.extractDwg(f.name);
-      var order=WO.match(dwg);
-      WO.files.push({name:f.name,dwg:dwg,bytes:bytes,order:order,status:order?'ok':'nomatch'});
+      var dwg=self.extractDwg(f.name);
+      var order=self.match(dwg);
+      self.files.push({name:f.name,dwg:dwg,bytes:bytes,order:order,status:order?'ok':'nomatch'});
     }
-    WO.render();
+    self.render();
   },
   extractDwg:function(fname){
     var n=fname.replace(/\.pdf$/i,'').trim();
@@ -3601,14 +3673,17 @@ var WO={
     if(o.id)f.push('OID:'+o.id);   // 주문 고유번호 — 스캐너 한글 깨짐과 무관하게 정확 매칭
     return f.join(' | ');
   },
+  ns:'',
+  $:function(id){return document.getElementById(id+(this.ns||''));},
   render:function(){
-    var el=document.getElementById('wo-list');if(!el)return;
-    if(WO.files.length===0){el.innerHTML='';document.getElementById('wo-actions').style.display='none';return;}
-    var okN=WO.files.filter(function(f){return f.status==='ok';}).length;
+    var self=this;
+    var el=this.$('wo-list');if(!el)return;
+    if(self.files.length===0){el.innerHTML='';this.$('wo-actions').style.display='none';return;}
+    var okN=self.files.filter(function(f){return f.status==='ok';}).length;
     // 출력 순서 그대로 보여주기 (매칭된 건 정렬 순, 미매칭은 뒤에)
-    var _ordered=WO.sortedTargets().concat(WO.files.filter(function(f){return f.status!=='ok';}));
+    var _ordered=self.sortedTargets().concat(self.files.filter(function(f){return f.status!=='ok';}));
     var rows=_ordered.map(function(f,ord){
-      var i=WO.files.indexOf(f);
+      var i=self.files.indexOf(f);
       var ok=f.status==='ok';
       if(f.sel===undefined)f.sel=ok;
       var badge=ok?'<span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 9px;border-radius:20px">매칭</span>'
@@ -3617,49 +3692,49 @@ var WO={
       var line2=ok?[(o.rev?'Rev '+o.rev:''),(o.customer||''),(o.po||'-'),(o.due?'납기 '+fmtYYMMDD(o.due):'')].filter(Boolean).join(' · ')
                   :'등록된 수주정보에 없습니다';
       return '<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid #f0f2f6;'+(ok?'':'background:#fffafa')+'">'
-        +'<input type="checkbox" '+(f.sel?'checked':'')+(ok?'':' disabled')+' onchange="WO.toggleSel('+i+',this.checked)" style="width:15px;height:15px;cursor:pointer">'
+        +'<input type="checkbox" '+(f.sel?'checked':'')+(ok?'':' disabled')+' onchange="self.toggleSel('+i+',this.checked)" style="width:15px;height:15px;cursor:pointer">'
         +'<div style="width:26px;font-size:11px;color:var(--tx3);text-align:right">'+(ok?(ord+1):'-')+'</div>'
         +'<div style="flex:1;min-width:0">'
           +'<div style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--tx)">'+hEsc(f.dwg)+'</div>'
           +'<div style="font-size:11.5px;color:var(--tx3);margin-top:2px">'+hEsc(line2)+'</div>'
         +'</div>'
         +badge
-        +'<button onclick="WO.remove('+i+')" title="목록에서 제거" style="border:none;background:none;color:var(--tx3);font-size:15px;cursor:pointer;padding:2px 4px">✕</button>'
+        +'<button onclick="self.remove('+i+')" title="목록에서 제거" style="border:none;background:none;color:var(--tx3);font-size:15px;cursor:pointer;padding:2px 4px">✕</button>'
       +'</div>';
     }).join('');
-    var selN=WO.files.filter(function(f){return f.status==='ok'&&f.sel;}).length;
+    var selN=self.files.filter(function(f){return f.status==='ok'&&f.sel;}).length;
     el.innerHTML=
       '<div style="display:flex;gap:14px;align-items:flex-start;margin-top:14px;flex-wrap:wrap">'
       +'<div style="flex:1;min-width:320px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff">'
         +'<div style="display:flex;align-items:center;gap:9px;padding:9px 14px;background:#f7f8fb;border-bottom:1px solid var(--border)">'
-          +'<button class="btn btn-sm btn-outline" onclick="WO.selAll(true)">전체선택</button>'
-          +'<button class="btn btn-sm btn-outline" onclick="WO.selAll(false)">선택해제</button>'
+          +'<button class="btn btn-sm btn-outline" onclick="self.selAll(true)">전체선택</button>'
+          +'<button class="btn btn-sm btn-outline" onclick="self.selAll(false)">선택해제</button>'
           +'<span style="margin-left:auto;font-size:11.5px;color:var(--tx3)">출력 순서대로 표시됩니다</span>'
         +'</div>'
         +rows
       +'</div>'
       +'<div style="width:210px;flex-shrink:0;border:1px solid var(--border);border-radius:10px;padding:16px 18px;background:#fff">'
         +'<div style="font-size:14px;font-weight:700;margin-bottom:12px">선택 요약</div>'
-        +WO._sumBox('올린 파일',WO.files.length,'')
-        +WO._sumBox('매칭됨',okN,'#12a05f')
-        +(WO.files.length-okN>0?WO._sumBox('미등록 도번',WO.files.length-okN,'#e0505f'):'')
-        +WO._sumBox('출력 대상',selN,'#6c5ce7')
+        +self._sumBox('올린 파일',self.files.length,'')
+        +self._sumBox('매칭됨',okN,'#12a05f')
+        +(self.files.length-okN>0?self._sumBox('미등록 도번',self.files.length-okN,'#e0505f'):'')
+        +self._sumBox('출력 대상',selN,'#6c5ce7')
         +'<div style="font-size:11.5px;color:var(--tx3);margin-top:10px;line-height:1.6">체크된 건만 QR이 삽입됩니다. 미등록 도번은 먼저 등록해 주세요.</div>'
       +'</div>'
       +'</div>';
-    var act=document.getElementById('wo-actions');act.style.display=okN>0?'block':'none';
-    WO.paintMode();
-    var sb=document.getElementById('wo-sort-btn');
-    if(sb)sb.textContent=(WO.sortDir==='desc')?'⇅ 내림차순':'⇅ 오름차순';
+    var act=this.$('wo-actions');act.style.display=okN>0?'block':'none';
+    self.paintMode();
+    var sb=this.$('wo-sort-btn');
+    if(sb)sb.textContent=(self.sortDir==='desc')?'⇅ 내림차순':'⇅ 오름차순';
   },
   _sumBox:function(label,n,color){
     return '<div style="margin-bottom:9px"><div style="font-size:11.5px;color:var(--tx3)">'+label+'</div>'
       +'<div style="font-size:22px;font-weight:800;margin-top:1px'+(color?';color:'+color:'')+'">'+n+'</div></div>';
   },
-  toggleSel:function(i,on){ if(WO.files[i])WO.files[i].sel=on; WO.render(); },
-  selAll:function(on){ WO.files.forEach(function(f){ if(f.status==='ok')f.sel=on; }); WO.render(); },
-  remove:function(i){WO.files.splice(i,1);WO.render();},
-  clear:function(){WO.files=[];WO.render();},
+  toggleSel:function(i,on){ var self=this; if(self.files[i])self.files[i].sel=on; self.render(); },
+  selAll:function(on){ var self=this; self.files.forEach(function(f){ if(f.status==='ok')f.sel=on; }); self.render(); },
+  remove:function(i){ var self=this;self.files.splice(i,1);self.render();},
+  clear:function(){ var self=this;self.files=[];self.render();},
   mode:'wo',        // 'wo'=작업지시서(공정칸 고정) · 'dwg'=도면(모서리 선택)
   dwgPos:'tr',      // 도면 모드 QR 위치: tl·tr·bl·br
   dwgSize:0.13,     // 페이지 높이 대비 QR 크기
@@ -3682,34 +3757,36 @@ var WO={
   },
   // 머릿말·꼬리말을 페이지에 그린다 (한글 지원 위해 이미지로 삽입)
   drawHF:async function(doc,pg,order,pageNo,total){
+    var self=this;
     var pw=pg.getWidth(), ph=pg.getHeight();
     var fs=Math.max(7,Math.min(11,ph*0.011));   // 페이지 크기에 맞춘 글자 크기(pt)
     var mgX=pw*0.04, mgY=ph*0.022;
     async function put(txt,isTop){
       if(!txt)return;
       var t=makeTextPng(txt,{size:42,bold:isTop});
-      var img=await doc.embedPng(WO.dataURLtoBytes(t.url));
+      var img=await doc.embedPng(self.dataURLtoBytes(t.url));
       var hgt=fs*1.45, wid=hgt*t.ratio;
       if(wid>pw-mgX*2){ wid=pw-mgX*2; hgt=wid/t.ratio; }
       pg.drawImage(img,{x:isTop?mgX:(pw-wid)/2, y:isTop?(ph-mgY-hgt):mgY, width:wid, height:hgt, opacity:0.85});
     }
-    if(WO.header.on)await put(WO.fillTokens(WO.header.text,order,pageNo,total),true);
-    if(WO.footer.on)await put(WO.fillTokens(WO.footer.text,order,pageNo,total),false);
+    if(this.header.on)await put(this.fillTokens(this.header.text,order,pageNo,total),true);
+    if(this.footer.on)await put(this.fillTokens(this.footer.text,order,pageNo,total),false);
   },
   qrRect:function(pw,ph){
-    if(WO.mode==='wo'){
+    if(this.mode==='wo'){
       var qs=ph*0.20;
       return {x:pw*0.850-qs/2, y:ph*0.281-qs/2+ph*0.01, s:qs};
     }
-    var s=ph*WO.dwgSize, m=ph*0.02;
-    var p=WO.dwgPos;
+    var s=ph*this.dwgSize, m=ph*0.02;
+    var p=this.dwgPos;
     var x=(p==='tl'||p==='bl')?m:(pw-s-m);
     var y=(p==='tl'||p==='tr')?(ph-s-m):m;
     return {x:x,y:y,s:s};
   },
   sortDir:'desc',   // 기본: 내림차순(큰 번호 → 작은 번호) — 인쇄 시 도면 순서와 일치
   sortedTargets:function(){
-    var targets=WO.files.filter(function(f){return f.status==='ok'&&f.sel!==false;});
+    var self=this;
+    var targets=this.files.filter(function(f){return f.status==='ok'&&f.sel!==false;});
     var natKey=function(s){return String(s||'').match(/(\d+|\D+)/g)||[];};
     targets.sort(function(a,b){
       var A=natKey(a.order&&a.order.dwg_no||a.dwg),B=natKey(b.order&&b.order.dwg_no||b.dwg);
@@ -3724,7 +3801,7 @@ var WO={
       // 도번이 같으면 REV 순
       return String((a.order&&a.order.rev)||'').localeCompare(String((b.order&&b.order.rev)||''));
     });
-    if(WO.sortDir==='desc')targets.reverse();
+    if(self.sortDir==='desc')targets.reverse();
     return targets;
   },
   // 파일명: 도번_REV (도번에 이미 REV가 붙어 있으면 중복 제거)
@@ -3737,81 +3814,85 @@ var WO={
   },
   // 대상 PDF에 공정 QR 삽입 → 바이트 반환
   buildOne:async function(t){
+    var self=this;
     var{PDFDocument}=PDFLib;
     var out=await PDFDocument.create();
     var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
-    var png=await out.embedPng(WO.dataURLtoBytes(makeQRPng(WO.woPayload(t.order),500)));
+    var png=await out.embedPng(self.dataURLtoBytes(makeQRPng(self.woPayload(t.order),500)));
     var pages=await out.copyPages(src,src.getPageIndices());
     for(var i=0;i<pages.length;i++){
       var pg=pages[i];
       out.addPage(pg);
-      var r=WO.qrRect(pg.getWidth(),pg.getHeight());
+      var r=self.qrRect(pg.getWidth(),pg.getHeight());
       pg.drawImage(png,{x:r.x, y:r.y, width:r.s, height:r.s});
-      await WO.drawHF(out,pg,t.order,i+1,pages.length);
+      await self.drawHF(out,pg,t.order,i+1,pages.length);
     }
     return await out.save();
   },
-  setHF:function(){
-    var a=document.getElementById('wo-hd-on'),b=document.getElementById('wo-hd-tx'),
-        c=document.getElementById('wo-ft-on'),d=document.getElementById('wo-ft-tx');
-    if(a)WO.header.on=a.checked;
-    if(b)WO.header.text=b.value;
-    if(c)WO.footer.on=c.checked;
-    if(d)WO.footer.text=d.value;
-    try{localStorage.setItem('hs_wo_hf',JSON.stringify({h:WO.header,f:WO.footer}));}catch(e){}
-    WO.previewHF();
+  setHF:function(){ var self=this;
+    var a=WO_ctx().$('wo-hd-on'),b=WO_ctx().$('wo-hd-tx'),
+        c=WO_ctx().$('wo-ft-on'),d=WO_ctx().$('wo-ft-tx');
+    if(a)self.header.on=a.checked;
+    if(b)self.header.text=b.value;
+    if(c)self.footer.on=c.checked;
+    if(d)self.footer.text=d.value;
+    try{localStorage.setItem('hs_wo_hf',JSON.stringify({h:self.header,f:self.footer}));}catch(e){}
+    self.previewHF();
   },
-  tok:function(t){
-    var b=document.getElementById('wo-hd-tx');if(!b)return;
+  tok:function(t){ var self=this;
+    var b=WO_ctx().$('wo-hd-tx');if(!b)return;
     b.value=(b.value?b.value+' ':'')+t;
-    var a=document.getElementById('wo-hd-on');if(a&&!a.checked)a.checked=true;
-    WO.setHF();
+    var a=WO_ctx().$('wo-hd-on');if(a&&!a.checked)a.checked=true;
+    self.setHF();
   },
   previewHF:function(){
-    var el=document.getElementById('wo-hf-prev');if(!el)return;
-    var s=WO.sortedTargets(), o=(s[0]&&s[0].order)||HS.orders[0]||{project:'예) 단품 3종',dwg_no:'1600791_M',rev:'00',customer:'Axcelis',po:'46340KF',unit:'1',qty:20,due:'2026-09-30'};
-    var hd=WO.header.on?WO.fillTokens(WO.header.text,o,1,12):'';
-    var ft=WO.footer.on?WO.fillTokens(WO.footer.text,o,1,12):'';
+    var self=this;
+    var el=WO_ctx().$('wo-hf-prev');if(!el)return;
+    var s=self.sortedTargets(), o=(s[0]&&s[0].order)||HS.orders[0]||{project:'예) 단품 3종',dwg_no:'1600791_M',rev:'00',customer:'Axcelis',po:'46340KF',unit:'1',qty:20,due:'2026-09-30'};
+    var hd=self.header.on?self.fillTokens(self.header.text,o,1,12):'';
+    var ft=self.footer.on?self.fillTokens(self.footer.text,o,1,12):'';
     if(!hd&&!ft){el.innerHTML='<span style="color:var(--tx3)">머릿말·꼬리말을 사용하지 않습니다.</span>';return;}
     el.innerHTML='<b style="color:var(--tx3);font-size:11px">미리보기</b><br>'
       +(hd?'위 &nbsp;<b>'+hEsc(hd)+'</b><br>':'')
       +(ft?'아래 &nbsp;<b>'+hEsc(ft)+'</b>':'');
   },
-  setMode:function(m){
-    WO.mode=m;
+  setMode:function(m){ var self=this;
+    self.mode=m;
     try{localStorage.setItem('hs_wo_mode',m);}catch(e){}
-    WO.paintMode();
+    self.paintMode();
   },
-  setPos:function(p){
-    WO.dwgPos=p;
+  setPos:function(p){ var self=this;
+    self.dwgPos=p;
     try{localStorage.setItem('hs_wo_pos',p);}catch(e){}
-    WO.paintMode();
+    self.paintMode();
   },
   paintMode:function(){
+    var self=this;
     var on='var(--blue)',off='';
     ['wo','dwg'].forEach(function(m){
-      var b=document.getElementById('wo-mode-'+m);if(!b)return;
-      b.className='btn btn-sm '+(WO.mode===m?'btn-pr':'btn-outline');
+      var b=WO_ctx().$('wo-mode-'+m);if(!b)return;
+      b.className='btn btn-sm '+(self.mode===m?'btn-pr':'btn-outline');
     });
-    var pos=document.getElementById('wo-dwgpos');
-    if(pos)pos.style.display=(WO.mode==='dwg')?'flex':'none';
+    var pos=WO_ctx().$('wo-dwgpos');
+    if(pos)pos.style.display=(self.mode==='dwg')?'flex':'none';
     ['tl','tr','bl','br'].forEach(function(p){
-      var b=document.getElementById('wo-pos-'+p);if(!b)return;
-      b.className='btn btn-sm '+(WO.dwgPos===p?'btn-pr':'btn-outline');
+      var b=WO_ctx().$('wo-pos-'+p);if(!b)return;
+      b.className='btn btn-sm '+(self.dwgPos===p?'btn-pr':'btn-outline');
     });
-    if(WO.previewHF)WO.previewHF();
-    var hint=document.getElementById('wo-hint-mode');
-    if(hint)hint.textContent=(WO.mode==='wo')
+    if(self.previewHF)self.previewHF();
+    var hint=WO_ctx().$('wo-hint-mode');
+    if(hint)hint.textContent=(self.mode==='wo')
       ? '작업지시서 공정 칸에 QR을 삽입합니다.'
       : '도면 모서리에 QR을 삽입합니다. 파일명은 도면번호 기준으로 매칭됩니다.';
   },
-  toggleSort:function(){
-    WO.sortDir=(WO.sortDir==='desc')?'asc':'desc';
-    WO.render();
+  toggleSort:function(){ var self=this;
+    self.sortDir=(self.sortDir==='desc')?'asc':'desc';
+    self.render();
   },
   // 개별 PDF 일괄 받기 (ZIP)
   generateEach:async function(){
-    var targets=WO.sortedTargets();
+    var self=this;
+    var targets=self.sortedTargets();
     if(!targets.length){toast('매칭된 파일이 없습니다','warn');return;}
     toast('개별 PDF 생성 중... ('+targets.length+'개)','ok');
     try{
@@ -3819,10 +3900,10 @@ var WO={
       var zip=useZip?new JSZip():null;
       for(var i=0;i<targets.length;i++){
         var t=targets[i];
-        var bytes=await WO.buildOne(t);
-        var nm=WO.fileNameOf(t);
+        var bytes=await self.buildOne(t);
+        var nm=self.fileNameOf(t);
         if(useZip)zip.file(nm,bytes);
-        else{ WO.download(bytes,nm); await new Promise(function(r){setTimeout(r,250);}); }
+        else{ self.download(bytes,nm); await new Promise(function(r){setTimeout(r,250);}); }
         if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();hsSaveOrders([t.order]);
           addQRHistoryEntry({drawingNo:t.order.dwg_no,customer:t.order.customer,project:t.order.project,unit:t.order.unit,qty:t.order.qty,po:t.order.po,qrSize:'공정'},nm);}
       }
@@ -3832,12 +3913,13 @@ var WO={
         var a=document.createElement('a');a.href=url;a.download='작업지시서_공정QR_개별_'+new Date().toISOString().slice(0,10)+'.zip';a.click();
         setTimeout(function(){URL.revokeObjectURL(url);},1000);
       }
-      renderStatus&&renderStatus();WO.render();
+      renderStatus&&renderStatus();self.render();
       toast('완료! 개별 PDF '+targets.length+'개'+(useZip?' (ZIP)':'')+' 저장됨','ok');
     }catch(e){console.error(e);toast('오류: '+e.message,true);}
   },
   generate:async function(){
-    var targets=WO.sortedTargets();
+    var self=this;
+    var targets=self.sortedTargets();
     if(targets.length===0){toast('매칭된 파일이 없습니다','warn');return;}
     toast('공정 QR 삽입 중... ('+targets.length+'개)','ok');
     try{
@@ -3845,7 +3927,7 @@ var WO={
       var merged=await PDFDocument.create();
       // 전체 페이지 수 미리 계산 (꼬리말 {전체}용)
       var _pgNo=0,_pgTotal=0;
-      if(WO.footer.on&&/\{전체\}/.test(WO.footer.text)){
+      if(self.footer.on&&/\{전체\}/.test(self.footer.text)){
         for(var k=0;k<targets.length;k++){
           try{ _pgTotal+=(await PDFDocument.load(targets[k].bytes,{ignoreEncryption:true})).getPageCount(); }catch(e){}
         }
@@ -3853,17 +3935,17 @@ var WO={
       for(var i=0;i<targets.length;i++){
         var t=targets[i];
         var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
-        var pngUrl=makeQRPng(WO.woPayload(t.order),500);
-        var pngBytes=WO.dataURLtoBytes(pngUrl);
+        var pngUrl=makeQRPng(self.woPayload(t.order),500);
+        var pngBytes=self.dataURLtoBytes(pngUrl);
         var png=await merged.embedPng(pngBytes);
         var pages=await merged.copyPages(src,src.getPageIndices());
         for(var pi=0;pi<pages.length;pi++){
           var pg=pages[pi];
           merged.addPage(pg);
-          var r=WO.qrRect(pg.getWidth(),pg.getHeight());
+          var r=self.qrRect(pg.getWidth(),pg.getHeight());
           pg.drawImage(png,{x:r.x, y:r.y, width:r.s, height:r.s});
           _pgNo++;
-          await WO.drawHF(merged,pg,t.order,_pgNo,_pgTotal);
+          await self.drawHF(merged,pg,t.order,_pgNo,_pgTotal);
         }
         // 출력 표시
         if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();
@@ -3871,7 +3953,7 @@ var WO={
       }
       hsSaveOrders&&hsSaveOrders();
       var bytes=await merged.save();
-      WO.download(bytes,'작업지시서_공정QR_'+new Date().toISOString().slice(0,10)+'.pdf');
+      self.download(bytes,'작업지시서_공정QR_'+new Date().toISOString().slice(0,10)+'.pdf');
       renderStatus&&renderStatus();
       toast('완료! '+targets.length+'개 병합 PDF 저장됨','ok');
     }catch(e){console.error(e);toast('오류: '+e.message,true);}
@@ -3883,15 +3965,69 @@ var WO={
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
   }
 };
+// 저장된 설정 복원 + 화면 반영
+function woRestore(ctx,keyMode,keyPos,keyHF){
+  try{
+    var m=keyMode&&localStorage.getItem(keyMode), p=localStorage.getItem(keyPos), hf=localStorage.getItem(keyHF);
+    if(m)ctx.mode=m;
+    if(p)ctx.dwgPos=p;
+    if(hf){var o=JSON.parse(hf); if(o.h)ctx.header=o.h; if(o.f)ctx.footer=o.f;}
+  }catch(e){}
+  var a=ctx.$('wo-hd-on'),b=ctx.$('wo-hd-tx'),c=ctx.$('wo-ft-on'),d=ctx.$('wo-ft-tx');
+  if(a)a.checked=ctx.header.on;  if(b)b.value=ctx.header.text;
+  if(c)c.checked=ctx.footer.on;  if(d)d.value=ctx.footer.text;
+  if(ctx.paintMode)ctx.paintMode();
+  if(ctx.previewHF)ctx.previewHF();
+}
+// ── 도면 QR 탭 (같은 로직, 별도 목록·설정) ──
+var DQ=Object.create(WO);
+DQ.ns='D';
+DQ.files=[];
+DQ.mode='dwg';                 // 도면 탭은 항상 도면 모드
+DQ.dwgPos='tr';
+DQ.header={on:false,text:'{프로젝트}  {도번}'};
+DQ.footer={on:false,text:'{페이지} / {전체}'};
+DQ.setMode=function(){};       // 도면 탭에서는 대상 전환 없음
+DQ.setHF=function(){
+  var a=this.$('wo-hd-on'),b=this.$('wo-hd-tx'),c=this.$('wo-ft-on'),d=this.$('wo-ft-tx');
+  if(a)this.header.on=a.checked;
+  if(b)this.header.text=b.value;
+  if(c)this.footer.on=c.checked;
+  if(d)this.footer.text=d.value;
+  try{localStorage.setItem('hs_dq_hf',JSON.stringify({h:this.header,f:this.footer}));}catch(e){}
+  this.previewHF();
+};
+DQ.setPos=function(p){
+  this.dwgPos=p;
+  try{localStorage.setItem('hs_dq_pos',p);}catch(e){}
+  this.paintMode();
+};
+setTimeout(function(){
+  woRestore(WO,'hs_wo_mode','hs_wo_pos','hs_wo_hf');
+  woRestore(DQ,null,'hs_dq_pos','hs_dq_hf');
+  DQ.mode='dwg';
+},0);
+
 // 드래그앤드롭
 (function(){
   document.addEventListener('DOMContentLoaded',function(){
-    var dz=document.getElementById('wo-drop');if(!dz)return;
-    ['dragover','dragenter'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='var(--blue)';dz.style.background='var(--blue-lt)';});});
-    ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='';dz.style.background='';});});
-    dz.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files)WO.add(e.dataTransfer.files);});
+    [['wo-drop',function(){return WO;}],['wo-dropD',function(){return DQ;}]].forEach(function(pair){
+      var dz=document.getElementById(pair[0]);if(!dz)return;
+      var ctx=pair[1];
+      ['dragover','dragenter'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='var(--blue)';dz.style.background='var(--blue-lt)';});});
+      ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='';dz.style.background='';});});
+      dz.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files)ctx().add(e.dataTransfer.files);});
+    });
   });
 })();
+// 작업지시서 QR / 도면 QR — 같은 로직을 두 탭에서 각각 사용
+function WO_ctx(){
+  try{
+    var pg=document.querySelector('.page:not(.hidden)');
+    if(pg&&pg.id==='pg-dwgqr')return DQ;
+  }catch(e){}
+  return WO;
+}
 var _txtCache={};
 function makeTextPng(text,opt){
   opt=opt||{};
@@ -5021,7 +5157,7 @@ var MOB_SHEET=[
   {ic:'📷',nm:'QR 스캔',role:'all',page:'scan',fn:function(){setPage('scan');}}
 ];
 var _mobVisible=[];
-var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리'};
+var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR'};
 function buildMobSheet(){
   var grid=document.getElementById('mob-sheet-grid');if(!grid)return;
   var admin=(typeof AUTH!=='undefined'&&AUTH.isAdmin&&AUTH.isAdmin());
@@ -5148,6 +5284,7 @@ var AUTH={
     show('nav-qrhist',admin);
     show('nav-users',admin); // 관리자도 사용자 관리(승인) 접근
     show('nav-workorder',admin);
+    show('nav-dwgqr',admin);
     var stepBtn=document.querySelector('[onclick="openStepSettings()"]');if(stepBtn)stepBtn.style.display=admin?'':'none';
     var box=document.getElementById('au-userbox');
     var lbl=document.getElementById('au-userlabel');
