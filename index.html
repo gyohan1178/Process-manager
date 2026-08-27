@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.39</title>
+<title>하네스 공정관리 v6.40</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -506,7 +506,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.39</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.40</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.39 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.40 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -820,6 +820,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div style="font-size:22px;font-weight:800;color:var(--tx);margin-top:3px">도면 QR 삽입</div>
           <div style="font-size:13px;color:var(--tx3);margin-top:6px;line-height:1.6">
             도면 PDF를 올리면 파일명(도면번호)으로 등록된 수주정보를 찾아, 지정한 모서리에 공정 QR을 삽입합니다.
+            원본 도면이 A0·A1이어도 <b>전부 A4로 맞춰 출력</b>하므로, 인쇄했을 때 QR 크기가 도면마다 달라지지 않습니다.
           </div>
         </div>
 
@@ -853,6 +854,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               <button class="btn btn-sm" id="wo-pos-blD" onclick="DQ.setPos('bl')">좌하</button>
               <button class="btn btn-sm" id="wo-pos-brD" onclick="DQ.setPos('br')">우하</button>
             </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:12.5px;font-weight:700;color:var(--tx2)">QR 크기</span>
+              <input type="range" id="dq-qrmm" min="15" max="40" step="1" value="25" oninput="DQ.setQrMm(this.value)" style="width:130px;accent-color:var(--purple)">
+              <span id="dq-qrmm-lbl" style="font-size:12.5px;font-family:var(--mono);font-weight:700;color:var(--purple);min-width:38px">25mm</span>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--tx3);margin-top:10px;line-height:1.6">
+            A0 도면이든 A4 도면이든 <b>인쇄된 QR 한 변은 항상 이 치수</b>입니다. 스캐너 인식에는 20mm 이상을 권합니다.
           </div>
         </div>
 
@@ -868,14 +877,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               <input type="checkbox" id="wo-hd-onD" onchange="DQ.setHF()">
               <span style="font-size:13px;font-weight:700">머릿말 사용 <span style="font-weight:500;color:var(--tx3)">(왼쪽 위)</span></span>
             </label>
-            <input type="text" id="wo-hd-txD" value="{프로젝트}  {도번}" oninput="DQ.setHF()"
+            <input type="text" id="wo-hd-txD" value="{프로젝트} {도번} {REV}" oninput="DQ.setHF()"
               style="width:100%;height:38px;margin-top:9px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--sans);font-size:13px">
 
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px">
               <input type="checkbox" id="wo-ft-onD" onchange="DQ.setHF()">
               <span style="font-size:13px;font-weight:700">꼬리말 사용 <span style="font-weight:500;color:var(--tx3)">(아래 가운데)</span></span>
             </label>
-            <input type="text" id="wo-ft-txD" value="{페이지} / {전체}" oninput="DQ.setHF()"
+            <input type="text" id="wo-ft-txD" value="{페이지} / {전체} {수량} {납기}" oninput="DQ.setHF()"
               style="width:100%;height:38px;margin-top:9px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-family:var(--sans);font-size:13px">
 
             <div style="font-size:12px;color:var(--tx3);margin-top:12px;line-height:1.7">
@@ -892,6 +901,21 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
                 <button class="wo-tok" onclick="DQ.tok('{페이지}')">페이지</button>
                 <button class="wo-tok" onclick="DQ.tok('{전체}')">전체쪽</button>
               </span>
+            </div>
+            <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #eceff5">
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+                <input type="checkbox" id="dq-hf-label" checked onchange="DQ.setHFOpt()">
+                <span style="font-size:12.5px;font-weight:700;color:var(--tx2)">항목 이름 표시</span>
+              </label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="font-size:12.5px;font-weight:700;color:var(--tx2)">항목 간격</span>
+                <input type="range" id="dq-hf-gap" min="0" max="30" step="1" value="12" oninput="DQ.setHFOpt()" style="width:150px;accent-color:var(--purple)">
+                <span id="dq-hf-gap-lbl" style="font-size:12.5px;font-family:var(--mono);font-weight:700;color:var(--purple);min-width:38px">12mm</span>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--tx3);margin-top:8px;line-height:1.6">
+              항목 이름을 켜면 <b>도번 1600791</b>처럼 이름이 값 앞에 붙습니다. 항목 사이를 <b>공백만</b>으로 띄우면 간격이 적용되고,
+              <b>/</b> 같은 글자로 이으면 한 덩어리로 붙습니다. (<span style="font-family:var(--mono)">{페이지} / {전체}</span> → 1 / 12)
             </div>
             <div id="wo-hf-prevD" style="margin-top:12px;font-size:12px;color:var(--tx2);background:#fff;border:1px solid var(--border-in,#f0f2f6);border-radius:8px;padding:10px 12px;line-height:1.7"></div>
           </div>
@@ -3240,8 +3264,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.39';
+var APP_VER='v6.40';
 var VER_LOG=[
+  {v:'v6.40',d:'2026-08', t:'[도면 QR] ① 출력 용지를 A4로 통일 — 원본이 A0·A1이어도 A4에 맞춰 담으므로 인쇄 시 축소 배율이 도면마다 달라지지 않음. ② QR 크기를 mm로 고정(기본 25mm) — 어느 도면이든 인쇄된 QR 한 변이 항상 같아 스캔 실패를 막음. ③ 머릿말·꼬리말에 항목 이름 표시(도번 160005530 처럼 이름+값) 및 항목 사이 간격 조절(0~30mm) 추가. QR 기본 위치를 우하단으로 변경'},
   {v:'v6.39',d:'2026-08', t:'[재고 현황] 메뉴 신설 — 포장 완료를 입고, 출하 완료를 출고로 잡아 도면번호별 현재고를 자동 계산(현재고 = 기초재고 + 포장입고 − 출하). 기초재고·비고는 표에서 더블클릭으로 직접 수정, 엑셀 일괄 업로드·CSV 내보내기 지원. 출하가 포장보다 많은 마이너스 재고는 빨강으로 표시해 데이터 오류를 드러냄. 관리자 전용'},
   {v:'v6.38',d:'2026-08', t:'[도면 QR] 메뉴 신설 — 작업지시서 QR과 별도 탭으로 분리. 도면 탭은 모서리 위치 선택(좌상·우상·좌하·우하) 전용이며, 파일 목록·머릿말/꼬리말 설정을 작업지시서 탭과 독립적으로 관리. 두 탭 모두 건별 선택·선택 요약·개별 ZIP 출력 지원'},
   {v:'v6.37',d:'2026-08', t:'작업지시서·도면 QR 화면에 건별 선택 기능과 선택 요약 패널 추가 — 올린 파일 중 필요한 건만 체크해 출력할 수 있고, 올린 파일·매칭됨·미등록 도번·출력 대상 건수를 만들기 전에 확인할 수 있음. 목록에 출력 순번과 Rev·PO·납기 표시'},
@@ -4057,6 +4082,7 @@ setTimeout(function(){
   woRestore(WO,'hs_wo_mode','hs_wo_pos','hs_wo_hf');
   woRestore(DQ,null,'hs_dq_pos','hs_dq_hf');
   DQ.mode='dwg';
+  if(!localStorage.getItem('hs_dq_pos'))DQ.dwgPos='br';
 },0);
 
 // 드래그앤드롭
@@ -4071,6 +4097,197 @@ setTimeout(function(){
     });
   });
 })();
+
+// ── 도면 QR — A4 통일 · QR 고정 크기 · 라벨형 머릿말 (v6.40) ──
+//   도면마다 용지가 달라 인쇄하면 축소 배율이 제각각이었다.
+//   전부 A4 로 맞춰 담고 QR 은 mm 로 고정하면 인쇄물의 QR 크기가 항상 같다.
+DQ.dwgPos='br';        // 우하단 (표제란 쪽 — 고객사 로고 자리라 가려도 된다)
+DQ.a4=true;            // A4 로 맞춰 출력
+DQ.qrMm=25;            // QR 한 변 (mm) — 도면 크기와 무관하게 항상 같다
+DQ.hfLabel=true;       // 항목 이름을 값 앞에 붙인다
+DQ.hfGap=12;           // 항목 사이 간격 (mm)
+DQ.hfBandMm=9;         // 머릿말·꼬리말 띠 높이 (mm)
+
+var MM2PT=72/25.4;
+var A4_LONG=297*MM2PT, A4_SHORT=210*MM2PT;
+
+DQ.setQrMm=function(v){
+  this.qrMm=Math.max(10,Math.min(60,parseInt(v,10)||25));
+  var l=document.getElementById('dq-qrmm-lbl'); if(l)l.textContent=this.qrMm+'mm';
+  try{localStorage.setItem('hs_dq_qrmm',String(this.qrMm));}catch(e){}
+};
+DQ.setHFOpt=function(){
+  var a=document.getElementById('dq-hf-label'), g=document.getElementById('dq-hf-gap');
+  if(a)this.hfLabel=a.checked;
+  if(g)this.hfGap=parseInt(g.value,10)||0;
+  var l=document.getElementById('dq-hf-gap-lbl'); if(l)l.textContent=this.hfGap+'mm';
+  try{localStorage.setItem('hs_dq_hfopt',JSON.stringify({l:this.hfLabel,g:this.hfGap}));}catch(e){}
+  this.previewHF();
+};
+
+// 토큰 → 항목 이름
+var DQ_LABEL={'{프로젝트}':'프로젝트','{도번}':'도번','{REV}':'REV','{고객사}':'고객사',
+              '{PO}':'PO','{호기}':'호기','{수량}':'수량','{납기}':'납기',
+              '{페이지}':'','{전체}':''};
+
+// 머릿말 문구를 [{lab,val}] 덩어리로 나눈다.
+//   토큰 사이가 공백만이면 새 덩어리(간격 적용), 다른 글자로 이어지면 같은 덩어리.
+DQ.hfItems=function(text,o,pg,total){
+  var self=this;
+  var s=String(text||''); if(!s.trim())return [];
+  var re=/\{[^{}]+\}/g, out=[], last=0, m;
+  while((m=re.exec(s))!==null){
+    var glue=s.slice(last,m.index);
+    var tokRaw=m[0];
+    var tok=tokRaw.toUpperCase()==='{REV}'?'{REV}':tokRaw;
+    var val=self.fillTokens(tokRaw,o,pg,total);
+    var lab=(self.hfLabel&&DQ_LABEL[tok])?DQ_LABEL[tok]:'';
+    if(out.length&&glue.length&&!/^\s*$/.test(glue)){
+      // 공백이 아닌 글자로 이어짐 → 앞 덩어리에 붙인다
+      out[out.length-1].val+=glue+val;
+    }else{
+      out.push({lab:lab,val:val});
+    }
+    last=m.index+tokRaw.length;
+  }
+  var tail=s.slice(last);
+  if(tail.trim()&&out.length)out[out.length-1].val+=tail;
+  else if(tail.trim())out.push({lab:'',val:tail.trim()});
+  return out.filter(function(x){return String(x.val).trim()!=='';});
+};
+
+// 띠 하나를 캔버스로 그려 PNG 로 (pdf-lib 기본 폰트는 한글을 못 그린다)
+var _dqBandCache={};
+DQ.bandPng=function(items,widthPt,heightPt,align){
+  var key=JSON.stringify(items)+'|'+Math.round(widthPt)+'|'+Math.round(heightPt)+'|'+align+'|'+this.hfGap;
+  if(_dqBandCache[key])return _dqBandCache[key];
+  var SC=3;
+  var W=Math.max(1,Math.round(widthPt*SC)), H=Math.max(1,Math.round(heightPt*SC));
+  var cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
+  var fs=Math.round(H*0.46);
+  var fL='500 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+  var fV='700 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+  var gap=this.hfGap*MM2PT*SC, pad=4*MM2PT*SC;
+  var segs=items.map(function(it){
+    ctx.font=fL; var wl=it.lab?ctx.measureText(it.lab+' ').width:0;
+    ctx.font=fV; var wv=ctx.measureText(String(it.val)).width;
+    return {lab:it.lab?it.lab+' ':'',val:String(it.val),wl:wl,wv:wv};
+  });
+  var total=segs.reduce(function(s,x){return s+x.wl+x.wv;},0)+gap*Math.max(0,segs.length-1);
+  // 넘치면 간격부터 줄이고, 그래도 넘치면 글자를 줄인다
+  if(total>W-pad*2&&segs.length>1){
+    gap=Math.max(0,(W-pad*2-segs.reduce(function(s,x){return s+x.wl+x.wv;},0))/(segs.length-1));
+    total=segs.reduce(function(s,x){return s+x.wl+x.wv;},0)+gap*(segs.length-1);
+  }
+  var sx=1;
+  if(total>W-pad*2){ sx=(W-pad*2)/total; }
+  var x=(align==='center')?Math.max(pad,(W-total*sx)/2):pad;
+  var y=H/2;
+  ctx.textBaseline='middle';
+  ctx.save(); ctx.scale(sx,1); x=x/sx;
+  segs.forEach(function(s){
+    if(s.lab){ ctx.font=fL; ctx.fillStyle='#969eac'; ctx.fillText(s.lab,x,y); x+=s.wl; }
+    ctx.font=fV; ctx.fillStyle='#1e2430'; ctx.fillText(s.val,x,y); x+=s.wv+gap;
+  });
+  ctx.restore();
+  var url=cv.toDataURL('image/png');
+  if(Object.keys(_dqBandCache).length>400)_dqBandCache={};
+  _dqBandCache[key]=url;
+  return url;
+};
+
+// 도면 한 건 → A4 정규화 + 고정 크기 QR + 띠
+DQ.buildOne=async function(t){
+  var self=this;
+  var PDFDocument=PDFLib.PDFDocument;
+  var out=await PDFDocument.create();
+  var src=await PDFDocument.load(t.bytes,{ignoreEncryption:true});
+  var qrPng=await out.embedPng(self.dataURLtoBytes(makeQRPng(self.woPayload(t.order),500)));
+  var idxs=src.getPageIndices();
+  var topB=self.header.on?self.hfBandMm*MM2PT:0;
+  var botB=self.footer.on?self.hfBandMm*MM2PT:0;
+  for(var i=0;i<idxs.length;i++){
+    var sp=src.getPage(idxs[i]);
+    var sw=sp.getWidth(), sh=sp.getHeight();
+    var emb=await out.embedPage(sp);
+    var pw,ph;
+    if(self.a4){ var land=(sw>=sh); pw=land?A4_LONG:A4_SHORT; ph=land?A4_SHORT:A4_LONG; }
+    else { pw=sw; ph=sh; }
+    var pg=out.addPage([pw,ph]);
+    // 도면을 띠 사이에 비율 그대로 끼워 넣는다
+    var boxH=Math.max(1,ph-topB-botB);
+    var sc=Math.min(pw/sw, boxH/sh);
+    var dw=sw*sc, dh=sh*sc;
+    var dx=(pw-dw)/2, dy=botB+(boxH-dh)/2;
+    pg.drawPage(emb,{x:dx,y:dy,xScale:sc,yScale:sc});
+    // QR — 도면 영역 모서리, 항상 같은 mm
+    var qs=self.qrMm*MM2PT;
+    if(qs>dw*0.5)qs=dw*0.5;
+    if(qs>dh*0.5)qs=dh*0.5;
+    var inset=4*MM2PT, p=self.dwgPos;
+    var qx=(p==='tl'||p==='bl')?(dx+inset):(dx+dw-qs-inset);
+    var qy=(p==='tl'||p==='tr')?(dy+dh-qs-inset):(dy+inset);
+    pg.drawImage(qrPng,{x:qx,y:qy,width:qs,height:qs});
+    // 머릿말 · 꼬리말
+    if(topB>0){
+      var hi=self.hfItems(self.header.text,t.order,i+1,idxs.length);
+      if(hi.length){
+        var im=await out.embedPng(self.dataURLtoBytes(self.bandPng(hi,pw,topB,'left')));
+        pg.drawImage(im,{x:0,y:ph-topB,width:pw,height:topB});
+      }
+    }
+    if(botB>0){
+      var fi=self.hfItems(self.footer.text,t.order,i+1,idxs.length);
+      if(fi.length){
+        var im2=await out.embedPng(self.dataURLtoBytes(self.bandPng(fi,pw,botB,'center')));
+        pg.drawImage(im2,{x:0,y:0,width:pw,height:botB});
+      }
+    }
+  }
+  return await out.save();
+};
+
+// 미리보기 — 라벨과 간격이 눈에 보이게
+DQ.previewHF=function(){
+  var self=this;
+  var el=document.getElementById('wo-hf-prevD'); if(!el)return;
+  var s=self.sortedTargets();
+  var o=(s[0]&&s[0].order)||HS.orders[0]||
+        {project:'OHT-OHT CST V3.0',dwg_no:'160005530',rev:'D',customer:'AXCELIS',
+         po:'821042',unit:'1',qty:64,due:'2026-10-15'};
+  function draw(items){
+    if(!items.length)return '<span style="color:var(--tx3)">(비어 있음)</span>';
+    return items.map(function(it){
+      return (it.lab?'<span style="color:#969eac">'+hEsc(it.lab)+' </span>':'')
+        +'<b style="color:#1e2430">'+hEsc(String(it.val))+'</b>';
+    }).join('<span style="display:inline-block;width:'+(self.hfGap*2.6)+'px"></span>');
+  }
+  var hd=self.header.on?self.hfItems(self.header.text,o,1,12):[];
+  var ft=self.footer.on?self.hfItems(self.footer.text,o,1,12):[];
+  if(!hd.length&&!ft.length){el.innerHTML='<span style="color:var(--tx3)">머릿말·꼬리말을 사용하지 않습니다.</span>';return;}
+  el.innerHTML='<b style="color:var(--tx3);font-size:11px">미리보기</b> '
+    +'<span style="font-size:11px;color:var(--tx3)">— 출력은 A4, QR '+self.qrMm+'mm</span><br>'
+    +(hd.length?'<div style="margin-top:6px"><span style="color:var(--tx3);font-size:11px">위&nbsp;&nbsp;</span>'+draw(hd)+'</div>':'')
+    +(ft.length?'<div style="margin-top:4px;text-align:center"><span style="color:var(--tx3);font-size:11px">아래&nbsp;&nbsp;</span>'+draw(ft)+'</div>':'');
+};
+
+// 저장해 둔 설정 복원
+setTimeout(function(){
+  try{
+    var q=localStorage.getItem('hs_dq_qrmm'); if(q)DQ.qrMm=parseInt(q,10)||25;
+    var op=JSON.parse(localStorage.getItem('hs_dq_hfopt')||'null');
+    if(op){ DQ.hfLabel=op.l!==false; DQ.hfGap=(op.g==null?12:op.g); }
+  }catch(e){}
+  var a=document.getElementById('dq-hf-label'); if(a)a.checked=DQ.hfLabel;
+  var g=document.getElementById('dq-hf-gap');   if(g)g.value=DQ.hfGap;
+  var gl=document.getElementById('dq-hf-gap-lbl'); if(gl)gl.textContent=DQ.hfGap+'mm';
+  var r=document.getElementById('dq-qrmm');     if(r)r.value=DQ.qrMm;
+  var rl=document.getElementById('dq-qrmm-lbl'); if(rl)rl.textContent=DQ.qrMm+'mm';
+  if(DQ.paintMode)try{DQ.paintMode();}catch(e){}
+},60);
+
 // 작업지시서 QR / 도면 QR — 같은 로직을 두 탭에서 각각 사용
 function WO_ctx(){
   try{
