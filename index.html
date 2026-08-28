@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.63</title>
+<title>하네스 공정관리 v6.64</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -533,7 +533,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.63</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.64</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.63 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.64 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -732,7 +732,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
 
     <div id="pg-workorder" class="page hidden" style="padding:0;overflow-y:auto;background:#f7f8fb">
-      <div style="max-width:1000px;margin:0 auto;padding:22px 24px 40px;display:flex;flex-direction:column;gap:14px">
+      <div style="max-width:1080px;margin:0 auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:14px">
 
         <!-- 페이지 헤더 -->
         <div>
@@ -749,50 +749,58 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <div style="font-size:15px;font-weight:700;color:var(--tx)"><span id="wo-cust-title">1. 수주 등록</span> <span id="wo-cust-name" style="font-size:12px;font-weight:700;color:var(--purple);background:var(--purple-lt);border:1px solid #ddd6fe;padding:2px 9px;border-radius:20px;margin-left:6px"></span></div>
           <div id="wo-cust-desc" style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6"></div>
 
-          <div id="wo-c-form" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
-            <div style="flex:1;min-width:150px">
+          <div id="wo-c-form" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px">
+            <div>
               <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">프로젝트</div>
               <input type="text" id="wo-c-proj" placeholder="예) ASML 9B" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;font-family:var(--sans)">
             </div>
-            <div style="width:110px">
+            <div>
               <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">호기</div>
               <input type="text" id="wo-c-unit" placeholder="#1" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;font-family:var(--sans)">
             </div>
-            <div style="width:150px">
+            <div>
               <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">불출일</div>
               <input type="date" id="wo-c-rel" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono)">
             </div>
-            <div style="width:150px">
+            <div>
               <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">제작납기</div>
               <input type="date" id="wo-c-due" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono)">
             </div>
           </div>
 
-          <!-- 붙여넣기 방식 (EDWARDS) -->
+          <!-- 엑셀로 올리기 (하네스 공통 · AXCELIS) -->
+          <div id="wo-xls-box" style="margin-top:14px;display:none">
+            <button class="btn btn-pr" onclick="document.getElementById('wo-c-file').click()">📋 PO 엑셀 올리기</button>
+            <input type="file" id="wo-c-file" accept=".xlsx,.xls" style="display:none" onchange="WOC.readExcel(this)">
+            <div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.6">
+              열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다.
+            </div>
+          </div>
+
+          <!-- 붙여넣기 (EDWARDS) -->
           <div id="wo-paste-box" style="margin-top:14px;display:none">
             <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">PO 붙여넣기</div>
-            <textarea id="wo-paste" rows="7" placeholder="엑셀에서 도면번호 · 품명 · 수량 세 열을 복사해 그대로 붙여넣으세요&#10;&#10;NXR206417&#9;CABLE PUMP FEEDBACK IXH&#9;4&#10;NXR206419&#9;CABLE PUMP FEEDBACK PXH6000&#9;4"
+            <textarea id="wo-paste" rows="6" placeholder="엑셀에서 도면번호 · 품명 · 수량 세 열을 복사해 그대로 붙여넣으세요&#10;&#10;NXR206417&#9;CABLE PUMP FEEDBACK IXH&#9;4"
               style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;font-family:var(--mono);line-height:1.7;resize:vertical"></textarea>
             <div style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6">
               탭·여러 칸 띄어쓰기 어느 쪽이든 됩니다. 수량이 없으면 1로 봅니다.
-              <b>제작납기</b>가 공정현황의 납기가 되고, <b>불출일</b>은 작업지시서에 찍힙니다.
             </div>
-            <div style="display:flex;gap:9px;margin-top:12px;align-items:center">
+            <div style="display:flex;gap:9px;margin-top:10px;align-items:center">
               <button class="btn btn-pr" onclick="WOC.readPaste()">📋 읽어서 등록</button>
               <button class="btn btn-outline" onclick="WOC.preview()">먼저 확인만</button>
               <span id="wo-paste-cnt" style="font-size:12px;color:var(--tx3);margin-left:auto"></span>
             </div>
-            <div id="wo-paste-prev" style="margin-top:12px"></div>
+            <div id="wo-paste-prev" style="margin-top:10px"></div>
           </div>
 
           <!-- 작업지시서 폴더 -->
-          <div id="wo-wofolder-box" style="margin-top:16px">
+          <div id="wo-wofolder-box" style="margin-top:16px;padding-top:14px;border-top:1px solid #eceff5">
             <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">작업지시서 폴더</div>
             <div style="font-size:11.5px;color:var(--tx3);margin:3px 0 9px;line-height:1.6">
-              파일명 <b>도면번호_PO_오더라인_납품라인.pdf</b> 로 저장된 폴더를 고르면 등록된 건과 자동으로 맞춥니다.
+              파일명 <b>도면번호_PO_오더라인_납품라인.pdf</b> 로 저장된 폴더를 고르면 위에서 등록한 건과 자동으로 맞춥니다.
             </div>
             <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
-              <button class="btn btn-pr" onclick="document.getElementById('wo-wofolder').click()">📁 작업지시서 폴더 선택</button>
+              <button class="btn btn-outline" onclick="document.getElementById('wo-wofolder').click()">📁 작업지시서 폴더 선택</button>
               <input type="file" id="wo-wofolder" webkitdirectory directory multiple style="display:none" onchange="WOC.pickWoFolder(this)">
               <span style="font-size:11.5px;color:var(--tx3)">새로고침하면 다시 골라야 합니다</span>
             </div>
@@ -806,39 +814,11 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
               <button class="btn btn-outline" onclick="document.getElementById('wo-folder').click()">📁 도면 폴더 선택</button>
               <input type="file" id="wo-folder" webkitdirectory directory multiple style="display:none" onchange="WOC.pickFolder(this)">
-              <span style="font-size:11.5px;color:var(--tx3)">새로고침하면 다시 골라야 합니다</span>
             </div>
             <div id="wo-folder-info" style="margin-top:11px"></div>
           </div>
 
-          <!-- 엑셀 방식 (하네스 · AXCELIS) -->
-          <div id="wo-xls-box" style="margin-top:14px;display:none">
-            <div style="display:flex;gap:9px;flex-wrap:wrap">
-              <button class="btn btn-pr" onclick="document.getElementById('wo-c-file').click()">📋 PO 엑셀 올리기</button>
-              <input type="file" id="wo-c-file" accept=".xlsx,.xls" style="display:none" onchange="WOC.readExcel(this)">
-            </div>
-            <div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.6">
-              열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다.
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. 파일 -->
-        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. 작업지시서 PDF 올리기</div>
-          <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
-            파일명은 <b>도면번호_PO_오더라인_납품라인.pdf</b> 형식을 권합니다 — 예) <b>160021769_47324KF_3_1.pdf</b><br>
-            <span style="color:var(--tx2)">뒤 두 자리는 없어도 되고(<b>160021769_47324KF.pdf</b>), 도면번호만 있어도(<b>160021769.pdf</b>) 인식합니다.
-            앞에 <b>작업지시서_</b> 가 붙어 있어도 됩니다. PO 안의 공백은 빼 주세요 (47268 KF → 47268KF).</span>
-          </div>
-          <div id="wo-drop" style="margin-top:14px;border:2px dashed #d7dbe6;border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:#fafbfd;transition:all .15s"
-            onclick="document.getElementById('wo-file').click()">
-            <div style="font-size:30px">📄</div>
-            <div style="font-size:14.5px;font-weight:700;color:var(--tx2);margin-top:8px">여기에 끌어놓거나 클릭해서 선택</div>
-            <div id="wo-hint-mode" style="font-size:12px;color:var(--pr,#6c5ce7);font-weight:600;margin-top:6px"></div>
-            <input type="file" id="wo-file" accept="application/pdf" multiple style="display:none" onchange="WO.add(this.files)">
-          </div>
-          <div id="wo-list"></div>
+          <div id="wo-list" style="margin-top:14px"></div>
         </div>
 
         <!-- 3. 머릿말/꼬리말 -->
@@ -2174,7 +2154,7 @@ var WOC={
   cust:'harness',
   MODE:{
     harness:{name:'하네스 공통', how:'xls',   desc:'하네스 등록 양식 엑셀을 올립니다. 고객사·프로젝트·호기가 엑셀에 들어 있습니다.'},
-    axcelis:{name:'AXCELIS', how:'none',  desc:'수주는 공정현황에서 엑셀로 이미 올린 것을 씁니다. 여기서는 작업지시서 폴더만 고르면 됩니다.'},
+    axcelis:{name:'AXCELIS', how:'xls',   desc:'AXCELIS PO 엑셀(QR업로드용)을 올려 수주로 등록한 뒤, 작업지시서·도면 폴더를 고릅니다.'},
     edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'}
   },
   go:function(k){
@@ -2199,10 +2179,10 @@ var WOC={
     var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(m.how==='paste')?'':'none';
     var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(m.how==='xls')?'':'none';
     // 등록할 게 없으면 입력칸 줄도 감춘다
-    var ff=document.getElementById('wo-c-form'); if(ff)ff.style.display=(m.how==='none')?'none':'';
+    var ff=document.getElementById('wo-c-form'); if(ff)ff.style.display='grid';   // '' 로 두면 인라인 grid 가 지워져 block 이 된다
     var ct=document.getElementById('wo-cust-card');
     var t1=document.getElementById('wo-cust-title');
-    if(t1)t1.textContent=(m.how==='none')?'1. 작업지시서 폴더':'1. 수주 등록';
+    if(t1)t1.textContent='1. 수주 등록';
     // 출력 구성에 따라 도면 폴더 칸을 보인다
     var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
     var fb=document.getElementById('wo-folder-box');
@@ -4831,8 +4811,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.63';
+var APP_VER='v6.64';
 var VER_LOG=[
+  {v:'v6.64',d:'2026-08', t:'[작업지시서] AXCELIS 에서 PO 엑셀 올리기가 사라졌던 것을 되돌렸습니다. 수주가 등록되어 있어야 작업지시서·도면 폴더를 맞출 대상이 생기므로, 세 탭 모두 PO 를 먼저 넣습니다. 작업지시서 PDF 를 끌어놓는 칸은 폴더 선택으로 대체되어 없앴고, 매칭 목록은 폴더 아래로 옮겼습니다. 1번 카드 순서를 입력칸 → PO 넣기 → 작업지시서 폴더 → 도면 폴더 → 매칭 목록 으로 정리했습니다'},
   {v:'v6.63',d:'2026-08', t:'[분석·공정 설정] ① 분석의 새로고침 줄과 탭 줄을 한 줄로 합쳤습니다. 탭도 다른 화면과 같은 알약 모양으로 바꿨습니다. ② 공정 부하를 세로 막대에서 한 줄 칸으로 바꿨습니다 — 공정이 늘어도 화면이 길어지지 않고 한눈에 보입니다. 칸을 누르면 그 공정의 목록이 아래에 표로 열리며, 한 번에 하나만 펼쳐집니다. ③ 공정 설정 표의 행 높이와 아이콘을 줄여 불필요하게 크던 것을 정리했습니다'},
   {v:'v6.62',d:'2026-08', t:'[화면 정리] ① 검색·필터 줄이 회색 바탕 사이에 흰 띠로 떠 보이던 것을 흰 카드로 감싸 본문과 이어 붙였습니다. 공정 이슈·분석·사용자 관리도 같은 모양으로 맞췄습니다. ② PO·오더라인·납품라인을 한 줄에 몰지 않고 윗줄 PO, 아랫줄 라인으로 나눴습니다. 공정 이슈 표에도 같은 모양의 PO/라인 열을 넣었습니다(엑셀 내보내기 포함). ③ 납기 배지를 진한 채움에서 파스텔로 바꿨습니다. 표 글자와 도면번호를 키우고 현황판 공정 배지도 크게 했습니다. ④ 공정 설정이 팝업으로 뜨던 것을 화면으로 옮겼습니다. 공정 목록이 잘리지 않고 모두 보입니다'},
   {v:'v6.61',d:'2026-08', t:'[화면 톤 통일] 머리말만 바뀌고 본문은 옛 모양이던 것을 전체로 맞췄습니다. 표 헤더를 대문자 작은 회색 글씨에서 다른 화면과 같은 굵은 진회색으로 바꾸고, 줄무늬 배경을 없애 눈이 덜 피로하게 했습니다. 검색창·필터·구분 버튼의 강조색을 파랑에서 보라로 통일했고, 주요 버튼도 사내 기준대로 보라 채움으로 바꿨습니다. 분석·이력관리 안의 카드와 작은 표들도 공정 이슈·설명서와 같은 모양으로 맞췄습니다. 현장 스캔 화면은 큰 글씨·큰 버튼 기준이라 그대로 둡니다'},
@@ -5782,7 +5763,8 @@ setTimeout(function(){
 // 드래그앤드롭
 (function(){
   document.addEventListener('DOMContentLoaded',function(){
-    [['wo-drop',function(){return WO;}],['wo-dropD',function(){return DQ;}]].forEach(function(pair){
+    // wo-drop 은 없어졌다(작업지시서는 폴더로 고른다). 없으면 건너뛴다.
+    [['wo-dropD',function(){return DQ;}]].forEach(function(pair){
       var dz=document.getElementById(pair[0]);if(!dz)return;
       var ctx=pair[1];
       ['dragover','dragenter'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.borderColor='var(--blue)';dz.style.background='var(--blue-lt)';});});
