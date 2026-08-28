@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.49</title>
+<title>하네스 공정관리 v6.50</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -523,7 +523,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.49</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.50</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -672,7 +672,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.49 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.50 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openManual()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans);margin-top:5px" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)';this.style.background='var(--green-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -2881,11 +2881,18 @@ function _renderStatusInner(){
     return '<tr style="'+rowStyle+(canEdit?';cursor:pointer':'')+'" onclick="rowClickSel(\''+o.id+'\',event)">'
       +'<td style="text-align:center">'+(canEdit?'<input type="checkbox"'+checked+' data-oid="'+o.id+'" onchange="toggleOrderSel(this.dataset.oid,this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">':'')+'</td>'
       +'<td style="font-weight:600;font-size:12px">'+(o.customer||'—')+'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;color:var(--blue)">'+(po||'—')+'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(ol||'—')+'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);text-align:center">'+(dl||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;white-space:nowrap">'+(function(){
+          // PO / Order Lines / Del Lines 를 한 칸에. 뒤쪽이 비면 굳이 보여주지 않는다.
+          if(!po&&!ol&&!dl)return '<span style="color:var(--tx3);font-size:10px">—</span>';
+          var parts=[po||'–', ol||'–', dl||'–'];
+          while(parts.length>1&&parts[parts.length-1]==='–')parts.pop();
+          var sep='<span style="color:var(--tx3);margin:0 4px">/</span>';
+          return parts.map(function(v,i){
+            return '<span style="color:'+(i===0?'var(--blue)':'var(--tx2)')+'">'+hEsc(v)+'</span>';
+          }).join(sep);
+        })()+'</td>'
       +'<td style="font-size:12px;color:var(--tx2)">'+projCell+'</td>'
-      +'<td><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
+      +'<td title="등록일 '+(o.created_at?fmtYYMMDD(isoToLocalYMD(o.created_at)):'—')+'"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
       +'<td style="text-align:center">'+(o.rev?'<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2)">'+hEsc(o.rev)+'</span>':'<span style="color:var(--tx3);font-size:10px">—</span>')+'</td>'
       +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
       +'<td style="text-align:center;font-family:var(--mono);font-size:12px">'+(o.qty||1)+'</td>'
@@ -2901,7 +2908,6 @@ function _renderStatusInner(){
           return '<span style="color:var(--tx2)">'+lbl+'</span>';
         })()
       +'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(isoToLocalYMD(o.created_at)):'—')+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'+typeBadge
         +miniProgress(o)
         +(done?'<span style="font-size:10px;font-weight:700;color:var(--green)">✅ 완료</span>':'')
@@ -2920,7 +2926,7 @@ function _renderStatusInner(){
     orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!_cm[k]){_cm[k]={key:k,items:[]};_cs.push(_cm[k]);}_cm[k].items.push(o);});
     _cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
     _cs.forEach(function(g){
-      rows+='<tr><td colspan="15" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
+      rows+='<tr><td colspan="12" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
       g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
     });
   } else if(_spGroup){
@@ -2946,16 +2952,13 @@ function _renderStatusInner(){
   var cols=[
     {h:'',key:null,w:34,al:'center'},
     {h:'고객사',key:'customer',w:120},
-    {h:'PO No',key:'po',w:120},
-    {h:'Order Line',key:'ord_ln',w:80,al:'center'},
-    {h:'Del Line',key:'del_ln',w:70,al:'center'},
-    {h:'프로젝트',key:'project',w:110},
+    {h:'PO / Order Lines / Del Lines',key:'po',w:210},
+    {h:'프로젝트',key:'project',w:130},
     {h:'도면번호',key:'dwg_no',w:175},
     {h:'Rev',key:'rev',w:52,al:'center'},
     {h:'호기',key:'unit',w:55,al:'center'},
     {h:'수량',key:'qty',w:55,al:'center'},
     {h:'납기',key:'due',w:88},
-    {h:'등록일',key:'created_at',w:88},
     {h:'현황판',key:'progress',w:200},
     {h:'상태',key:'alarm',w:56,al:'center'},
     {h:'QR 출력',key:'qr_printed',w:64,al:'center'}
@@ -3955,8 +3958,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.49';
+var APP_VER='v6.50';
 var VER_LOG=[
+  {v:'v6.50',d:'2026-08', t:'[공정현황] 표가 한 줄에 너무 많아 가로로 밀리고 글자가 겹치던 문제 개선. PO No·Order Line·Del Line 세 칸을 [PO / Order Lines / Del Lines] 한 칸으로 합쳤습니다(값은 47268 KF / 3 / 1 처럼 / 로 구분, 뒤쪽 값이 없으면 생략). 등록일 열은 감췄고 도면번호에 마우스를 올리면 보입니다(CSV·엑셀에는 그대로 들어갑니다). 15열 → 12열이 되어 가로 스크롤이 없어졌습니다'},
   {v:'v6.49',d:'2026-08', t:'[긴급] 도면 QR 재설계(A4 통일·머릿말 확대·QR 고정 위치)가 [병합 저장]에는 적용되지 않던 문제 수정. 병합 저장이 개별 저장과 다른 경로로 그리고 있어 개별 저장에만 반영됐습니다. 이제 두 경로가 같은 함수를 씁니다. 저장 파일 이름도 탭에 맞게 고쳤습니다(도면 QR 인데 작업지시서로 저장되던 것). 사이드바 하위 항목 앞에 ㄴ 모양 선을 넣어 상위에 딸린 항목임이 보이게 했습니다'},
   {v:'v6.48',d:'2026-08', t:'[사이드바] 사내 UI 규칙에 맞춰 다시 짰습니다. 남색 배경을 흰 배경으로 바꾸고(사내 시스템 공통 기준), 항목 높이·활성 표시(보라)를 통일했습니다. 순서는 공정현황 → 공정 이력관리 → 공정 이슈 → 재고 현황, 그다음 [QR 관리] 묶음에 도면 QR·QR 이력·작업지시서 QR·QR 스캔, 마지막 [관리] 묶음에 분석·사용자 관리·공정 설정입니다. 묶음 이름을 누르면 접히고 그 상태가 기억되며, 접힌 묶음 안의 화면을 열면 자동으로 펴집니다. 아래쪽에 따로 있던 공정 설정 버튼은 [관리] 묶음으로 옮겼습니다'},
   {v:'v6.47',d:'2026-08', t:'[현장 확인 반영] ① 오전 9시 이전에 등록한 건이 전날 날짜로 보이던 문제 수정 — 서버 시각(UTC)을 그대로 잘라 쓰던 것을 우리 시각으로 바꿨습니다. ② 도면 QR 출력 재설계 — 도면을 위아래 1cm 여백이 남게 축소해 넣고, 그 여백에 머릿말·꼬리말이 들어갑니다. ③ QR은 도면이 얼마나 줄었든 상관없이 페이지 모서리 기준 같은 자리·같은 크기(기본 25mm)로 찍힙니다. 전에는 도면 크기에 따라 자리가 제각각이었습니다. ④ 머릿말·꼬리말 글씨가 알아볼 수 없게 작던 문제 수정 — 띠를 1cm로 키우고 글자를 약 5mm로 키웠습니다. 글자가 넘치면 가로로 눌러 붙이지 않고 간격→글자크기→줄임표 순으로 처리합니다'},
