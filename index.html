@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.57</title>
+<title>하네스 공정관리 v6.58</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -36,23 +36,26 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .sb-logo{height:28px;width:auto;object-fit:contain}
 .sb-title{font-size:13.5px;font-weight:800;color:var(--tx);line-height:1.3}
 .sb-sub{font-size:10.5px;color:var(--tx3);margin-top:2px;font-weight:500}
-.sb-nav{padding:8px 8px;flex:1;overflow-y:auto;min-height:0}
-.sn-item{display:flex;align-items:center;gap:9px;width:100%;height:38px;padding:0 11px;border-radius:8px;border:none;background:transparent;color:var(--tx2);font-size:13px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:all .13s;margin-bottom:1px;text-align:left}
+.sb-nav{padding:6px 7px;flex:1;overflow-y:auto;min-height:0}
+.sn-item{display:flex;align-items:center;gap:8px;width:100%;height:33px;padding:0 10px;border-radius:7px;border:none;background:transparent;color:var(--tx2);font-size:12.5px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:all .13s;margin-bottom:0;text-align:left}
 .sn-item:hover{background:var(--bg2);color:var(--tx)}
 .sn-item.on{background:var(--purple-lt);color:var(--purple);font-weight:700}
 /* 하위 항목 — 상위에 딸린 것임이 보이도록 앞에 ㄴ 모양 선을 긋는다 */
-.sn-sub{position:relative;height:34px;padding-left:32px;font-size:12px}
+.sn-sub{position:relative;height:30px;padding-left:32px;font-size:12px}
 .sn-sub .sn-ic{font-size:13px}
-.sn-sub::before{content:'';position:absolute;left:17px;top:-1px;bottom:50%;
+.sn-sub::before{content:'';position:absolute;left:16px;top:-1px;bottom:50%;
   width:9px;border-left:1.5px solid var(--border2);border-bottom:1.5px solid var(--border2);
   border-bottom-left-radius:5px}
 .sn-sub.on::before{border-color:var(--purple);opacity:.55}
 .man-num::before{content:counter(mn)}
 /* 그룹 라벨 — 접을 수 있다 */
 .sn-group{display:flex;align-items:center;justify-content:space-between;width:100%;
-  padding:0 11px;height:26px;margin:14px 0 3px;border:none;background:transparent;
-  font-family:var(--sans);font-size:12px;font-weight:700;color:var(--tx3);
+  padding:0 10px;height:22px;margin:10px 0 2px;border:none;background:transparent;
+  font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--tx3);
   cursor:pointer;letter-spacing:.2px}
+/* 누를 수 없는 소제목 — 그룹 안에서 묶음 이름 역할만 한다 */
+.sn-head{display:flex;align-items:center;gap:8px;width:100%;height:31px;padding:0 10px;
+  font-size:12.5px;font-weight:700;color:var(--tx2);user-select:none}
 .sn-group:hover{color:var(--tx2)}
 .sn-group .sn-arw{font-size:11px;transition:transform .15s}
 .sn-group.closed .sn-arw{transform:rotate(-90deg)}
@@ -524,7 +527,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.57</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.58</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -660,10 +663,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div class="sn-sect" id="grp-qr">
         <button class="sn-item" id="nav-dwgqr" onclick="setPage('dwgqr')"><span class="sn-ic">📐</span> 도면 QR <span style="font-size:8px;background:var(--blue-lt2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:auto;font-weight:700">NEW</span></button>
         <button class="sn-item sn-sub" id="nav-qrhist" onclick="setPage('qrhist')"><span class="sn-ic">📋</span> QR 이력</button>
-        <button class="sn-item" id="nav-workorder" onclick="WOC.go('harness')"><span class="sn-ic">📄</span> 작업지시서 QR</button>
-        <button class="sn-item sn-sub" id="nav-wo-harness" onclick="WOC.go('harness')"><span class="sn-ic">🔌</span> 하네스</button>
-        <button class="sn-item sn-sub" id="nav-wo-axcelis" onclick="WOC.go('axcelis')"><span class="sn-ic">🅰️</span> AXCELIS</button>
-        <button class="sn-item sn-sub" id="nav-wo-edwards" onclick="WOC.go('edwards')"><span class="sn-ic">🅴</span> EDWARDS</button>
+        <div class="sn-head" id="nav-workorder"><span class="sn-ic">📄</span> 작업지시서 QR</div>
+        <button class="sn-item sn-sub" id="nav-wo-harness" onclick="WOC.go('harness')">하네스 공통</button>
+        <button class="sn-item sn-sub" id="nav-wo-axcelis" onclick="WOC.go('axcelis')">AXCELIS</button>
+        <button class="sn-item sn-sub" id="nav-wo-edwards" onclick="WOC.go('edwards')">EDWARDS</button>
         <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
       </div>
 
@@ -677,7 +680,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.57 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.58 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -1358,8 +1361,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
   </div>
 
-  <div id="man-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"></div>
-  <div id="man-body"></div>
+  <div id="man-search-wrap" style="margin-bottom:14px">
+    <input id="man-q" class="po-inp" placeholder="찾고 싶은 말을 넣으세요 — 예) 되돌리기, 빨간 띠, 납기"
+      style="width:100%;max-width:420px" oninput="MAN.find(this.value)">
+  </div>
+  <div style="display:flex;gap:18px;align-items:flex-start">
+    <div id="man-tabs" style="width:190px;flex-shrink:0;display:flex;flex-direction:column;gap:2px;position:sticky;top:0"></div>
+    <div id="man-body" style="flex:1;min-width:0"></div>
+  </div>
 </div>
 
 <div id="pg-issue" class="page hidden" style="padding:20px;overflow-y:auto">
@@ -2115,7 +2124,7 @@ async function hsDeleteLog(id){
 var WOC={
   cust:'harness',
   MODE:{
-    harness:{name:'하네스',  how:'xls',   desc:'하네스 등록 양식 엑셀을 올립니다. 고객사·프로젝트·호기가 엑셀에 들어 있습니다.'},
+    harness:{name:'하네스 공통', how:'xls',   desc:'하네스 등록 양식 엑셀을 올립니다. 고객사·프로젝트·호기가 엑셀에 들어 있습니다.'},
     axcelis:{name:'AXCELIS', how:'xls',   desc:'AXCELIS PO 엑셀(QR업로드용)을 올립니다. Item·SRev·OrderNumber 열을 읽습니다.'},
     edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'}
   },
@@ -2399,15 +2408,19 @@ var MAN={
   TABS:[
     {k:'status', ic:'📊', t:'공정현황',      adminOnly:false},
     {k:'scan',   ic:'📷', t:'QR 스캔',       adminOnly:false},
+    {k:'wo',     ic:'📄', t:'작업지시서 QR', adminOnly:true},
     {k:'issue',  ic:'⚠️', t:'공정 이슈',     adminOnly:true},
     {k:'stock',  ic:'📦', t:'재고 현황',     adminOnly:true},
-    {k:'dwgqr',  ic:'📐', t:'도면 QR',       adminOnly:true},
-    {k:'wo',     ic:'📄', t:'작업지시서 QR', adminOnly:true},
     {k:'set',    ic:'⚙️', t:'공정 설정',     adminOnly:true},
     {k:'trouble',ic:'🩹', t:'문제가 생기면', adminOnly:false}
   ],
   open:function(){ MAN.render(); },
-  go:function(k){ MAN.tab=k; MAN.render(); },
+  go:function(k){
+    MAN.tab=k;
+    var q=document.getElementById('man-q'); if(q)q.value='';
+    MAN.render();
+    var b=document.getElementById('man-body'); if(b)b.scrollIntoView({block:'nearest'});
+  },
 
   // 카드 한 장
   card:function(o){
@@ -2454,11 +2467,40 @@ var MAN={
     if(!list.some(function(t){return t.k===MAN.tab;}))MAN.tab=list[0].k;
     tabs.innerHTML=list.map(function(t){
       var on=(MAN.tab===t.k);
-      return '<button onclick="MAN.go(\''+t.k+'\')" style="height:36px;padding:0 14px;border-radius:20px;cursor:pointer;font-family:var(--sans);font-size:12.5px;font-weight:700;'
-        +(on?'background:var(--purple);color:#fff;border:1.5px solid var(--purple)'
-            :'background:#fff;color:var(--tx2);border:1.5px solid var(--border)')+'">'+t.ic+' '+t.t+'</button>';
+      return '<button onclick="MAN.go(\''+t.k+'\')" style="display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 12px;border-radius:8px;cursor:pointer;text-align:left;font-family:var(--sans);font-size:12.5px;'
+        +(on?'background:var(--purple-lt);color:var(--purple);border:1px solid #ddd6fe;font-weight:700'
+            :'background:#fff;color:var(--tx2);border:1px solid var(--border);font-weight:500')+'">'
+        +'<span style="font-size:14px">'+t.ic+'</span>'+t.t+'</button>';
     }).join('');
     body.innerHTML=(MAN.PAGES[MAN.tab]||function(){return '';})();
+  },
+
+  // 설명서 안에서 말 찾기
+  find:function(q){
+    q=String(q||'').trim();
+    var body=document.getElementById('man-body'); if(!body)return;
+    if(!q){ MAN.render(); return; }
+    var admin=(typeof AUTH==='undefined')||AUTH.isAdmin();
+    var hits=[];
+    MAN.TABS.filter(function(t){return admin||!t.adminOnly;}).forEach(function(t){
+      var html=(MAN.PAGES[t.k]||function(){return '';})();
+      var txt=html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+      if(txt.toLowerCase().indexOf(q.toLowerCase())>=0){
+        // 앞뒤를 조금 보여 준다
+        var i=txt.toLowerCase().indexOf(q.toLowerCase());
+        var a=Math.max(0,i-45), b=Math.min(txt.length,i+q.length+70);
+        hits.push({t:t, snip:(a>0?'… ':'')+txt.slice(a,b).trim()+(b<txt.length?' …':'')});
+      }
+    });
+    body.innerHTML=hits.length
+      ? '<div style="font-size:12.5px;color:var(--tx3);margin-bottom:10px">'+hits.length+'곳에서 찾았습니다</div>'
+        +hits.map(function(x){
+          return '<div onclick="MAN.go(\''+x.t.k+'\')" style="cursor:pointer;background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:13px 16px;margin-bottom:9px">'
+            +'<div style="font-size:13px;font-weight:800;color:var(--purple)">'+x.t.ic+' '+x.t.t+' →</div>'
+            +'<div style="font-size:12.5px;color:var(--tx2);margin-top:4px;line-height:1.7">'+hEsc(x.snip)+'</div></div>';
+        }).join('')
+      : '<div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:28px;text-align:center;color:var(--tx3);font-size:13px">'
+        +'\''+hEsc(q)+'\' 를 찾지 못했습니다. 다른 말로 찾아보세요.</div>';
   },
 
   PAGES:{}
@@ -2604,17 +2646,47 @@ MAN.PAGES.dwgqr=function(){
 };
 
 MAN.PAGES.wo=function(){
-  return MAN.card({ic:'📄',t:'작업지시서 QR',d:'작업지시서 양식의 정해진 칸에 QR을 넣습니다.',
+  return MAN.card({ic:'📄',t:'작업지시서 QR',d:'작업지시서 PDF에 공정 QR을 넣습니다. 고객사마다 뽑는 모양이 다릅니다.',
+      body:'<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+        +'<thead><tr style="background:var(--bg2)">'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:110px">고객사</th>'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:110px">PO 넣는 법</th>'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">뽑히는 모양</th></tr></thead><tbody>'
+        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">하네스 공통</td>'
+          +'<td style="padding:8px 12px;color:var(--tx2)">엑셀</td>'
+          +'<td style="padding:8px 12px;color:var(--tx2)">작업지시서만</td></tr>'
+        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">AXCELIS</td>'
+          +'<td style="padding:8px 12px;color:var(--tx2)">엑셀</td>'
+          +'<td style="padding:8px 12px;color:var(--tx2)">작업지시서 1부 + 도면 2부</td></tr>'
+        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">EDWARDS</td>'
+          +'<td style="padding:8px 12px;color:var(--tx2)">붙여넣기</td>'
+          +'<td style="padding:8px 12px;color:var(--tx2)">갑지 + 도면마다 [작업지시서 1 + 도면 2]</td></tr>'
+        +'</tbody></table></div>'
+        +MAN.tip('<b>QR은 작업지시서에만</b> 들어갑니다. 도면에는 넣지 않습니다. 도면도 A4로 맞추고 누워 있으면 바로 세웁니다.')})
+  + MAN.card({ic:'📁',t:'파일명 규칙',tone:'amber',d:'파일명으로 어느 수주인지 찾습니다.',
+      body:'<div style="background:var(--bg2);border-radius:var(--r);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;text-align:center;color:var(--tx)">'
+        +'160021769_47324KF_3_1.pdf</div>'
+        +'<div style="font-size:12px;color:var(--tx3);text-align:center;margin-top:4px;font-family:var(--mono)">'
+        +'도면번호 &nbsp; PO &nbsp; 오더라인 &nbsp; 납품라인</div>'
+        +MAN.bul([
+          '뒤 두 자리는 없어도 됩니다 — <span style="font-family:var(--mono)">160021769_47324KF.pdf</span>',
+          '도면번호만 있어도 됩니다 — <span style="font-family:var(--mono)">160021769.pdf</span>',
+          '앞에 <span style="font-family:var(--mono)">작업지시서_</span> 가 붙어 있어도 됩니다',
+          '<b>PO 안의 공백은 빼 주세요</b> — 47268 KF → 47268KF'
+        ])
+        +MAN.tip('같은 도면이 <b>여러 PO로 나뉜 경우</b>가 있습니다. 그때는 PO·라인까지 파일명에 넣어야 정확한 건을 찾습니다.','warn')})
+  + MAN.card({ic:'🎚️',t:'머릿말·꼬리말',d:'고객사 탭마다 따로 저장됩니다.',
       body:MAN.bul([
-        '도면 QR과 달리 <b>용지를 바꾸지 않습니다</b>. 양식 그대로 나옵니다.',
-        'QR은 공정칸 자리에 고정으로 들어갑니다.',
-        '파일명이 <b>도면번호</b> 로 되어 있으면 등록된 수주를 자동으로 찾습니다.'
+        '탭을 열면 <b>그 탭에 저장해 둔 문구</b>가 기본으로 나옵니다.',
+        '하네스에서 고친 문구가 AXCELIS에 옮아가지 않습니다.',
+        '항목 사이를 <b>공백만</b>으로 띄우면 벌어지고, <b>/</b> 같은 글자로 이으면 붙습니다.'
       ])})
   + MAN.card({ic:'📦',t:'저장 방법 두 가지',
       body:MAN.bul([
         '<b>병합 저장</b> — 전부 한 PDF로. 한꺼번에 인쇄할 때.',
         '<b>개별 저장</b> — 건별 PDF를 ZIP으로. 따로 보관하거나 나눠 줄 때.'
-      ])+MAN.tip('만들고 나면 공정현황의 <b>QR 출력</b> 표시가 켜집니다. 다시 뽑아도 같은 건으로 잡히니 걱정하지 않아도 됩니다.','info')});
+      ])+MAN.tip('다시 뽑아도 <b>같은 건으로 잡힙니다</b>. QR 안의 고유번호가 바뀌지 않기 때문입니다.','info')});
 };
 
 MAN.PAGES.set=function(){
@@ -4609,8 +4681,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.57';
+var APP_VER='v6.58';
 var VER_LOG=[
+  {v:'v6.58',d:'2026-08', t:'[화면 정리] 사이드바 — 작업지시서 QR 은 묶음 이름이므로 눌리지 않게 바꿨고, 아래 항목은 하네스 공통·AXCELIS·EDWARDS 로 이모지 없이 정리했습니다. 항목 높이와 여백을 좁혀 한 화면에 더 들어갑니다. [사용 설명서] — 탭이 한 줄에 늘어서 눈에 안 들어오던 것을 왼쪽 세로 목차로 바꾸고, 찾기 칸을 넣어 \'되돌리기\' 처럼 말로 바로 찾을 수 있게 했습니다. 작업지시서 설명을 고객사별 표와 파일명 규칙으로 다시 썼습니다'},
   {v:'v6.57',d:'2026-08', t:'[작업지시서] ① 머릿말·꼬리말을 고객사 탭별로 따로 저장합니다. 탭을 열면 그 탭에 저장해 둔 문구가 기본으로 나옵니다. 예전에 저장한 문구는 하네스 탭으로 옮겨집니다. ② AXCELIS 작업지시서 파일명 규칙을 인식합니다 — 도면번호_PO_오더라인_납품라인.pdf (예 160021769_47324KF_3_1.pdf). 같은 도면이 여러 PO로 나뉘어 있어도 정확히 그 건을 찾습니다. 뒤 두 자리는 생략해도 되고, 앞에 작업지시서_ 가 붙어 있어도 됩니다'},
   {v:'v6.56',d:'2026-08', t:'[작업지시서] 고객사별 출력 구성. 하네스는 작업지시서만, AXCELIS는 작업지시서 1부 + 도면 2부, EDWARDS는 갑지 뒤에 도면마다 [작업지시서 1부 + 도면 2부]로 이어집니다. QR은 작업지시서에만 넣고 도면에는 넣지 않습니다. 도면도 A4로 맞추고 회전된 것은 바로 세웁니다. 도면 폴더를 고르면 도면번호로 찾아 주며, 찾은 수와 못 찾은 도번을 미리 보여 줍니다. 그림 그리는 엔진은 하나만 두고 조립 순서만 고객사별로 갖습니다. ※ EDWARDS 갑지는 아직 미구현'},
   {v:'v6.55',d:'2026-08', t:'[작업지시서] 고객사별로 나눴습니다 — 사이드바 작업지시서 QR 아래 하네스·AXCELIS·EDWARDS. 화면은 하나이고 수주 등록 방식만 바뀝니다(화면을 셋으로 복사하면 한쪽만 고쳐져 어긋나기 때문). EDWARDS 는 PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다(도면번호·품명·수량). 탭·띄어쓰기 어느 쪽이든 읽고, [먼저 확인만] 으로 등록 전에 결과를 봅니다. 프로젝트·호기·불출일·제작납기를 함께 넣으며, 제작납기가 공정현황의 납기가 되고 불출일은 작업지시서에 찍힙니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_item_release)'},
@@ -7790,7 +7863,7 @@ var AUTH={
     show('nav-stamp-single',admin);
     show('nav-qrhist',admin);
     show('nav-users',admin); // 관리자도 사용자 관리(승인) 접근
-    show('nav-workorder',admin);
+    show('nav-workorder',admin);   // 소제목 (누를 수 없음)
     ['harness','axcelis','edwards'].forEach(function(k){ show('nav-wo-'+k,admin); });
     // nav-dwgqr 은 위에서 SHOW_DWGQR 로 정한다
     var stepBtn=document.querySelector('[onclick="openStepSettings()"]');if(stepBtn)stepBtn.style.display=admin?'':'none';
