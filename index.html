@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.61</title>
+<title>하네스 공정관리 v6.62</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -70,8 +70,11 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .sb-ver-num:hover{color:var(--purple)}
 .sb-ver-date{font-size:9px;color:var(--tx3);margin-top:2px}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.sp-bar{background:var(--white);border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:9px;flex-shrink:0;flex-wrap:wrap}
+.page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;background:var(--bg)}
+/* 필터 줄 — 본문과 같은 회색 바탕 위에 흰 카드로 얹는다 */
+.sp-bar{background:transparent;border:none;padding:12px 20px 0;display:flex;align-items:center;gap:9px;flex-shrink:0;flex-wrap:wrap}
+.sp-bar-in{background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;width:100%}
 .sp-title{font-size:16px;font-weight:700;color:var(--tx)}
 .sp-search{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:9px 13px;color:var(--tx);font-size:13px;outline:none;width:230px;transition:all .18s}
 .sp-search:focus{border-color:var(--purple);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
@@ -104,11 +107,11 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
 .dwg-table tbody tr:hover td{background:var(--bg2)}
 .dwg-table th{background:var(--bg2);padding:9px 10px;text-align:left;font-size:11.5px;font-weight:700;color:var(--tx2);letter-spacing:0;border-bottom:2px solid var(--border);white-space:nowrap}
-.dwg-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;color:var(--tx)}
+.dwg-table td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12.5px;color:var(--tx2)}
 .dwg-table tbody tr{transition:background .1s}
 .dwg-table tr:last-child td{border-bottom:none}
 .dwg-table tr:hover td{background:var(--bg2)}
-.dwg-no{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--tx)}
+.dwg-no{font-family:var(--mono);font-weight:800;font-size:13px;color:var(--tx);letter-spacing:-.2px}
 .step-col{text-align:center;min-width:68px}
 .step-cell{display:inline-flex;flex-direction:column;align-items:center;gap:3px}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
@@ -526,7 +529,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.61</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.62</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -536,47 +539,6 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   <div class="po-box" style="max-width:400px">
     <div class="po-hd"><div class="po-hd-title">버전 이력</div><button class="po-hd-x" onclick="document.getElementById('ver-modal-ovl').classList.add('hidden')">×</button></div>
     <div class="po-body" id="ver-log-body" style="max-height:420px;overflow-y:auto;padding:0 18px"></div>
-  </div>
-</div>
-<div id="step-settings-ovl" class="po-ovl hidden" onclick="if(event.target===this)closeStepSettings()">
-  <div class="po-box" style="max-width:640px">
-    <div class="po-hd">
-      <div class="po-hd-title">⚙ 공정 설정</div>
-      <button class="po-hd-x" onclick="closeStepSettings()">×</button>
-    </div>
-    <div style="display:flex;border-bottom:2px solid var(--border);background:var(--bg)">
-      <button id="stab-steps" onclick="setStab('steps')" style="padding:9px 20px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;cursor:pointer;transition:all .15s">📋 공정 단계</button>
-      <button id="stab-types" onclick="setStab('types')" style="padding:9px 20px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .15s">🏷 공정 구분 (A/B/C형)</button>
-    </div>
-    <div id="stab-panel-steps" style="padding:0">
-      <div id="step-list" style="max-height:260px;overflow-y:auto"></div>
-      <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg)">
-        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:10px">+ 공정 추가</div>
-        <div style="display:grid;grid-template-columns:60px 1fr 90px 1fr;gap:8px;align-items:end">
-          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div><button type="button" onclick="openIconPalette(this,'new')" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white);cursor:pointer;font-size:18px" title="클릭하여 선택"><span id="new-icon-preview">📦</span></button><input type="hidden" id="new-step-icon" value="📦"></div>
-          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">공정명 <span style="color:var(--red)">*</span></div><input class="po-inp" id="new-step-id" placeholder="예: 검수"></div>
-          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">색상</div><input type="color" id="new-step-color" value="#1755f4" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px"></div>
-          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">설명</div><input class="po-inp" id="new-step-desc" placeholder="간단한 설명"></div>
-        </div>
-        <div style="margin-top:10px;display:flex;justify-content:flex-end"><button class="btn btn-pr btn-sm" onclick="addStep()">+ 추가</button></div>
-      </div>
-    </div>
-    <div id="stab-panel-types" style="display:none">
-      <div style="padding:9px 16px;font-size:11px;color:var(--tx3);background:var(--bg2);border-bottom:1px solid var(--border)">
-        A형은 기본 공정 단계를 그대로 사용합니다. B·C형은 별도 공정 단계를 체크박스로 선택하세요.
-      </div>
-      <div id="type-list" style="max-height:320px;overflow-y:auto;padding:8px 0"></div>
-      <div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--bg);display:flex;gap:7px;align-items:center">
-        <input class="po-inp" id="new-type-code" placeholder="코드 (B, C...)" style="width:80px;text-transform:uppercase" maxlength="4">
-        <input class="po-inp" id="new-type-name" placeholder="이름 (예: B형 특수조립)" style="flex:1">
-        <button class="btn btn-pr btn-sm" onclick="addStepType()">+ 추가</button>
-      </div>
-    </div>
-    <div class="po-ft">
-      <div style="font-size:11px;color:var(--tx3);flex:1">첫 번째 공정(출도)은 삭제/이름변경 불가</div>
-      <button class="btn btn-outline" onclick="closeStepSettings()">닫기</button>
-      <button class="btn btn-pr" onclick="saveSteps()">저장</button>
-    </div>
   </div>
 </div>
 
@@ -679,7 +641,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.61 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.62 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -691,7 +653,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
   <div class="main">
     <div id="pg-status" class="page">
-      <div style="padding:16px 20px 0;flex-shrink:0">
+      <div style="padding:16px 20px 0;flex-shrink:0;background:var(--bg)">
         <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
         <div id="sp-head-t" style="font-size:20px;font-weight:800;color:var(--tx)">📊 공정현황</div>
         <div id="sp-head-d" style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">
@@ -699,7 +661,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         </div>
         <div id="sp-kpi" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:12px;width:100%"></div>
       </div>
-      <div class="sp-bar" style="flex-wrap:wrap;gap:8px">
+      <div class="sp-bar"><div class="sp-bar-in">
         <div style="position:relative;display:flex;align-items:center">
           <span style="position:absolute;left:10px;font-size:13px;color:var(--tx3);pointer-events:none">🔍</span>
           <input class="sp-search" id="sp-search" placeholder="도면번호 / PO / 고객사 / 프로젝트..." oninput="clearTimeout(window.__spDeb);window.__spDeb=setTimeout(refreshSpTab,200)" style="padding-left:30px;width:260px">
@@ -723,7 +685,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <button class="btn btn-outline btn-sm admin-only" onclick="downloadOrderTemplate()" title="양식 다운로드">⬇ 양식</button>
           <button class="btn btn-outline btn-sm" onclick="refreshSpTab()">↻</button>
         </div>
-      </div>
+      </div></div>
       <div class="sp-content" id="sp-board">
         <div class="sp-empty">
           <div class="sp-empty-ic">📋</div>
@@ -740,12 +702,12 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div style="font-size:20px;font-weight:800;color:var(--tx)">📈 분석 <span style="font-size:10px;background:var(--amber-lt);color:var(--amber);border:1px solid #fde68a;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:4px">BETA</span></div>
         <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">공정 부하·품질·리드타임·납기 준수율을 봅니다. 쌓인 스캔 기록으로 계산합니다.</div>
       </div>
-      <div class="sp-bar" style="border-top:none">
+      <div class="sp-bar"><div class="sp-bar-in">
         <div style="margin-left:auto;display:flex;gap:6px">
           <button class="btn btn-outline btn-sm" onclick="Analytics.render()">↻ 새로고침</button>
         </div>
-      </div>
-      <div style="padding:10px 20px 0;display:flex;gap:4px;border-bottom:1px solid var(--border);background:var(--white)">
+      </div></div>
+      <div style="margin:0 20px 12px;padding:6px 8px 0;display:flex;gap:4px;border-bottom:1px solid var(--border);background:#fff;border-radius:var(--r2) var(--r2) 0 0;border:1px solid var(--border);border-bottom:1px solid var(--border)">
         <button class="an-tab on" id="antab-wip" onclick="Analytics.setTab('wip')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-1px;cursor:pointer">🔧 공정 부하</button>
         <button class="an-tab" id="antab-quality" onclick="Analytics.setTab('quality')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer">✅ 품질 (합불/재작업)</button>
         <button class="an-tab" id="antab-leadtime" onclick="Analytics.setTab('leadtime')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer">⏱ 리드타임</button>
@@ -761,9 +723,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div style="font-size:20px;font-weight:800;color:var(--tx)">👥 사용자 관리 <span style="font-size:10px;background:var(--purple-lt);color:var(--purple);border:1px solid #ddd6fe;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:4px">최고관리자</span></div>
         <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">가입한 사람에게 권한을 줍니다. <b>작업자</b>는 스캔·현황만, <b>관리자</b>는 전체 메뉴, <b>최고관리자</b>는 권한 부여까지 할 수 있습니다.</div>
       </div>
-      <div class="sp-bar" style="border-top:none">
+      <div class="sp-bar"><div class="sp-bar-in">
         <div style="margin-left:auto"><button class="btn btn-outline btn-sm" onclick="Users.render()">↻ 새로고침</button></div>
-      </div>
+      </div></div>
       <div id="users-body" style="padding:16px 20px"></div>
     </div>
 
@@ -1389,6 +1351,53 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </div>
 
 
+<div id="pg-stepset" class="page hidden" style="padding:20px;overflow-y:auto;display:block">
+  <div style="max-width:760px;width:100%">
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
+      <div style="font-size:20px;font-weight:800;color:var(--tx)">⚙️ 공정 설정</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">
+        공정의 이름·순서·색과 공정 타입(A형·B형)을 정합니다. 여기서 정한 것이 현장 스캔 화면과 현황판에 바로 반영됩니다.
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+    <div style="display:flex;border-bottom:2px solid var(--border);background:var(--bg)">
+      <button id="stab-steps" onclick="setStab('steps')" style="padding:9px 20px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-2px;cursor:pointer;transition:all .15s">📋 공정 단계</button>
+      <button id="stab-types" onclick="setStab('types')" style="padding:9px 20px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;transition:all .15s">🏷 공정 구분 (A/B/C형)</button>
+    </div>
+    <div id="stab-panel-steps" style="padding:0">
+      <div id="step-list"></div>
+      <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg)">
+        <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:10px">+ 공정 추가</div>
+        <div style="display:grid;grid-template-columns:60px 1fr 90px 1fr;gap:8px;align-items:end">
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div><button type="button" onclick="openIconPalette(this,'new')" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white);cursor:pointer;font-size:18px" title="클릭하여 선택"><span id="new-icon-preview">📦</span></button><input type="hidden" id="new-step-icon" value="📦"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">공정명 <span style="color:var(--red)">*</span></div><input class="po-inp" id="new-step-id" placeholder="예: 검수"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">색상</div><input type="color" id="new-step-color" value="#1755f4" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px"></div>
+          <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">설명</div><input class="po-inp" id="new-step-desc" placeholder="간단한 설명"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;justify-content:flex-end"><button class="btn btn-pr btn-sm" onclick="addStep()">+ 추가</button></div>
+      </div>
+    </div>
+    <div id="stab-panel-types" style="display:none">
+      <div style="padding:9px 16px;font-size:11px;color:var(--tx3);background:var(--bg2);border-bottom:1px solid var(--border)">
+        A형은 기본 공정 단계를 그대로 사용합니다. B·C형은 별도 공정 단계를 체크박스로 선택하세요.
+      </div>
+      <div id="type-list" style="max-height:320px;overflow-y:auto;padding:8px 0"></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--bg);display:flex;gap:7px;align-items:center">
+        <input class="po-inp" id="new-type-code" placeholder="코드 (B, C...)" style="width:80px;text-transform:uppercase" maxlength="4">
+        <input class="po-inp" id="new-type-name" placeholder="이름 (예: B형 특수조립)" style="flex:1">
+        <button class="btn btn-pr btn-sm" onclick="addStepType()">+ 추가</button>
+      </div>
+    </div>
+    <div class="po-ft">
+      <div style="font-size:11px;color:var(--tx3);flex:1">첫 번째 공정(출도)은 삭제/이름변경 불가</div>
+      <button class="btn btn-outline" onclick="closeStepSettings()">닫기</button>
+      <button class="btn btn-pr" onclick="saveSteps()">저장</button>
+    </div>
+    </div>
+  </div>
+</div>
+
 <div id="pg-manual" class="page hidden" style="padding:20px;overflow-y:auto">
   <div style="margin-bottom:14px">
     <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
@@ -1420,7 +1429,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
   <div id="alm-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px"></div>
 
-  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">
     <div id="alm-tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
       <span id="alm-cnt" style="font-size:12px;color:var(--tx3)"></span>
@@ -1435,14 +1444,15 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   <div style="overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white)">
     <table id="alm-table" style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
       <colgroup>
-        <col style="width:118px"><col style="width:126px"><col style="width:150px">
-        <col style="width:52px"><col style="width:78px"><col style="width:88px">
-        <col style="width:88px"><col style="width:52px"><col>
+        <col style="width:96px"><col style="width:136px"><col style="width:118px">
+        <col style="width:130px"><col style="width:46px"><col style="width:74px">
+        <col style="width:84px"><col style="width:84px"><col style="width:48px"><col>
       </colgroup>
       <thead>
         <tr style="background:var(--bg2);border-bottom:2px solid var(--border)">
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">종류</th>
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">도면번호</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">PO / 라인</th>
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">고객사 · 프로젝트</th>
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">호기</th>
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">다음 공정</th>
@@ -1882,10 +1892,10 @@ function openManualOld(){
 function openStepSettings(){
   _editSteps=H_STEPS.map(function(s){return Object.assign({},s);});
   renderStepList();
-  document.getElementById('step-settings-ovl').classList.remove('hidden');
+  setPage('stepset');
 }
 function closeStepSettings(){
-  document.getElementById('step-settings-ovl').classList.add('hidden');
+  setPage('status');
 }
 function renderStepList(){
   var el=document.getElementById('step-list');if(!el)return;
@@ -3002,7 +3012,7 @@ var ALMUI={
     setTimeout(function(){ makeResizable(document.getElementById('alm-table'),'issue'); },0);
 
     if(!rows.length){
-      body.innerHTML='<tr><td colspan="9" style="padding:36px;text-align:center;color:var(--tx3)">'
+      body.innerHTML='<tr><td colspan="10" style="padding:36px;text-align:center;color:var(--tx3)">'
         +(all.length?'이 종류의 이슈는 없습니다':'<span style="font-size:30px">✅</span><br><br>이슈가 없습니다')+'</td></tr>';
       return;
     }
@@ -3012,21 +3022,29 @@ var ALMUI={
       var target=x.due?almShift(x.due,-ALM.leadDays):'';
       var badges=x.kinds.map(function(k){
         var c=ALM_KINDS[k.kind];
-        return '<span style="font-size:10.5px;font-weight:700;color:'+c.color+';background:'+c.bg+';border:1px solid '+c.bd+';padding:1px 7px;border-radius:20px;white-space:nowrap">'+c.label+'</span>';
-      }).join(' ');
+        return '<span style="font-size:10.5px;font-weight:700;color:'+c.color+';background:'+c.bg+';border:1px solid '+c.bd+';padding:2px 8px;border-radius:20px;white-space:nowrap">'+c.label+'</span>';
+      }).join('');
       var urgent=(x.top.kind==='overdue');
       return '<tr style="border-bottom:1px solid var(--border)'+(urgent?';background:#fef2f2':'')+'">'
-        +'<td style="padding:9px 12px;white-space:nowrap">'+badges+'</td>'
-        +'<td style="padding:9px 12px;font-family:var(--mono);font-weight:700;color:var(--tx);white-space:nowrap">'+hEsc(o.dwg_no||'')
-          +(o.rev?'<span style="margin-left:5px;font-size:10px;font-weight:700;color:var(--purple)">Rev '+hEsc(o.rev)+'</span>':'')+'</td>'
-        +'<td style="padding:9px 12px;color:var(--tx2)">'+hEsc([o.customer,o.project].filter(Boolean).join(' · ')||'—')+'</td>'
+        +'<td style="padding:9px 10px"><div style="display:flex;flex-direction:column;align-items:flex-start;gap:3px">'+badges+'</div></td>'
+        +'<td style="padding:9px 10px;font-family:var(--mono);font-weight:800;color:var(--tx)">'
+          +'<div style="white-space:nowrap">'+hEsc(o.dwg_no||'')+'</div>'
+          +(o.rev?'<div style="font-size:10px;font-weight:700;color:var(--purple);margin-top:2px">Rev '+hEsc(o.rev)+'</div>':'')+'</td>'
+        +'<td style="padding:9px 10px;font-family:var(--mono);font-size:11.5px">'+(function(){
+            if(!o.po&&!o.ord_ln&&!o.del_ln)return '<span style="color:var(--tx3);font-size:10px">—</span>';
+            var top=o.po?'<div style="color:var(--blue);font-weight:700;white-space:nowrap">'+hEsc(o.po)+'</div>':'<div style="color:var(--tx3)">—</div>';
+            var sub=(o.ord_ln||o.del_ln)
+              ?'<div style="color:var(--tx3);font-size:10.5px;margin-top:2px;white-space:nowrap">'+hEsc(o.ord_ln||'–')+' <span style="opacity:.6">/</span> '+hEsc(o.del_ln||'–')+'</div>':'';
+            return top+sub;
+          })()+'</td>'
+        +'<td style="padding:9px 10px;color:var(--tx2)">'+hEsc([o.customer,o.project].filter(Boolean).join(' · ')||'—')+'</td>'
         +'<td style="padding:9px 12px;color:var(--tx2);white-space:nowrap">'+hEsc(o.unit||'—')+'</td>'
         +'<td style="padding:9px 12px;color:var(--tx2);white-space:nowrap">'+hEsc(x.step||(x.done?'완료':'—'))+'</td>'
         +'<td style="padding:9px 12px;font-family:var(--mono);white-space:nowrap;'+(urgent?'color:var(--red);font-weight:700':'color:var(--tx2)')+'">'+(x.due?fmtYYMMDD(x.due):'—')+'</td>'
         +'<td style="padding:9px 12px;font-family:var(--mono);color:var(--tx3);white-space:nowrap">'+(target||'—')+'</td>'
         +'<td style="padding:9px 12px;font-family:var(--mono);text-align:right;white-space:nowrap;color:'+d.color+';font-weight:800">'
           +(x.top.days?x.top.days+'일':'—')+'</td>'
-        +'<td style="padding:9px 12px;color:var(--tx3);line-height:1.6">'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</td>'
+        +'<td style="padding:9px 10px;color:var(--tx3);line-height:1.6;font-size:11.5px">'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</td>'
       +'</tr>';
     }).join('');
   },
@@ -3036,17 +3054,17 @@ var ALMUI={
     if(!rows.length){ toast('내보낼 이슈가 없습니다','warn'); return; }
     if(!needLib('XLSX'))return;
     loadXLSX(function(){
-      var aoa=[['종류','도면번호','Rev','고객사','프로젝트','호기','다음 공정','납기','출하 목표','지연(영업일)','내용']];
+      var aoa=[['종류','도면번호','Rev','PO','오더라인','납품라인','고객사','프로젝트','호기','다음 공정','납기','출하 목표','지연(영업일)','내용']];
       rows.forEach(function(x){
         var o=x.order;
         aoa.push([x.kinds.map(function(k){return ALM_KINDS[k.kind].label;}).join(','),
-          o.dwg_no||'',o.rev||'',o.customer||'',o.project||'',o.unit||'',x.step||'',
+          o.dwg_no||'',o.rev||'',o.po||'',o.ord_ln||'',o.del_ln||'',o.customer||'',o.project||'',o.unit||'',x.step||'',
           x.due||'',x.due?almShift(x.due,-ALM.leadDays):'',x.top.days||0,
           x.kinds.map(function(k){return k.msg;}).join(' · ')]);
       });
       var ws=XLSX.utils.aoa_to_sheet(aoa);
-      ws['!cols']=[{wch:18},{wch:16},{wch:6},{wch:12},{wch:20},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:46}];
-      ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:10}})};
+      ws['!cols']=[{wch:18},{wch:16},{wch:6},{wch:14},{wch:8},{wch:8},{wch:12},{wch:20},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:46}];
+      ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:aoa.length-1,c:13}})};
       var wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb,ws,'공정이슈');
       XLSX.writeFile(wb,'하네스_공정이슈_'+fmtDate(new Date())+'.xlsx');
@@ -3298,15 +3316,15 @@ function openNavGroupFor(id){
 }
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue','manual'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue','manual','stepset'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue','manual'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue','manual','stepset'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue','manual'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue','manual','stepset'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb){ nb.classList.toggle('on', id===p); if(id===p)openNavGroupFor('nav-'+id); }
     const mn=document.getElementById('mn-'+id);
@@ -3602,7 +3620,7 @@ function _renderStatusInner(){
   _spVisibleIds=orders.map(function(o){return o.id;});
   function miniProgress(mOrder){
     var mSteps=getStepsForType(mOrder&&mOrder.step_type);
-    return '<div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">'
+    return '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;row-gap:4px">'
       +mSteps.map(function(s){
         var st=getStepSt(mOrder,s.id);
         var isDone=st.s==='done', isRun=st.s==='run';
@@ -3617,7 +3635,7 @@ function _renderStatusInner(){
         var title=isDone?s.id+' 완료('+(st.worker||'?')+')'+(st.result?' '+st.result:''):isRun?s.id+' 진행중':s.id+' 대기';
         // 노트북 화면에서 한 줄에 들어가도록 긴 이름은 줄여 쓴다. 전체 이름은 마우스를 올리면 보인다.
         var shown=label.length>3?label.replace(/[&·\/].*$/,'').slice(0,3):label;
-        return '<span title="'+title+'" style="font-size:9.5px;font-weight:700;padding:2px 5px;border-radius:4px;background:'+bg
+        return '<span title="'+title+'" style="font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:5px;background:'+bg
           +';color:'+col+';opacity:'+op+';white-space:nowrap'+anim+'">'+hEsc(shown)+'</span>';
       }).join('')+'</div>';
   }
@@ -3713,15 +3731,17 @@ function _renderStatusInner(){
     return '<tr style="'+rowStyle+(canEdit?';cursor:pointer':'')+'" onclick="rowClickSel(\''+o.id+'\',event)">'
       +'<td style="text-align:center">'+(canEdit?'<input type="checkbox"'+checked+' data-oid="'+o.id+'" onchange="toggleOrderSel(this.dataset.oid,this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">':'')+'</td>'
       +'<td style="font-weight:600;font-size:12px">'+(o.customer||'—')+'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;white-space:nowrap">'+(function(){
-          // PO / Order Lines / Del Lines 를 한 칸에. 뒤쪽이 비면 굳이 보여주지 않는다.
+      +'<td style="font-family:var(--mono);font-size:11.5px">'+(function(){
+          // 윗줄 PO, 아랫줄 오더라인/납품라인. 한 줄에 몰면 눈에 안 들어온다.
           if(!po&&!ol&&!dl)return '<span style="color:var(--tx3);font-size:10px">—</span>';
-          var parts=[po||'–', ol||'–', dl||'–'];
-          while(parts.length>1&&parts[parts.length-1]==='–')parts.pop();
-          var sep='<span style="color:var(--tx3);margin:0 4px">/</span>';
-          return parts.map(function(v,i){
-            return '<span style="color:'+(i===0?'var(--blue)':'var(--tx2)')+'">'+hEsc(v)+'</span>';
-          }).join(sep);
+          var top=po?'<div style="color:var(--blue);font-weight:700;white-space:nowrap">'+hEsc(po)+'</div>'
+                    :'<div style="color:var(--tx3)">—</div>';
+          var sub='';
+          if(ol||dl){
+            sub='<div style="color:var(--tx3);font-size:10.5px;margin-top:2px;white-space:nowrap">'
+              +hEsc(ol||'–')+' <span style="opacity:.6">/</span> '+hEsc(dl||'–')+'</div>';
+          }
+          return top+sub;
         })()+'</td>'
       +'<td style="font-size:12px;color:var(--tx2)">'+projCell+'</td>'
       +'<td title="등록일 '+(o.created_at?fmtYYMMDD(isoToLocalYMD(o.created_at)):'—')+'"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
@@ -3734,8 +3754,8 @@ function _renderStatusInner(){
           var iso=normDueToISO(due), lbl=fmtYYMMDD(due);
           if(/^\d{4}-\d{2}-\d{2}$/.test(iso)&&!done){
             var dd=Math.floor((new Date(iso)-new Date(new Date().toISOString().slice(0,10)))/86400000);
-            if(dd<0)return '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:#d8443c;color:#fff;padding:4px 9px;border-radius:6px;font-weight:800;line-height:1.25"><span>'+lbl+'</span><span style="font-size:9.5px;opacity:.95">'+(-dd)+'일 지연</span></span>';
-            if(dd<=3)return '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;background:#E0922F;color:#fff;padding:4px 9px;border-radius:6px;font-weight:800;line-height:1.25"><span>'+lbl+'</span><span style="font-size:9.5px;opacity:.95">D-'+dd+'</span></span>';
+            if(dd<0)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:#fef2f2;border:1px solid #fecaca;color:var(--red);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">'+(-dd)+'일 지연</span></span>';
+            if(dd<=3)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:var(--amber-lt);border:1px solid #fde68a;color:var(--amber);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">D-'+dd+'</span></span>';
           }
           return '<span style="color:var(--tx2)">'+lbl+'</span>';
         })()
@@ -4791,8 +4811,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.61';
+var APP_VER='v6.62';
 var VER_LOG=[
+  {v:'v6.62',d:'2026-08', t:'[화면 정리] ① 검색·필터 줄이 회색 바탕 사이에 흰 띠로 떠 보이던 것을 흰 카드로 감싸 본문과 이어 붙였습니다. 공정 이슈·분석·사용자 관리도 같은 모양으로 맞췄습니다. ② PO·오더라인·납품라인을 한 줄에 몰지 않고 윗줄 PO, 아랫줄 라인으로 나눴습니다. 공정 이슈 표에도 같은 모양의 PO/라인 열을 넣었습니다(엑셀 내보내기 포함). ③ 납기 배지를 진한 채움에서 파스텔로 바꿨습니다. 표 글자와 도면번호를 키우고 현황판 공정 배지도 크게 했습니다. ④ 공정 설정이 팝업으로 뜨던 것을 화면으로 옮겼습니다. 공정 목록이 잘리지 않고 모두 보입니다'},
   {v:'v6.61',d:'2026-08', t:'[화면 톤 통일] 머리말만 바뀌고 본문은 옛 모양이던 것을 전체로 맞췄습니다. 표 헤더를 대문자 작은 회색 글씨에서 다른 화면과 같은 굵은 진회색으로 바꾸고, 줄무늬 배경을 없애 눈이 덜 피로하게 했습니다. 검색창·필터·구분 버튼의 강조색을 파랑에서 보라로 통일했고, 주요 버튼도 사내 기준대로 보라 채움으로 바꿨습니다. 분석·이력관리 안의 카드와 작은 표들도 공정 이슈·설명서와 같은 모양으로 맞췄습니다. 현장 스캔 화면은 큰 글씨·큰 버튼 기준이라 그대로 둡니다'},
   {v:'v6.60',d:'2026-08', t:'[작업지시서·화면] ① 머릿말·꼬리말을 여섯 칸으로 나눴습니다 — 위 왼쪽·가운데·오른쪽, 아래 왼쪽·가운데·오른쪽. 채운 칸만 나오며 고객사 탭마다 따로 저장됩니다. 예전에 한 칸으로 저장해 둔 문구는 가운데 칸으로 옮겨집니다. ② AXCELIS 탭은 수주 등록 없이 작업지시서 폴더만 고릅니다 — 수주는 공정현황에서 엑셀로 올린 것을 쓰고, 폴더의 파일명(도면번호_PO_오더라인_납품라인)으로 자동으로 맞춥니다. 맞은 수와 못 맞춘 파일을 미리 보여 줍니다. ③ 분석·사용자 관리·QR 이력 화면에도 제목과 한 줄 설명을 넣어 다른 화면과 모양을 맞췄습니다. 현장 스캔 화면은 큰 글씨·큰 버튼 기준이라 그대로 둡니다'},
   {v:'v6.59',d:'2026-08', t:'[공정현황·이력관리] 공정 이슈 화면과 같은 모양으로 맞췄습니다. 위에 페이지 제목과 한 줄 설명을 넣고, 작은 알약으로 나오던 요약을 지표 카드 6개(전체·진행중·오늘 납기·지연·재작업·재검 대기)로 바꿨습니다. 카드를 누르면 그것만 걸러 보고 한 번 더 누르면 풀립니다. 값이 0인 카드는 회색으로 남습니다. 이력관리 탭으로 가면 제목과 설명이 그에 맞게 바뀌고 지표는 숨습니다. 표 테두리도 다른 화면과 같게 맞췄습니다'},
@@ -7969,7 +7990,7 @@ var MOB_SHEET=[
   {ic:'📷',nm:'QR 스캔',role:'all',page:'scan',fn:function(){setPage('scan');}}
 ];
 var _mobVisible=[];
-var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황',issue:'공정 이슈',manual:'사용 설명서'};
+var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황',issue:'공정 이슈',manual:'사용 설명서',stepset:'공정 설정'};
 function buildMobSheet(){
   var grid=document.getElementById('mob-sheet-grid');if(!grid)return;
   var admin=(typeof AUTH!=='undefined'&&AUTH.isAdmin&&AUTH.isAdmin());
