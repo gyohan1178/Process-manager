@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.77</title>
+<title>하네스 공정관리 v6.78</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -533,7 +533,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.77</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.78</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.77 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.78 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2831,8 +2831,15 @@ WOC.buildOneSet=async function(t, pgFrom, pgTotal){
   if(rec.dwg&&t.order){
     var hit=WOC.findDwg(t.order);
     if(hit){
-      var one=await DQ.buildOne({file:hit.file, order:t.order},
-                {noQr:true, pgFrom:pgFrom, pgTotal:pgTotal});
+      // 도면에도 같은 머릿말·꼬리말이 찍혀야 한다.
+      //   DQ.buildOne 은 DQ 의 설정을 보므로 그리는 동안만 WO 것으로 바꿔 둔다.
+      var _h=DQ.header, _f=DQ.footer;
+      DQ.header=self.header; DQ.footer=self.footer;
+      var one;
+      try{
+        one=await DQ.buildOne({file:hit.file, order:t.order},
+              {noQr:true, pgFrom:pgFrom, pgTotal:pgTotal});
+      } finally { DQ.header=_h; DQ.footer=_f; }
       for(var i=0;i<rec.dwg;i++)out.push(one);
     }
   }
@@ -5197,8 +5204,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.77';
+var APP_VER='v6.78';
 var VER_LOG=[
+  {v:'v6.78',d:'2026-08', t:'[머릿말] 작업지시서에만 들어가던 머릿말·꼬리말이 뒤에 붙는 도면에도 함께 찍힙니다. 한 세트(작업지시서 1부 + 도면 2부) 세 장 모두 같은 문구가 나옵니다. 종이가 좁아 왼쪽·가운데·오른쪽 글자가 서로 겹치던 것도 고쳤습니다 — 겹칠 상황이면 글자를 줄이고, 그래도 모자라면 값을 줄임표로 자릅니다'},
   {v:'v6.77',d:'2026-08', t:'[바로잡음] PO 를 한 건만 넣었는데 수십 장이 잡히던 문제. [읽어서 등록] 을 누르지 않고 [먼저 확인만] 만 본 뒤 폴더를 고르면, 등록된 것이 없어 공정현황의 옛 자료 전체로 넘어가고 있었습니다. 이제 이번에 등록한 PO 만 대상으로 합니다. PO 를 등록하기 전에는 폴더를 고를 수 없고, 먼저 등록하라는 안내가 뜹니다'},
   {v:'v6.76',d:'2026-08', t:'[머릿말] 작업지시서의 머릿말·꼬리말을 도면 QR 과 같은 모양으로 맞췄습니다. 예전에는 값만 작게 찍혀 그것이 납기인지 수량인지 CCN 인지 알 수 없었습니다. 이제 CCN K · 프로젝트 ASML 9B · 도번 1600791 · REV M · PO 47057KF 처럼 항목 이름을 회색으로, 값을 굵게 함께 찍고 글자도 커집니다. 오른쪽 칸이 종이 끝에 닿아 잘리던 것도 여백을 늘려 고쳤습니다'},
   {v:'v6.75',d:'2026-08', t:'[붙여넣기 안내] 예시와 설명이 고객사에 맞게 나옵니다. AXCELIS 는 CCN·PO·라인이 들어간 예시를, EDWARDS 는 도면번호·품명·수량 예시를 보여 줍니다. AXCELIS 탭인데 PO 가 하나도 없으면 다른 고객사 자료일 수 있으므로 붉은 안내가 뜨고, 그대로 등록하려 하면 한 번 더 물어봅니다'},
@@ -6294,22 +6302,26 @@ DQ.bandPng3=function(g,widthPt,heightPt){
   var fs=Math.round(H*0.52), minFs=Math.round(fs*0.62);
   var fL=function(s){return '500 '+s+"px 'Malgun Gothic','Noto Sans KR',sans-serif";};
   var fV=function(s){return '700 '+s+"px 'Malgun Gothic','Noto Sans KR',sans-serif";};
-  function measure(items,size,gp){
+  function measure(items,size,gp,cutN){
     var segs=items.map(function(it){
+      var val=String(it.val);
+      if(cutN&&val.length>cutN)val=val.slice(0,cutN)+'…';
       ctx.font=fL(size); var wl=it.lab?ctx.measureText(it.lab+' ').width:0;
-      ctx.font=fV(size); var wv=ctx.measureText(String(it.val)).width;
-      return {lab:it.lab?it.lab+' ':'',val:String(it.val),wl:wl,wv:wv};
+      ctx.font=fV(size); var wv=ctx.measureText(val).width;
+      return {lab:it.lab?it.lab+' ':'',val:val,wl:wl,wv:wv};
     });
     var tot=segs.reduce(function(s,x){return s+x.wl+x.wv;},0)+gp*Math.max(0,segs.length-1);
     return {segs:segs,total:tot};
   }
-  // 세 자리 폭을 합쳐 넘치면 글자를 함께 줄인다
-  var sets;
+  // 세 자리가 서로 겹치지 않게 한다.
+  //   글자를 줄여도 안 되면 값을 잘라 낸다. 겹쳐서 못 읽는 것보다 낫다.
+  var sets, cut=0;
   for(;;){
-    sets={l:measure(g.l||[],fs,gap), c:measure(g.c||[],fs,gap), r:measure(g.r||[],fs,gap)};
+    sets={l:measure(g.l||[],fs,gap,cut), c:measure(g.c||[],fs,gap,cut), r:measure(g.r||[],fs,gap,cut)};
     var need=sets.l.total+sets.c.total+sets.r.total+pad*2+gap*2;
-    if(need<=W||fs<=minFs)break;
-    fs-=1;
+    if(need<=W)break;
+    if(fs>minFs){ fs-=1; continue; }
+    if(cut===0)cut=24; else if(cut>8){ cut-=4; } else break;
   }
   var y=H/2; ctx.textBaseline='middle';
   function draw(m,x0){
@@ -6319,9 +6331,17 @@ DQ.bandPng3=function(g,widthPt,heightPt){
       ctx.font=fV(fs); ctx.fillStyle='#111827'; ctx.fillText(s.val,x,y); x+=s.wv+gap;
     });
   }
+  var lEnd=pad+sets.l.total;
+  var rStart=W-pad-sets.r.total;
   if(sets.l.segs.length)draw(sets.l,pad);
-  if(sets.c.segs.length)draw(sets.c,Math.max(pad,(W-sets.c.total)/2));
-  if(sets.r.segs.length)draw(sets.r,Math.max(pad,W-pad-sets.r.total-gap*0.5));
+  if(sets.c.segs.length){
+    // 가운데는 좌우 사이에만 놓는다. 그래야 겹치지 않는다.
+    var cx=(W-sets.c.total)/2;
+    if(sets.l.segs.length&&cx<lEnd+gap)cx=lEnd+gap;
+    if(sets.r.segs.length&&cx+sets.c.total>rStart-gap)cx=Math.max(pad,rStart-gap-sets.c.total);
+    draw(sets.c,cx);
+  }
+  if(sets.r.segs.length)draw(sets.r,Math.max(pad,rStart));
   var url=cv.toDataURL('image/png');
   if(Object.keys(_dqBandCache).length>400)_dqBandCache={};
   _dqBandCache[key]=url;
