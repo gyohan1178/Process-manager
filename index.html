@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.67</title>
+<title>하네스 공정관리 v6.68</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -533,7 +533,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.67</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.68</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.67 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.68 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -795,12 +795,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
           <!-- 작업지시서 폴더 -->
           <div id="wo-wofolder-box" style="margin-top:16px;padding-top:14px;border-top:1px solid #eceff5">
-            <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">작업지시서 폴더</div>
+            <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">OCR 폴더 <span style="font-weight:500;color:var(--tx3)">(QR 넣기 전 작업지시서)</span></div>
             <div style="font-size:11.5px;color:var(--tx3);margin:3px 0 9px;line-height:1.6">
-              파일명 <b>도면번호_PO_오더라인_납품라인.pdf</b> 로 저장된 폴더를 고르면 위에서 등록한 건과 자동으로 맞춥니다.
+              OCR로 만들어 <b>도면번호_REV.pdf</b> 로 저장해 둔 폴더를 고릅니다 — 예) <b>160021769_D.pdf</b><br>
+              도면번호만 있어도(<b>160021769.pdf</b>) 됩니다. 위에서 등록한 PO와 도면번호로 맞춰 공정 QR을 넣습니다.
             </div>
             <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
-              <button class="btn btn-outline" onclick="document.getElementById('wo-wofolder').click()">📁 작업지시서 폴더 선택</button>
+              <button class="btn btn-outline" onclick="document.getElementById('wo-wofolder').click()">📁 OCR 폴더 선택</button>
               <input type="file" id="wo-wofolder" webkitdirectory directory multiple style="display:none" onchange="WOC.pickWoFolder(this)">
               <span style="font-size:11.5px;color:var(--tx3)">새로고침하면 다시 골라야 합니다</span>
             </div>
@@ -2208,8 +2209,8 @@ var WOC={
     var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
     if(pt)pt.textContent=(WOC.cust==='harness')?'작업지시서 QR 삽입':'도면 출도 — '+m.name;
     if(pd)pd.textContent=rec.dwg
-      ? 'PO를 등록하고 작업지시서·도면 폴더를 고르면, 도면마다 작업지시서 1부와 도면 '+rec.dwg+'부를 묶어 뽑습니다.'
-      : 'PO를 등록하고 작업지시서 폴더를 고르면, 파일명으로 맞춰 공정 QR을 넣어 뽑습니다.';
+      ? 'PO를 등록하고 OCR 폴더·도면 폴더를 고르면, 공정 QR을 넣은 작업지시서 1부와 도면 '+rec.dwg+'부를 묶어 뽑습니다.'
+      : 'PO를 등록하고 OCR 폴더를 고르면, 도면번호로 맞춰 공정 QR을 넣어 뽑습니다.';
     // 출력 구성에 따라 도면 폴더 칸을 보인다
     var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
     var fb=document.getElementById('wo-folder-box');
@@ -2367,14 +2368,22 @@ WOC.pickWoFolder=function(input){
   if(!pdfs.length){ toast('폴더에 PDF 가 없습니다','warn'); return; }
   var self=WO_ctx();
   self.files=[];
-  var ok=0, miss=[];
+  var ok=0, miss=[], multi=[];
   pdfs.forEach(function(f){
     var dwg=self.extractDwg(f.name);
     var order=self.match(dwg);
+    // 같은 도면번호에 PO가 여러 건이면 어느 것인지 알 수 없다.
+    // 지금은 납기가 빠른 것을 고르지만, 그대로 두면 엉뚱한 PO로 기록될 수 있으니 알린다.
+    var base=(dwg||'').split('_')[0];
+    var cand=HS.orders.filter(function(o){ return (o.dwg_no||'')===base && !isOrderDone(o); });
+    var amb=(cand.length>1 && (dwg||'').split('_').length<3);
     self.files.push({name:f.name, dwg:dwg, order:order, file:f,
-                     status:order?'ok':'nomatch', sel:!!order});
+                     status:order?'ok':'nomatch', sel:!!order,
+                     warn:amb, note:amb?('PO가 '+cand.length+'건 — 납기가 빠른 '+(order&&order.po||'?')+' 로 넣습니다'):''});
     if(order)ok++; else miss.push(f.name);
+    if(amb)multi.push(f.name);
   });
+  WOC._multi=multi;
   self.render();
   var el=document.getElementById('wo-wofolder-info');
   if(el){
@@ -2389,9 +2398,16 @@ WOC.pickWoFolder=function(input){
         +'<div style="font-size:11.5px;color:var(--tx3)">못 맞춤</div>'
         +'<div style="font-size:21px;font-weight:800;color:var(--red)">'+miss.length+'</div>'
         +'<div style="font-size:11px;color:var(--tx3)">'+hEsc(miss.slice(0,2).join(', '))+(miss.length>2?' 외':'')+'</div></div>':'')
-      +'</div>';
+      +((WOC._multi&&WOC._multi.length)?'<div style="flex:1;min-width:110px;background:var(--amber-lt);border:1px solid #fde68a;border-radius:10px;padding:11px 13px">'
+        +'<div style="font-size:11.5px;color:var(--tx3)">PO 여러 건</div>'
+        +'<div style="font-size:21px;font-weight:800;color:var(--amber)">'+WOC._multi.length+'</div>'
+        +'<div style="font-size:11px;color:var(--tx3)">확인 필요</div></div>':'')
+      +'</div>'
+      +((WOC._multi&&WOC._multi.length)?'<div style="margin-top:9px;background:var(--amber-lt);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;padding:9px 12px;font-size:12px;color:var(--tx2);line-height:1.7">'
+        +'⚠️ 같은 도면번호에 <b>PO가 여러 건</b>인 파일이 있습니다. 지금은 납기가 빠른 것으로 넣습니다.<br>'
+        +'PO별로 따로 뽑아야 하면 파일명을 <b>도면번호_PO_오더라인_납품라인.pdf</b> 로 저장하세요.</div>':'');
   }
-  toast('작업지시서 '+pdfs.length+'개 · 수주와 맞은 것 '+ok+'개','ok');
+  toast('OCR 작업지시서 '+pdfs.length+'개 · 수주와 맞은 것 '+ok+'개','ok');
   WOC.paintFolder();
 };
 WOC.dwgFolder='';
@@ -2741,46 +2757,57 @@ MAN.PAGES.dwgqr=function(){
 };
 
 MAN.PAGES.wo=function(){
-  return MAN.card({ic:'📄',t:'작업지시서 QR',d:'작업지시서 PDF에 공정 QR을 넣습니다. 고객사마다 뽑는 모양이 다릅니다.',
+  return MAN.card({ic:'🔄',t:'전체 흐름',d:'OCR로 만든 작업지시서에 공정 QR을 넣어 뽑습니다.',
+      body:MAN.steps([
+        '<b>OCR로 작업지시서를 만들어</b> 폴더에 저장합니다. 파일명은 <span style="font-family:var(--mono)">도면번호_REV.pdf</span>',
+        '이 화면에서 <b>PO를 등록</b>합니다 (엑셀 또는 붙여넣기).',
+        '<b>OCR 폴더</b>를 고르면 도면번호로 맞춰 줍니다.',
+        'AXCELIS·EDWARDS는 <b>도면 폴더</b>도 고릅니다.',
+        '<b>만들기</b> — 공정 QR을 넣어 저장합니다.'
+      ])+MAN.tip('PO를 먼저 등록해야 합니다. QR 안에 도번·PO·수량·납기가 들어가는데, 파일명만으로는 수량·납기를 알 수 없기 때문입니다.')})
+  + MAN.card({ic:'📄',t:'고객사별로 뽑히는 모양',
       body:'<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">'
         +'<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
-        +'<thead><tr style="background:var(--bg2)">'
-          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:110px">고객사</th>'
-          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:110px">PO 넣는 법</th>'
+        +'<thead><tr style="background:var(--bg2);border-bottom:2px solid var(--border)">'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:112px">메뉴</th>'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:98px">PO 넣는 법</th>'
           +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">뽑히는 모양</th></tr></thead><tbody>'
-        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">하네스 공통</td>'
+        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">작업지시서 QR<div style="font-size:11px;color:var(--tx3);font-weight:500">하네스 공통</div></td>'
           +'<td style="padding:8px 12px;color:var(--tx2)">엑셀</td>'
           +'<td style="padding:8px 12px;color:var(--tx2)">작업지시서만</td></tr>'
-        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">AXCELIS</td>'
+        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">도면 출도<div style="font-size:11px;color:var(--tx3);font-weight:500">AXCELIS</div></td>'
           +'<td style="padding:8px 12px;color:var(--tx2)">엑셀</td>'
           +'<td style="padding:8px 12px;color:var(--tx2)">작업지시서 1부 + 도면 2부</td></tr>'
-        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">EDWARDS</td>'
+        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">도면 출도<div style="font-size:11px;color:var(--tx3);font-weight:500">EDWARDS</div></td>'
           +'<td style="padding:8px 12px;color:var(--tx2)">붙여넣기</td>'
           +'<td style="padding:8px 12px;color:var(--tx2)">갑지 + 도면마다 [작업지시서 1 + 도면 2]</td></tr>'
         +'</tbody></table></div>'
         +MAN.tip('<b>QR은 작업지시서에만</b> 들어갑니다. 도면에는 넣지 않습니다. 도면도 A4로 맞추고 누워 있으면 바로 세웁니다.')})
-  + MAN.card({ic:'📁',t:'파일명 규칙',tone:'amber',d:'파일명으로 어느 수주인지 찾습니다.',
-      body:'<div style="background:var(--bg2);border-radius:var(--r);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;text-align:center;color:var(--tx)">'
-        +'160021769_47324KF_3_1.pdf</div>'
-        +'<div style="font-size:12px;color:var(--tx3);text-align:center;margin-top:4px;font-family:var(--mono)">'
-        +'도면번호 &nbsp; PO &nbsp; 오더라인 &nbsp; 납품라인</div>'
+  + MAN.card({ic:'📁',t:'파일 이름 규칙',tone:'amber',
+      body:'<div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-bottom:5px">들어오는 것 — OCR 폴더</div>'
+        +'<div style="background:var(--bg2);border-radius:var(--r);padding:11px 14px;font-family:var(--mono);font-size:13px;font-weight:700;text-align:center;color:var(--tx)">160021769_D.pdf</div>'
+        +'<div style="font-size:12px;color:var(--tx3);text-align:center;margin-top:4px">도면번호 _ REV</div>'
+        +'<div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin:14px 0 5px">나가는 것 — 저장 파일</div>'
+        +'<div style="background:var(--purple-lt);border:1px solid #ddd6fe;border-radius:var(--r);padding:11px 14px;font-family:var(--mono);font-size:13px;font-weight:700;text-align:center;color:var(--purple)">출도용_160021769_47324KF_3_1.pdf</div>'
+        +'<div style="font-size:12px;color:var(--tx3);text-align:center;margin-top:4px">출도용 _ 도면번호 _ PO _ 오더라인 _ 납품라인</div>'
         +MAN.bul([
-          '뒤 두 자리는 없어도 됩니다 — <span style="font-family:var(--mono)">160021769_47324KF.pdf</span>',
-          '도면번호만 있어도 됩니다 — <span style="font-family:var(--mono)">160021769.pdf</span>',
-          '앞에 <span style="font-family:var(--mono)">작업지시서_</span> 가 붙어 있어도 됩니다',
-          '<b>PO 안의 공백은 빼 주세요</b> — 47268 KF → 47268KF'
+          'REV 없이 <span style="font-family:var(--mono)">160021769.pdf</span> 로 저장해도 됩니다.',
+          '나가는 이름은 [3. 만들기]에서 세 가지 중 고를 수 있습니다.',
+          'PO 안의 공백은 자동으로 빠집니다.'
         ])
-        +MAN.tip('같은 도면이 <b>여러 PO로 나뉜 경우</b>가 있습니다. 그때는 PO·라인까지 파일명에 넣어야 정확한 건을 찾습니다.','warn')})
-  + MAN.card({ic:'🎚️',t:'머릿말·꼬리말',d:'고객사 탭마다 따로 저장됩니다.',
+        +MAN.tip('<b>같은 도면번호에 PO가 여러 건</b>이면 어느 PO인지 알 수 없어, 납기가 빠른 것으로 넣습니다. '
+                 +'PO별로 따로 뽑아야 하면 파일명을 <span style="font-family:var(--mono)">도면번호_PO_오더라인_납품라인.pdf</span> 로 저장하세요. '
+                 +'폴더를 고르면 해당하는 파일 수를 주황색으로 알려 줍니다.','warn')})
+  + MAN.card({ic:'🎚️',t:'머릿말 · 꼬리말',d:'위·아래 각각 왼쪽·가운데·오른쪽 여섯 칸입니다.',
       body:MAN.bul([
-        '탭을 열면 <b>그 탭에 저장해 둔 문구</b>가 기본으로 나옵니다.',
-        '하네스에서 고친 문구가 AXCELIS에 옮아가지 않습니다.',
-        '항목 사이를 <b>공백만</b>으로 띄우면 벌어지고, <b>/</b> 같은 글자로 이으면 붙습니다.'
+        '<b>채운 칸만</b> 나옵니다. 빈 칸은 자리를 차지하지 않습니다.',
+        '메뉴마다 <b>따로 저장</b>됩니다. 하네스에서 고친 문구가 AXCELIS에 옮아가지 않습니다.',
+        '항목 단추는 <b>마지막에 손댄 칸</b>으로 들어갑니다.'
       ])})
   + MAN.card({ic:'📦',t:'저장 방법 두 가지',
       body:MAN.bul([
-        '<b>병합 저장</b> — 전부 한 PDF로. 한꺼번에 인쇄할 때.',
-        '<b>개별 저장</b> — 건별 PDF를 ZIP으로. 따로 보관하거나 나눠 줄 때.'
+        '<b>병합 저장</b> — 전부 한 PDF로. 한꺼번에 인쇄할 때. 파일 이름 규칙은 적용되지 않습니다.',
+        '<b>개별 저장</b> — 건별 PDF를 ZIP으로. 파일 이름 규칙이 적용됩니다.'
       ])+MAN.tip('다시 뽑아도 <b>같은 건으로 잡힙니다</b>. QR 안의 고유번호가 바뀌지 않기 때문입니다.','info')});
 };
 
@@ -4840,8 +4867,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.67';
+var APP_VER='v6.68';
 var VER_LOG=[
+  {v:'v6.68',d:'2026-08', t:'[이름 정정·설명서] 작업지시서 폴더를 OCR 폴더로 바로잡았습니다 — QR 넣기 전 작업지시서를 도면번호_REV.pdf 로 저장해 둔 곳입니다. 같은 도면번호에 PO가 여러 건이면 어느 PO인지 알 수 없어, 폴더를 고를 때 그 파일 수를 주황색으로 알리고 납기가 빠른 건으로 넣는다고 안내합니다. PO별로 따로 뽑으려면 파일명에 PO를 붙이면 됩니다. 사용 설명서의 작업지시서 항목을 실제 흐름(OCR 저장 → PO 등록 → 폴더 선택 → QR 삽입 → 출력)에 맞춰 다시 썼습니다'},
   {v:'v6.67',d:'2026-08', t:'[작업지시서] ① 나가는 파일 이름을 출도용_도면번호_PO_오더라인_납품라인 으로 바꿨습니다. 들어온 작업지시서 이름과 짝이 맞아 어느 것이 처리됐는지 대조하기 쉽습니다. PO_오더라인_납품라인 과 도면번호_REV 도 고를 수 있습니다. ② 하네스 공통도 PO를 등록하고 작업지시서 폴더에서 찾는 방식으로 바꿨습니다. PDF를 하나씩 끌어놓던 칸은 없앴고, 세 화면이 같은 흐름(PO 등록 → 폴더 선택 → 만들기)이 됩니다'},
   {v:'v6.66',d:'2026-08', t:'[작업지시서] 개별 저장 파일 이름을 PO_오더라인_납품라인 으로 뽑을 수 있게 했습니다(관련부서 요청). [3. 만들기]에서 PO 방식과 도면번호_REV 방식 중 고르며, 고른 값은 기억됩니다. PO 가 없으면 도면번호_REV 로 대신하고, 이름이 겹치면 뒤에 도면번호를 붙여 구분합니다. PO 안의 공백은 자동으로 빠집니다. 병합 저장에는 해당되지 않습니다(한 파일로 묶이므로)'},
   {v:'v6.65',d:'2026-08', t:'[메뉴 정리] 작업지시서 QR 과 도면 출도를 나눴습니다. [작업지시서 QR] 은 하네스 공통 전용으로, 예전처럼 작업지시서 PDF 를 올려 공정 QR 을 넣습니다(수주는 공정현황에서 등록). [도면 출도] 묶음에 AXCELIS·EDWARDS 를 두고, 여기서는 PO 를 등록한 뒤 작업지시서·도면 폴더를 골라 도면마다 작업지시서와 도면을 묶어 뽑습니다. 화면 제목도 고른 메뉴에 따라 바뀝니다'},
