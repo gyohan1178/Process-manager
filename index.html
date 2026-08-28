@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.69</title>
+<title>하네스 공정관리 v6.70</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -533,7 +533,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.69</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.70</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.69 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.70 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -865,6 +865,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
                 <button class="wo-tok" onclick="WO.tok('{PO}')">PO</button>
                 <button class="wo-tok" onclick="WO.tok('{오더라인}')">Order Line</button>
                 <button class="wo-tok" onclick="WO.tok('{납품라인}')">Del Line</button>
+                <button class="wo-tok" onclick="WO.tok('{CCN}')">CCN</button>
                 <button class="wo-tok" onclick="WO.tok('{호기}')">호기</button>
                 <button class="wo-tok" onclick="WO.tok('{수량}')">수량</button>
                 <button class="wo-tok" onclick="WO.tok('{납기}')">납기</button>
@@ -2109,7 +2110,7 @@ function hsOrderRow(o){
           alarm_at:o.alarm_at||null,alarm_by:o.alarm_by||null,
           alarm_cleared_at:o.alarm_cleared_at||null,alarm_cleared_by:o.alarm_cleared_by||null,
           field_reg:o.field_reg||false,field_reg_at:o.field_reg_at||null,field_reg_by:o.field_reg_by||null,
-          item_name:o.item_name||null,release_date:o.release_date||null};
+          item_name:o.item_name||null,release_date:o.release_date||null,ccn:o.ccn||null};
 }
 function hsLogRow(l){
   return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -2190,7 +2191,7 @@ var WOC={
   cust:'harness',
   MODE:{
     harness:{name:'하네스 공통', how:'xls',   desc:'하네스 등록 양식 엑셀로 수주를 등록한 뒤, 작업지시서 폴더를 고르면 파일명으로 맞춰 QR을 넣습니다.'},
-    axcelis:{name:'AXCELIS', how:'xls',   desc:'AXCELIS PO 엑셀(QR업로드용)을 올려 수주로 등록한 뒤, 작업지시서·도면 폴더를 고릅니다.'},
+    axcelis:{name:'AXCELIS', how:'both',  desc:'AXCELIS PO 를 엑셀로 올리거나 그대로 붙여넣습니다. 머리글을 보고 열을 알아서 잡습니다.'},
     edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'}
   },
   go:function(k){
@@ -2212,8 +2213,8 @@ var WOC={
     if(WO.previewHF)WO.previewHF();
     var nm=document.getElementById('wo-cust-name'); if(nm)nm.textContent=m.name;
     var de=document.getElementById('wo-cust-desc'); if(de)de.textContent=m.desc;
-    var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(m.how==='paste')?'':'none';
-    var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(m.how==='xls')?'':'none';
+    var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(m.how==='paste'||m.how==='both')?'':'none';
+    var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(m.how==='xls'||m.how==='both')?'':'none';
     // 하네스는 수주 등록·폴더 없이 작업지시서만 올린다 (예전 방식 그대로)
     var ff=document.getElementById('wo-c-form'); if(ff)ff.style.display='grid';   // '' 로 두면 인라인 grid 가 지워져 block 이 된다
     var t1=document.getElementById('wo-cust-title');
@@ -2252,29 +2253,63 @@ var WOC={
   // ── 붙여넣기 읽기 ──
   //   탭 / 여러 칸 띄어쓰기 둘 다 받는다. 품명에 띄어쓰기가 있으므로
   //   맨 앞을 도면번호, 맨 뒤 숫자를 수량, 가운데를 품명으로 본다.
+  // \ubd99\uc5ec\ub123\uae30 \uc77d\uae30
+  //   \uccab \uc904\uc5d0 \uba38\ub9ac\uae00(CCN\u00b7Item\u00b7OrderNumber \ub4f1)\uc774 \uc788\uc73c\uba74 \uadf8\uac83\uc73c\ub85c \uc5f4\uc744 \uc7a1\uace0,
+  //   \uc5c6\uc73c\uba74 EDWARDS \ubc29\uc2dd(\ub3c4\uba74\ubc88\ud638 \u00b7 \ud488\uba85 \u00b7 \uc218\ub7c9)\uc73c\ub85c \ubcf8\ub2e4.
+  HDR:{ ccn:['ccn'], dwg:['item','\ub3c4\uba74\ubc88\ud638','\ud488\ubc88','pn','drawing'],
+        rev:['srev','rev','\ub9ac\ube44\uc804'], rev2:['brev'],
+        po:['ordernumber','pono','po','\ubc1c\uc8fc\ubc88\ud638'],
+        ol:['orderlines','orderline','\uc624\ub354\ub77c\uc778'], dl:['delline','\ub0a9\ud488\ub77c\uc778'],
+        qty:['quantity','qty','\uc218\ub7c9'], due:['promisedate','\ub0a9\uae30','duedate','requireddate'],
+        name:['itemdesc','\ud488\uba85','description'] },
   parse:function(txt){
-    var out=[], bad=[];
-    String(txt||'').split(/\r?\n/).forEach(function(raw){
-      var line=raw.replace(/\u00a0/g,' ').trim();
-      if(!line)return;
-      var cells=line.indexOf('\t')>=0 ? line.split('\t') : line.split(/\s{2,}/);
-      cells=cells.map(function(c){return c.trim();}).filter(function(c){return c!=='';});
-      if(!cells.length)return;
-      var dwg=cells[0];
-      if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(dwg)){ bad.push(line.slice(0,40)); return; }
-      var qty=1, name='';
-      if(cells.length>=2){
-        var last=cells[cells.length-1].replace(/,/g,'');
-        if(/^\d+(\.\d+)?$/.test(last)){
-          qty=parseInt(last,10)||1;
-          name=cells.slice(1,cells.length-1).join(' ');
-        }else{
-          name=cells.slice(1).join(' ');
-        }
+    var self=WOC;
+    var lines=String(txt||'').split(/\r?\n/).map(function(s){return s.replace(/\u00a0/g,' ').replace(/\s+$/,'');}).filter(function(s){return s.trim()!=='';});
+    if(!lines.length)return {rows:[],bad:[],mode:''};
+    var cut=function(s){ return s.indexOf('\t')>=0 ? s.split('\t') : s.split(/\s{2,}/); };
+    var norm=function(s){ return String(s||'').toLowerCase().replace(/[\s_-]/g,''); };
+
+    // \uccab \uc904\uc774 \uba38\ub9ac\uae00\uc778\uac00
+    var head=cut(lines[0]).map(norm);
+    var idx={}, hits=0;
+    Object.keys(self.HDR).forEach(function(k){
+      for(var a=0;a<self.HDR[k].length;a++){
+        var p=self.HDR[k][a], f=head.indexOf(p);
+        if(f>=0){ idx[k]=f; hits++; return; }
       }
-      out.push({dwg_no:dwg, name:name.trim(), qty:qty});
     });
-    return {rows:out, bad:bad};
+    var hasHdr=(hits>=3 && idx.dwg!==undefined);
+
+    var out=[], bad=[];
+    var start=hasHdr?1:0;
+    for(var i=start;i<lines.length;i++){
+      var cells=cut(lines[i]).map(function(c){return c.trim();});
+      if(hasHdr){
+        var g=function(k){ return (idx[k]!==undefined && cells[idx[k]]!==undefined)?String(cells[idx[k]]).trim():''; };
+        var dwg=g('dwg').replace(/\.0$/,'');
+        if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(dwg)){ if(lines[i].trim())bad.push(lines[i].slice(0,40)); continue; }
+        var q=parseInt(String(g('qty')).replace(/,/g,''),10);
+        out.push({dwg_no:dwg, name:g('name'),
+                  qty:(q>0?q:1),
+                  rev:(g('rev')||g('rev2')).toUpperCase(),
+                  ccn:g('ccn').toUpperCase(),
+                  po:g('po'), ord_ln:g('ol').replace(/\.0$/,''), dl_raw:g('dl').replace(/\.0$/,''),
+                  due:normDueToISO(g('due'))});
+      }else{
+        var c2=cells.filter(function(c){return c!=='';});
+        if(!c2.length)continue;
+        var d2=c2[0];
+        if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(d2)){ bad.push(lines[i].slice(0,40)); continue; }
+        var qty=1, nm='';
+        if(c2.length>=2){
+          var last=c2[c2.length-1].replace(/,/g,'');
+          if(/^\d+(\.\d+)?$/.test(last)){ qty=parseInt(last,10)||1; nm=c2.slice(1,c2.length-1).join(' '); }
+          else nm=c2.slice(1).join(' ');
+        }
+        out.push({dwg_no:d2, name:nm.trim(), qty:qty, rev:'', ccn:'', po:'', ord_ln:'', dl_raw:'', due:''});
+      }
+    }
+    return {rows:out, bad:bad, mode:hasHdr?'\uba38\ub9ac\uae00 \uc778\uc2dd':'\ub3c4\uba74\ubc88\ud638 \u00b7 \ud488\uba85 \u00b7 \uc218\ub7c9'};
   },
 
   form:function(){
@@ -2322,31 +2357,40 @@ var WOC={
   readPaste:function(){
     var f=WOC.form();
     var r=WOC.parse((document.getElementById('wo-paste')||{}).value);
-    if(!r.rows.length){ toast('읽을 수 있는 행이 없습니다','err'); return; }
-    if(!f.due){ toast('제작납기를 넣으세요','warn'); return; }
+    if(!r.rows.length){ toast('\uc77d\uc744 \uc218 \uc788\ub294 \ud589\uc774 \uc5c6\uc2b5\ub2c8\ub2e4','err'); return; }
+    // \ubd99\uc5ec\ub123\uc740 \uac83\uc5d0 \ub0a9\uae30\uac00 \uc788\uc73c\uba74 \uadf8\uac78 \uc4f0\uace0, \uc5c6\uc73c\uba74 \ud654\uba74\uc758 \uc81c\uc791\ub0a9\uae30\ub97c \uc4f4\ub2e4.
+    var noDue=r.rows.filter(function(x){ return !x.due; }).length;
+    if(noDue && !f.due){ toast('\ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc774 \uc788\uc2b5\ub2c8\ub2e4. \uc81c\uc791\ub0a9\uae30\ub97c \ub123\uc73c\uc138\uc694','warn'); return; }
+    var cust=(WOC.cust==='axcelis')?'AXCELIS':(WOC.cust==='edwards'?'Edwards':'');
+    var withPO=r.rows.filter(function(x){return x.po;}).length;
     var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
-    var msg=r.rows.length+'행을 읽었습니다.\n\n'
-      +'  신규 등록 '+(r.rows.length-already)+'건\n'
-      +'  이미 있는 건 '+already+'건 (덮어쓰지 않습니다)\n\n'
-      +'고객사 EDWARDS'
-      +(f.proj?' · 프로젝트 '+f.proj:'')
-      +(f.unit?' · 호기 '+f.unit:'')
-      +'\n  제작납기 '+f.due+(f.rel?'\n  불출일 '+f.rel:'')
-      +(r.bad.length?'\n\n※ 못 읽은 줄 '+r.bad.length+'개는 건너뜁니다.':'')
-      +'\n\n등록할까요?';
+    var msg=r.rows.length+'\ud589\uc744 \uc77d\uc5c8\uc2b5\ub2c8\ub2e4. ('+r.mode+')\n\n'
+      +'  \uc2e0\uaddc \ub4f1\ub85d '+(r.rows.length-already)+'\uac74\n'
+      +'  \uc774\ubbf8 \uc788\ub294 \uac74 '+already+'\uac74 (\ub36e\uc5b4\uc4f0\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4)\n'
+      +(withPO?'  PO \uac00 \ub4e4\uc5b4 \uc788\ub294 \ud589 '+withPO+'\uac74\n':'')
+      +'\n\uace0\uac1d\uc0ac '+(cust||'(\ube44\uc6c0)')
+      +(f.proj?' \u00b7 \ud504\ub85c\uc81d\ud2b8 '+f.proj:'')
+      +(f.unit?' \u00b7 \ud638\uae30 '+f.unit:'')
+      +(f.due?'\n  \uc81c\uc791\ub0a9\uae30 '+f.due+' (\ubd99\uc5ec\ub123\uae30\uc5d0 \ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc5d0\ub9cc)':'')
+      +(f.rel?'\n  \ubd88\ucd9c\uc77c '+f.rel:'')
+      +(r.bad.length?'\n\n\u203b \ubabb \uc77d\uc740 \uc904 '+r.bad.length+'\uac1c\ub294 \uac74\ub108\ub701\ub2c8\ub2e4.':'')
+      +'\n\n\ub4f1\ub85d\ud560\uae4c\uc694?';
     if(!confirm(msg))return;
     var list=r.rows.map(function(x){
-      return {dwg_no:x.dwg_no, rev:'', customer:'Edwards', project:f.proj, unit:f.unit,
-              qty:x.qty, po:'', ord_ln:'', del_ln:'', due:f.due,
+      return {dwg_no:x.dwg_no, rev:x.rev||'', customer:cust, project:f.proj, unit:f.unit,
+              qty:x.qty, po:x.po||'', ord_ln:x.ord_ln||'', del_ln:x.dl_raw||'',
+              due:x.due||f.due, ccn:x.ccn||'',
               step_type:'A', item_name:x.name, release_date:f.rel||''};
     });
-    var res=hsRegisterOrders(list,{matchBy:'projunit'});
+    // PO \uac00 \uc788\uc73c\uba74 \ub3c4\ubc88+PO+\ub77c\uc778\uc73c\ub85c, \uc5c6\uc73c\uba74 \ub3c4\ubc88+\ud504\ub85c\uc81d\ud2b8+\ud638\uae30\ub85c \uac19\uc740 \uac74\uc744 \ubcf8\ub2e4
+    var res=hsRegisterOrders(list,{matchBy:(withPO===r.rows.length)?'poline':'projunit'});
     if(typeof renderStatus==='function')renderStatus();
     if(typeof renderOrderStampList==='function')renderOrderStampList();
-    toast('신규 '+res.added+'건 등록 · 기존 '+res.skipped+'건 유지','ok');
+    toast('\uc2e0\uaddc '+res.added+'\uac74 \ub4f1\ub85d \u00b7 \uae30\uc874 '+res.skipped+'\uac74 \uc720\uc9c0','ok');
     WOC.paintPO(); if(WOC.ocrIndex)WOC.buildTargets();
     WOC.preview();
   },
+
 
   readExcel:function(input){
     // 하네스·AXCELIS 는 이미 있는 양식 판별기를 그대로 쓴다
@@ -2546,6 +2590,20 @@ WOC.paintFolder=function(){
 };
 
 // \ub4f1\ub85d\ub41c PO \uc694\uc57d
+// CCN 규칙
+//   AXCELIS 의 CCN 이 B 면 미국으로 보내므로 발송 기간이 더 필요하다.
+//   작업지시서에는 본래 납기가 아니라 1주일 앞당긴 날짜를 찍는다.
+var CCN_LEAD_DAYS=7;
+function ccnIsUS(o){ return String((o&&o.ccn)||'').trim().toUpperCase()==='B'; }
+function ccnDueISO(o){
+  var iso=normDueToISO(o&&o.due)||'';
+  if(!iso||!ccnIsUS(o))return iso;
+  var d=new Date(iso+'T00:00:00');
+  if(isNaN(d))return iso;
+  d.setDate(d.getDate()-CCN_LEAD_DAYS);
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+}
+
 WOC.paintPO=function(){
   var el=document.getElementById('wo-po-info'); if(!el)return;
   var rows=WOC.rowsForCust();
@@ -4947,8 +5005,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.69';
+var APP_VER='v6.70';
 var VER_LOG=[
+  {v:'v6.70',d:'2026-08', t:'[AXCELIS] ① CCN 을 읽어 둡니다. 머릿말·꼬리말에 CCN 항목이 생겼고, CCN 이 B(미국행)인 건은 발송 기간을 감안해 작업지시서에 찍히는 납기를 1주일 앞당깁니다. 공정현황의 납기는 본래 값 그대로입니다. ② AXCELIS 도 엑셀 대신 그대로 붙여넣을 수 있습니다. 첫 줄에 머리글(CCN·Item·OrderNumber 등)이 있으면 그것을 보고 열을 알아서 잡아 CCN·REV·PO·라인·수량·납기까지 읽습니다. 머리글이 없으면 EDWARDS 방식(도면번호·품명·수량)으로 봅니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_ccn)'},
   {v:'v6.69',d:'2026-08', t:'[도면 출도] ① 같은 도면번호라도 PO가 다르면 각각 따로 만듭니다. 예전에는 파일 기준이라 한 장만 나왔지만, 이제 PO 건마다 한 장씩 나옵니다. ② 단계별로 숫자를 보여 줍니다 — PO를 올리면 도면 종수·필요한 장수·PO 번호 수·총 수량, OCR 폴더를 고르면 맞은 수와 없는 수, 도면 폴더를 고르면 도면 매칭 수. ③ 없는 것 카드를 누르면 무엇이 빠졌는지 목록이 열리고 [목록 복사]로 관련부서에 바로 요청할 수 있습니다. ④ 머릿말·꼬리말에 Order Line·Del Line 항목을 넣었습니다. ⑤ 만들기를 누르면 진행 창이 뜨고 몇 장 중 몇 장인지와 남은 시간이 보입니다'},
   {v:'v6.68',d:'2026-08', t:'[이름 정정·설명서] 작업지시서 폴더를 OCR 폴더로 바로잡았습니다 — QR 넣기 전 작업지시서를 도면번호_REV.pdf 로 저장해 둔 곳입니다. 같은 도면번호에 PO가 여러 건이면 어느 PO인지 알 수 없어, 폴더를 고를 때 그 파일 수를 주황색으로 알리고 납기가 빠른 건으로 넣는다고 안내합니다. PO별로 따로 뽑으려면 파일명에 PO를 붙이면 됩니다. 사용 설명서의 작업지시서 항목을 실제 흐름(OCR 저장 → PO 등록 → 폴더 선택 → QR 삽입 → 출력)에 맞춰 다시 썼습니다'},
   {v:'v6.67',d:'2026-08', t:'[작업지시서] ① 나가는 파일 이름을 출도용_도면번호_PO_오더라인_납품라인 으로 바꿨습니다. 들어온 작업지시서 이름과 짝이 맞아 어느 것이 처리됐는지 대조하기 쉽습니다. PO_오더라인_납품라인 과 도면번호_REV 도 고를 수 있습니다. ② 하네스 공통도 PO를 등록하고 작업지시서 폴더에서 찾는 방식으로 바꿨습니다. PDF를 하나씩 끌어놓던 칸은 없앴고, 세 화면이 같은 흐름(PO 등록 → 폴더 선택 → 만들기)이 됩니다'},
@@ -5568,7 +5627,8 @@ var WO={
       .replace(/\{납품라인\}/g,o.del_ln||'')
       .replace(/\{호기\}/g,o.unit||'')
       .replace(/\{수량\}/g,(o.qty!=null?o.qty:''))
-      .replace(/\{납기\}/g,normDueToISO(o.due)||'')
+      .replace(/\{CCN\}/gi,o.ccn||'')
+      .replace(/\{납기\}/g,ccnDueISO(o)||'')
       .replace(/\{페이지\}/g,pg==null?'':pg)
       .replace(/\{전체\}/g,total==null?'':total)
       .replace(/\s+/g,' ').trim();
@@ -5992,7 +6052,8 @@ DQ.setHFOpt=function(){
 
 // 토큰 → 항목 이름
 var DQ_LABEL={'{프로젝트}':'프로젝트','{도번}':'도번','{REV}':'REV','{고객사}':'고객사',
-              '{PO}':'PO','{오더라인}':'Order Line','{납품라인}':'Del Line','{호기}':'호기','{수량}':'수량','{납기}':'납기',
+              '{PO}':'PO','{오더라인}':'Order Line','{납품라인}':'Del Line',
+              '{CCN}':'CCN','{호기}':'호기','{수량}':'수량','{납기}':'납기',
               '{페이지}':'','{전체}':''};
 
 // 머릿말 문구를 [{lab,val}] 덩어리로 나눈다.
@@ -6287,7 +6348,7 @@ var DQ_MAX_COL=39;   // 엑셀에서 읽을 마지막 열 (0부터)
 var DQ_PROFILES=[
   { key:'axcelis', name:'AXCELIS PO', customer:'AXCELIS',
     need:['item','srev'],
-    map:{ dwg:['Item'], rev:['SRev'], rev2:['BRev'],
+    map:{ dwg:['Item'], rev:['SRev'], rev2:['BRev'], ccn:['CCN'],
           po:['OrderNumber'], ol:['Order Lines'], dl:['Del Line'],
           qty:['Quantity'], due:['Promise Date'], desc:['Item Desc'] } },
   { key:'harness', name:'하네스 등록 양식', customer:'',
@@ -6303,7 +6364,7 @@ var DQ_PROFILES=[
           po:['OrderNumber','PO No','PO','발주번호','Order No'],
           ol:['Order Lines','Order Line','오더라인'], dl:['Del Line','납품라인'],
           qty:['Quantity','수량','Qty'], due:['Promise Date','납기','Due Date','Required Date'],
-          desc:['Item Desc','품명','Description'], cust:['고객사','Customer'],
+          ccn:['CCN'], desc:['Item Desc','품명','Description'], cust:['고객사','Customer'],
           proj:['프로젝트','Project'], unit:['호기','Unit'] } },
 ];
 
@@ -6468,7 +6529,8 @@ DQ.readExcel=function(input){
         var c={item:col(M.dwg), srev:col(M.rev||[]), brev:col(M.rev2||[]),
                po:col(M.po||[]), ol:col(M.ol||[]), dl:col(M.dl||[]),
                qty:col(M.qty||[]), due:col(M.due||[]), desc:col(M.desc||[]),
-               cust:col(M.cust||[]), proj:col(M.proj||[]), unit:col(M.unit||[])};
+               cust:col(M.cust||[]), proj:col(M.proj||[]), unit:col(M.unit||[]),
+               ccn:col(M.ccn||[])};
         if(c.item<0){ toast('도면번호 열을 찾을 수 없습니다','err'); return; }
 
         var proj=(document.getElementById('dq-xl-proj')||{}).value||'';
@@ -6492,6 +6554,7 @@ DQ.readExcel=function(input){
                      po:c.po>=0?String(r[c.po]||'').trim():'',
                      ord_ln:c.ol>=0?String(r[c.ol]||'').replace(/\.0$/,'').trim():'',
                      del_ln:c.dl>=0?String(r[c.dl]||'').replace(/\.0$/,'').trim():'',
+                     ccn:c.ccn>=0?String(r[c.ccn]||'').trim().toUpperCase():'',
                      due:due, step_type:typeSel});
           metas.push({brev:brev, desc:c.desc>=0?String(r[c.desc]||'').trim():''});
         }
@@ -8131,7 +8194,7 @@ function hsRegisterOrders(list, opt){
              po:String(n.po||'').trim(), ord_ln:String(n.ord_ln||'').trim(),
              del_ln:String(n.del_ln||'').trim(), due:n.due||'',
              step_type:n.step_type||'A', manually_done:false,
-             item_name:n.item_name||null, release_date:n.release_date||null,
+             item_name:n.item_name||null, release_date:n.release_date||null, ccn:n.ccn||null,
              created_at:new Date().toISOString()};
       HS.orders.push(o); touched.push(o); added++; out.push(o);
     }
