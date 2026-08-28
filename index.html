@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.51</title>
+<title>하네스 공정관리 v6.53</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -47,6 +47,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   width:9px;border-left:1.5px solid var(--border2);border-bottom:1.5px solid var(--border2);
   border-bottom-left-radius:5px}
 .sn-sub.on::before{border-color:var(--purple);opacity:.55}
+.man-num::before{content:counter(mn)}
 /* 그룹 라벨 — 접을 수 있다 */
 .sn-group{display:flex;align-items:center;justify-content:space-between;width:100%;
   padding:0 11px;height:26px;margin:14px 0 3px;border:none;background:transparent;
@@ -523,7 +524,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.51</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.53</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -668,16 +669,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <button class="sn-item" id="nav-analytics" onclick="setPage('analytics')"><span class="sn-ic">📈</span> 분석 <span style="font-size:8px;background:var(--amber-lt);color:var(--amber);padding:1px 5px;border-radius:8px;margin-left:auto;font-weight:700">BETA</span></button>
         <button class="sn-item" id="nav-users" onclick="setPage('users')" style="display:none"><span class="sn-ic">👥</span> 사용자 관리</button>
         <button class="sn-item" id="nav-stepset" onclick="openStepSettings()"><span class="sn-ic">⚙️</span> 공정 설정</button>
+        <button class="sn-item" id="nav-manual" onclick="setPage('manual')"><span class="sn-ic">📖</span> 사용 설명서</button>
       </div>
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.51 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.53 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
-      <button onclick="openManual()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans);margin-top:5px" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)';this.style.background='var(--green-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
-        <span>📖</span> 사용자 매뉴얼
-      </button>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
         <span id="au-userlabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <button onclick="AUTH.signOut()" title="로그아웃" style="flex-shrink:0;border:1px solid var(--border);background:#fff;color:var(--tx2);font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer">로그아웃</button>
@@ -1278,6 +1277,19 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </div>
 
 
+<div id="pg-manual" class="page hidden" style="padding:20px;overflow-y:auto">
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
+    <div style="font-size:20px;font-weight:800;color:var(--tx)">📖 사용 설명서</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">
+      화면별로 무엇을 하는 곳인지, 어떤 순서로 쓰는지 적어 두었습니다. 위 탭에서 화면을 고르세요.
+    </div>
+  </div>
+
+  <div id="man-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"></div>
+  <div id="man-body"></div>
+</div>
+
 <div id="pg-issue" class="page hidden" style="padding:20px;overflow-y:auto">
   <div style="margin-bottom:14px">
     <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
@@ -1288,7 +1300,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
   </div>
 
-  <div id="alm-kpi" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px"></div>
+  <div id="alm-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px"></div>
 
   <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px">
     <div id="alm-tabs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
@@ -1303,18 +1315,23 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   <div id="alm-rule" style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6"></div>
 
   <div style="overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white)">
-    <table id="alm-table" style="width:100%;border-collapse:collapse;font-size:12px">
+    <table id="alm-table" style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">
+      <colgroup>
+        <col style="width:118px"><col style="width:126px"><col style="width:150px">
+        <col style="width:52px"><col style="width:78px"><col style="width:88px">
+        <col style="width:88px"><col style="width:52px"><col>
+      </colgroup>
       <thead>
         <tr style="background:var(--bg2);border-bottom:2px solid var(--border)">
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">종류</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">도면번호</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">고객사 · 프로젝트</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">호기</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">다음 공정</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">납기</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">출하 목표</th>
-          <th style="padding:9px 12px;text-align:right;font-weight:700;color:var(--tx2);white-space:nowrap">지연</th>
-          <th style="padding:9px 12px;text-align:left;font-weight:700;color:var(--tx2)">내용</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">종류</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">도면번호</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">고객사 · 프로젝트</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">호기</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">다음 공정</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">납기</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">출하 목표</th>
+          <th style="padding:9px 10px;text-align:right;font-weight:700;color:var(--tx2);line-height:1.25">지연</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">내용</th>
         </tr>
       </thead>
       <tbody id="alm-body"><tr><td colspan="9" style="padding:32px;text-align:center;color:var(--tx3)">계산 중…</td></tr></tbody>
@@ -1393,7 +1410,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 
   <div id="stk-warn" style="display:none;margin-bottom:12px;padding:11px 14px;border-radius:var(--r);background:#fef2f2;border:1.5px solid #fecaca;color:var(--red);font-size:12px;font-weight:600;line-height:1.6"></div>
 
-  <div id="stk-kpi" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px"></div>
+  <div id="stk-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px"></div>
 
   <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px">
     <input id="stk-q" class="po-inp" placeholder="도면번호 · 고객사 · 프로젝트 검색" style="width:260px" oninput="STK.setQ(this.value)">
@@ -1670,7 +1687,8 @@ function removeStepType(ti){
   toast('삭제됨','ok');
 }
 
-function openManual(){
+function openManual(){ setPage('manual'); return; }
+function openManualOld(){
   var el=document.getElementById('manual-body');if(!el)return;
   var stepList=H_STEPS.map(function(s){return s.icon+' '+s.id;}).join(' → ');
   var S='<h3 style="font-size:15px;font-weight:800;color:var(--blue);margin-bottom:8px">';
@@ -2008,6 +2026,272 @@ async function hsDeleteLog(id){
 }
 
 
+
+
+// ════════════════════════════════════════
+// 사용 설명서 (v6.53)
+//   화면별 탭. 각 탭은 카드 몇 개로 이루어진다.
+//   카드 = 제목 + 한 줄 설명 + 순서/요령. 규칙은 사내 UI 기준을 따른다.
+// ════════════════════════════════════════
+var MAN={
+  tab:'status',
+  TABS:[
+    {k:'status', ic:'📊', t:'공정현황',      adminOnly:false},
+    {k:'scan',   ic:'📷', t:'QR 스캔',       adminOnly:false},
+    {k:'issue',  ic:'⚠️', t:'공정 이슈',     adminOnly:true},
+    {k:'stock',  ic:'📦', t:'재고 현황',     adminOnly:true},
+    {k:'dwgqr',  ic:'📐', t:'도면 QR',       adminOnly:true},
+    {k:'wo',     ic:'📄', t:'작업지시서 QR', adminOnly:true},
+    {k:'set',    ic:'⚙️', t:'공정 설정',     adminOnly:true},
+    {k:'trouble',ic:'🩹', t:'문제가 생기면', adminOnly:false}
+  ],
+  open:function(){ MAN.render(); },
+  go:function(k){ MAN.tab=k; MAN.render(); },
+
+  // 카드 한 장
+  card:function(o){
+    var tone={red:['#fef2f2','#fecaca','var(--red)'],
+              amber:['var(--amber-lt)','#fde68a','var(--amber)'],
+              green:['var(--green-lt)','#a7f3d0','var(--green)'],
+              purple:['var(--purple-lt)','#ddd6fe','var(--purple)']}[o.tone];
+    var head=tone?('background:'+tone[0]+';border-color:'+tone[1]):'background:var(--bg2);border-color:var(--border)';
+    return '<div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:12px">'
+      +'<div style="padding:12px 16px;border-bottom:1px solid;'+head+'">'
+        +'<div style="font-size:14.5px;font-weight:800;color:'+(tone?tone[2]:'var(--tx)')+'">'+(o.ic||'')+' '+hEsc(o.t)+'</div>'
+        +(o.d?'<div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">'+o.d+'</div>':'')
+      +'</div>'
+      +'<div style="padding:14px 16px">'+o.body+'</div>'
+    +'</div>';
+  },
+  // 번호가 붙은 순서
+  steps:function(list){
+    return '<ol style="margin:0;padding-left:0;list-style:none;counter-reset:mn">'
+      +list.map(function(s){
+        return '<li style="counter-increment:mn;position:relative;padding-left:30px;margin-bottom:10px;font-size:13px;color:var(--tx2);line-height:1.7">'
+          +'<span class="man-num" style="position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--purple-lt);color:var(--purple);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">'
+          +'</span>'+s+'</li>';
+      }).join('')+'</ol>';
+  },
+  // 점 목록
+  bul:function(list){
+    return '<ul style="margin:0;padding-left:17px;font-size:13px;color:var(--tx2);line-height:1.9">'
+      +list.map(function(x){return '<li style="margin-bottom:4px">'+x+'</li>';}).join('')+'</ul>';
+  },
+  tip:function(txt,tone){
+    var c={warn:['var(--amber-lt)','var(--amber)','⚠️'],
+           info:['var(--blue-lt)','var(--blue)','📌'],
+           bad :['#fef2f2','var(--red)','🚫']}[tone||'info'];
+    return '<div style="margin-top:12px;background:'+c[0]+';border-left:3px solid '+c[1]+';border-radius:0 6px 6px 0;padding:10px 13px;font-size:12.5px;color:var(--tx2);line-height:1.7">'
+      +c[2]+' '+txt+'</div>';
+  },
+
+  render:function(){
+    var tabs=document.getElementById('man-tabs'), body=document.getElementById('man-body');
+    if(!tabs||!body)return;
+    var admin=(typeof AUTH==='undefined')||AUTH.isAdmin();
+    var list=MAN.TABS.filter(function(t){ return admin||!t.adminOnly; });
+    if(!list.some(function(t){return t.k===MAN.tab;}))MAN.tab=list[0].k;
+    tabs.innerHTML=list.map(function(t){
+      var on=(MAN.tab===t.k);
+      return '<button onclick="MAN.go(\''+t.k+'\')" style="height:36px;padding:0 14px;border-radius:20px;cursor:pointer;font-family:var(--sans);font-size:12.5px;font-weight:700;'
+        +(on?'background:var(--purple);color:#fff;border:1.5px solid var(--purple)'
+            :'background:#fff;color:var(--tx2);border:1.5px solid var(--border)')+'">'+t.ic+' '+t.t+'</button>';
+    }).join('');
+    body.innerHTML=(MAN.PAGES[MAN.tab]||function(){return '';})();
+  },
+
+  PAGES:{}
+};
+
+MAN.PAGES.status=function(){
+  var steps=(typeof H_STEPS!=='undefined'?H_STEPS:[]).map(function(s){return s.id;}).join(' → ')||'출도 → 재단 → 제작 → 검사 → 포장 → 출하';
+  return MAN.card({ic:'📊',t:'공정현황이란',d:'등록된 모든 건이 어느 공정까지 왔는지 한눈에 보는 화면입니다.',
+      body:MAN.bul([
+        '<b>현황판</b> 칸의 색이 찬 배지가 <b>끝난 공정</b>입니다. 회색은 아직입니다.',
+        '기본 공정 순서: <b>'+hEsc(steps)+'</b>',
+        '<b>A형</b>은 기본 6단계, <b>B형</b>은 넘버링·하우징·압착 등이 들어간 긴 공정입니다. 배지 앞 <b>A형/B형</b>을 누르면 바뀝니다.',
+        '납기가 지난 건은 <b>빨간 배지</b>로 며칠 지났는지 같이 나옵니다.'
+      ])+MAN.tip('공정 배지에 마우스를 올리면 <b>누가 언제 찍었는지</b>가 나옵니다.')})
+  + MAN.card({ic:'📥',t:'수주 등록하기',d:'엑셀로 한꺼번에 넣습니다.',
+      body:MAN.steps([
+        '<b>양식</b> 버튼으로 엑셀 서식을 받습니다.',
+        '도면번호·수량·납기 등을 채웁니다.',
+        '<b>Excel 업로드</b>로 올립니다.',
+        '이미 있는 건은 그대로 두고 새 건만 들어갑니다.'
+      ])+MAN.tip('같은 파일을 다시 올려도 <b>중복이 생기지 않습니다</b>. 같은 건인지는 도면번호·PO·오더라인·납품라인으로 봅니다.','info')})
+  + MAN.card({ic:'🔎',t:'찾기와 정리',
+      body:MAN.bul([
+        '검색창에 <b>도면번호·PO·고객사·프로젝트</b> 아무거나 넣으면 걸립니다.',
+        '<b>프로젝트 묶기</b>를 켜면 같은 프로젝트가 한 줄로 접힙니다. ▶ 를 누르면 펼쳐집니다.',
+        '열 제목을 누르면 <b>정렬</b>됩니다. 한 번 더 누르면 반대로 정렬됩니다.',
+        '<b>PO / Order Lines / Del Lines</b> 는 한 칸에 <b>/</b> 로 구분해 나옵니다.',
+        '등록일은 <b>도면번호에 마우스를 올리면</b> 보입니다. CSV·엑셀에는 그대로 들어갑니다.'
+      ])})
+  + MAN.card({ic:'✏️',t:'고치기',tone:'amber',d:'표에서 바로 고칠 수 있는 것들입니다.',
+      body:MAN.bul([
+        '<b>납기</b> — 날짜를 누르면 그 자리에서 고쳐집니다.',
+        '<b>공정 타입</b> — A형/B형 배지를 누르면 A → B → C 로 돕니다.',
+        '<b>여러 건 한꺼번에</b> — 왼쪽 네모를 체크하면 위에 일괄 처리 단추가 나옵니다.'
+      ])+MAN.tip('삭제는 <b>되돌릴 수 없습니다</b>. 지우기 전에 진행 기록이 있는지 확인하세요.','warn')});
+};
+
+MAN.PAGES.scan=function(){
+  return MAN.card({ic:'📷',t:'현장에서 찍는 순서',d:'공정을 먼저 고르고 QR을 찍습니다. 순서가 반대면 인식하지 않습니다.',
+      body:MAN.steps([
+        '<b>작업자 이름</b>을 넣습니다. 한 번 넣으면 기억됩니다.',
+        '가운데에서 <b>공정</b>을 고릅니다 (재단·제작·검사…).',
+        '<b>카메라로 스캔</b>을 누르고 도면의 QR을 찍습니다.',
+        '초록 화면이 뜨면 기록된 것입니다.'
+      ])})
+  + MAN.card({ic:'⏭️',t:'앞 공정을 건너뛰어도 됩니다',tone:'green',
+      body:MAN.bul([
+        '재단을 안 찍고 제작부터 찍어도 <b>막지 않습니다</b>.',
+        '등록되지 않은 도면을 찍으면 <b>물어봅니다</b>. [예] 를 누르면 그 자리에서 등록되고 기록도 남습니다.',
+        '그렇게 등록된 건은 사무실 <b>공정 이슈</b> 화면에 「현장 등록」으로 표시됩니다.'
+      ])+MAN.tip('잘못 찍었으면 [아니오] 를 누르세요. 아무것도 남지 않습니다.','info')})
+  + MAN.card({ic:'⛔',t:'작업을 못 할 때',tone:'red',d:'부품이 없거나 도면이 이상하면 알립니다.',
+      body:MAN.steps([
+        '공정을 고릅니다.',
+        '아래 <b>작업중단 / 불가</b> 를 누르고 사유를 적습니다.',
+        'QR을 찍습니다.',
+        '사무실 화면에 빨간 표시가 뜹니다. 문제가 풀려 그 공정을 완료로 찍으면 자동으로 풀립니다.'
+      ])})
+  + MAN.card({ic:'📶',t:'인터넷이 끊겨도 찍힙니다',tone:'green',
+      body:MAN.bul([
+        '연결이 끊겨도 스캔은 됩니다. 기록은 <b>이 기기에 남습니다</b>.',
+        '위에 빨간 띠로 <b>아직 못 보낸 건수</b>가 나옵니다.',
+        '연결이 돌아오면 <b>알아서 다시 보냅니다</b>. 빨간 띠를 눌러 바로 보낼 수도 있습니다.'
+      ])+MAN.tip('빨간 띠가 떠 있는 채로 앱을 지우거나 브라우저 기록을 지우면 <b>그 기록이 사라집니다</b>. 띠가 사라진 것을 보고 닫으세요.','warn')});
+};
+
+MAN.PAGES.issue=function(){
+  return MAN.card({ic:'⚠️',t:'공정 이슈란',d:'납기를 넘겼거나 오래 멈춰 있는 건을 모아 보는 화면입니다. 영업 요청으로 만들었습니다.',
+      body:MAN.bul([
+        '<b style="color:var(--red)">납기 지남</b> — 납기가 지났는데 출하가 안 된 건',
+        '<b style="color:var(--amber)">출하준비 늦음</b> — 출하 목표일을 넘긴 건',
+        '<b style="color:var(--purple)">공정 정체</b> — 한 공정에 오래 멈춰 있는 건',
+        '<b style="color:var(--red)">작업중단</b> — 현장에서 중단을 건 건',
+        '<b style="color:var(--blue)">현장 등록</b> — 현장에서 찍다가 등록된 건 (확인 필요)'
+      ])+MAN.tip('위 지표 카드를 누르면 <b>그 종류만</b> 걸러 봅니다. 한 번 더 누르면 풀립니다.')})
+  + MAN.card({ic:'📅',t:'날짜 계산 방식',d:'주말과 등록한 공휴일을 뺀 영업일로 셉니다.',
+      body:MAN.bul([
+        '<b>출하 목표일 = 납기 − 출하 여유일</b>',
+        '예를 들어 여유일이 3영업일이고 납기가 금요일이면, 목표일은 그 주 화요일입니다.',
+        '목표일을 넘기면 주황, 납기까지 넘기면 빨강입니다.'
+      ])+MAN.tip('<b>공휴일을 넣지 않으면 주말만 빠집니다.</b> 연휴가 있는 달은 계산이 어긋나니 [기준 설정]에서 넣어 두세요.','warn')})
+  + MAN.card({ic:'⚙️',t:'기준 설정',d:'무엇을 이슈로 볼지 정합니다.',
+      body:MAN.bul([
+        '<b>출하 여유일</b> — 납기 며칠 전까지 출하가 끝나 있어야 하는지',
+        '<b>공정 정체 기준</b> — 며칠 움직임이 없으면 방치로 볼지',
+        '<b>이 날짜부터 보기</b> — 그보다 이른 납기는 이슈에서 뺍니다. 옛 자료가 잔뜩 잡힐 때 씁니다.',
+        '<b>공휴일</b> — 회사가 쉬는 날. 임시공휴일·창립기념일도 넣으세요.'
+      ])})
+  + MAN.card({ic:'🚨',t:'알림',
+      body:MAN.bul([
+        '납기 지난 건이 있으면 왼쪽 메뉴에 <b>빨간 숫자</b>가 붙습니다.',
+        '로그인하면 <b>하루 한 번</b> 팝업으로 알려 줍니다.',
+        '[엑셀] 로 목록을 받아 회의 자료로 쓸 수 있습니다.'
+      ])});
+};
+
+MAN.PAGES.stock=function(){
+  return MAN.card({ic:'📦',t:'재고 현황이란',d:'포장이 끝나면 입고, 출하가 끝나면 출고로 잡아 도면번호별로 셉니다.',
+      body:'<div style="background:var(--bg2);border-radius:var(--r);padding:12px 14px;font-size:13.5px;font-weight:700;color:var(--tx);text-align:center;font-family:var(--mono)">현재고 = 기초재고 + 포장입고 − 출하</div>'
+        +MAN.tip('같은 도면이 여러 PO로 나뉘어 있어도 <b>한 줄로 합쳐서</b> 셉니다.','info')})
+  + MAN.card({ic:'✏️',t:'기초재고 넣기',d:'이 시스템으로 잡기 전부터 가지고 있던 수량입니다.',
+      body:MAN.steps([
+        '표에서 <b>기초재고</b> 칸을 두 번 누릅니다.',
+        '수량을 넣고 Enter 를 누릅니다. (Esc 는 취소)',
+        '여러 건은 <b>기초재고 업로드</b> 로 엑셀에서 한꺼번에 넣습니다. [양식] 으로 서식을 받으세요.'
+      ])+MAN.tip('일괄 업로드는 <b>덮어씁니다</b>. 잘못했으면 [되돌리기] 로 바로 전 상태로 돌아갑니다.','warn')})
+  + MAN.card({ic:'🔴',t:'마이너스가 뜨면',tone:'red',d:'출하가 포장보다 많다는 뜻입니다. 정상이 아닙니다.',
+      body:MAN.bul([
+        '포장을 안 찍고 출하만 찍었을 수 있습니다.',
+        '출하 공정이 생기기 전(옛 자료)이라 포장 기록이 없을 수 있습니다.',
+        '이미 나간 수량만큼 <b>기초재고에 마이너스</b>를 넣으면 맞춰집니다.'
+      ])});
+};
+
+MAN.PAGES.dwgqr=function(){
+  return MAN.card({ic:'📐',t:'도면 QR이란',d:'도면에 공정 QR을 넣어 현장에서 찍을 수 있게 만듭니다.',
+      body:MAN.bul([
+        '원본이 A0·A1이어도 <b>전부 A4로 맞춰</b> 나옵니다. 그래서 인쇄된 QR 크기가 도면마다 달라지지 않습니다.',
+        '도면이 옆으로 누워 있어도 <b>바로 세워</b> 나옵니다.',
+        '위아래 1cm에 <b>머릿말·꼬리말</b>이 들어갑니다.'
+      ])})
+  + MAN.card({ic:'📋',t:'엑셀 + 폴더로 한꺼번에',d:'PO 엑셀을 올리면 등록하고, 폴더에서 도면을 찾아 줍니다.',
+      body:MAN.steps([
+        '<b>프로젝트명</b>과 <b>공정 타입</b>을 정합니다. (엑셀에 없는 값입니다)',
+        '<b>PO 엑셀 올리기</b> — 수주로 등록됩니다.',
+        '<b>도면 폴더 선택</b> — NAS의 도면 폴더를 고릅니다.',
+        '매칭 결과를 확인하고 <b>만들기</b> 를 누릅니다.'
+      ])+MAN.tip('브라우저를 <b>새로고침하면 폴더를 다시 골라야 합니다</b>. 보안상 어쩔 수 없습니다.','warn')})
+  + MAN.card({ic:'🔤',t:'REV 고르는 규칙',
+      body:MAN.bul([
+        '엑셀의 <b>SRev</b> 와 같은 REV 도면을 먼저 찾습니다.',
+        '없으면 <b>BRev</b> 도면을 쓰고 <span style="color:var(--amber);font-weight:700">주황색</span>으로 표시합니다.',
+        '둘 다 없으면 <span style="color:var(--red);font-weight:700">출력에서 뺍니다</span>. 구판이 현장에 나가는 것을 막기 위해서입니다.',
+        '같은 REV가 여러 판이면 <b>판번호가 가장 큰 것</b>(최신판)을 씁니다.'
+      ])+MAN.tip('파일명은 <b>도번_REV_판번호</b> 형식이어야 합니다. 예) 160023431_C_02','info')})
+  + MAN.card({ic:'🎚️',t:'모양 정하기',
+      body:MAN.bul([
+        '<b>QR 크기</b> — 기본 25mm. 스캐너 인식에는 20mm 이상을 권합니다.',
+        '<b>모서리</b> — QR을 넣을 자리. 도면 내용을 가리지 않는 쪽으로.',
+        '<b>QR은 첫 장에만</b> — 여러 장짜리 도면에서 첫 장에만 넣습니다.',
+        '<b>항목 간격</b> — 머릿말 항목 사이를 벌립니다.'
+      ])+MAN.tip('머릿말에서 항목 사이를 <b>공백만</b>으로 띄우면 간격이 벌어지고, <b>/</b> 같은 글자로 이으면 붙습니다.','info')});
+};
+
+MAN.PAGES.wo=function(){
+  return MAN.card({ic:'📄',t:'작업지시서 QR',d:'작업지시서 양식의 정해진 칸에 QR을 넣습니다.',
+      body:MAN.bul([
+        '도면 QR과 달리 <b>용지를 바꾸지 않습니다</b>. 양식 그대로 나옵니다.',
+        'QR은 공정칸 자리에 고정으로 들어갑니다.',
+        '파일명이 <b>도면번호</b> 로 되어 있으면 등록된 수주를 자동으로 찾습니다.'
+      ])})
+  + MAN.card({ic:'📦',t:'저장 방법 두 가지',
+      body:MAN.bul([
+        '<b>병합 저장</b> — 전부 한 PDF로. 한꺼번에 인쇄할 때.',
+        '<b>개별 저장</b> — 건별 PDF를 ZIP으로. 따로 보관하거나 나눠 줄 때.'
+      ])+MAN.tip('만들고 나면 공정현황의 <b>QR 출력</b> 표시가 켜집니다. 다시 뽑아도 같은 건으로 잡히니 걱정하지 않아도 됩니다.','info')});
+};
+
+MAN.PAGES.set=function(){
+  return MAN.card({ic:'⚙️',t:'공정 설정',d:'공정 이름·순서·색과 공정 타입을 정합니다.',
+      body:MAN.bul([
+        '공정을 <b>추가·삭제·순서 변경</b>할 수 있습니다.',
+        '<b>공정 타입</b>(A형·B형…)마다 어떤 공정을 쓸지 고릅니다.',
+        '여기서 정한 것이 현장 스캔 화면과 현황판에 바로 반영됩니다.'
+      ])+MAN.tip('<b>이미 기록이 쌓인 공정의 이름을 바꾸면</b> 옛 기록과 이어지지 않습니다. 바꾸기 전에 확인하세요.','warn')})
+  + MAN.card({ic:'👥',t:'사용자 관리',
+      body:MAN.bul([
+        '가입 신청을 <b>승인</b>해야 쓸 수 있습니다.',
+        '<b>작업자</b>는 스캔 화면과 공정현황만 봅니다.',
+        '<b>관리자</b>는 모든 화면을 봅니다.'
+      ])});
+};
+
+MAN.PAGES.trouble=function(){
+  return MAN.card({ic:'🩹',t:'자주 나오는 문제',tone:'amber',
+      body:'<div style="font-size:13px;color:var(--tx2);line-height:1.9">'
+        +'<b>화면이 예전 그대로예요</b><br><span style="color:var(--tx3)">Ctrl + Shift + R 을 누르세요. 그냥 새로고침(F5)으로는 안 바뀔 때가 있습니다.</span><br><br>'
+        +'<b>위에 빨간 띠가 떠요</b><br><span style="color:var(--tx3)">서버에 아직 못 보낸 기록이 있다는 뜻입니다. 띠를 누르면 다시 보냅니다. 인터넷을 확인하세요.</span><br><br>'
+        +'<b>QR을 찍었는데 반응이 없어요</b><br><span style="color:var(--tx3)">① 작업자 이름을 넣었는지 ② 공정을 골랐는지 ③ 그 도면의 공정 타입에 있는 공정인지 확인하세요.</span><br><br>'
+        +'<b>화면을 새로고침했더니 도면 폴더가 풀렸어요</b><br><span style="color:var(--tx3)">브라우저 보안상 그렇습니다. 폴더를 다시 고르면 됩니다.</span><br><br>'
+        +'<b>목록이 안 바뀌어요</b><br><span style="color:var(--tx3)">값만 고친 것은 자동 새로고침이 잡지 못합니다. 오른쪽 위 ↻ 를 누르세요.</span>'
+      +'</div>'})
+  + MAN.card({ic:'🚫',t:'되돌릴 수 없는 것',tone:'red',
+      body:MAN.bul([
+        '<b>삭제</b> — 지운 건은 복구되지 않습니다.',
+        '기초재고 <b>일괄 업로드</b>는 [되돌리기] 로 바로 전 상태까지만 돌아갑니다.',
+        '같은 건을 두 사람이 동시에 고치면 <b>나중에 저장한 쪽</b>이 남습니다.'
+      ])+MAN.tip('지우기 전에 그 건에 <b>진행 기록이 있는지</b> 꼭 보세요. 기록이 있으면 지우지 말고 값만 고치세요.','warn')})
+  + MAN.card({ic:'📞',t:'그래도 안 되면',
+      body:MAN.bul([
+        '왼쪽 아래 <b>버전 번호</b>를 눌러 무엇이 바뀌었는지 볼 수 있습니다.',
+        '화면을 캡처해서 구매자재팀에 알려 주세요.'
+      ])});
+};
 
 // ════════════════════════════════════════
 // 공정 이슈 · 납기 알람 (v6.46)
@@ -2507,15 +2791,15 @@ function openNavGroupFor(id){
 }
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue','manual'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue','manual'].forEach(function(id){
     const pg=document.getElementById('pg-'+id);
     if(pg) pg.classList.toggle('hidden', id!==p);
   });
-  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue'].forEach(function(id){
+  ['status','analytics','stamp','stamp-single','scan','qrhist','users','workorder','dwgqr','stock','issue','manual'].forEach(function(id){
     const nb=document.getElementById('nav-'+id);
     if(nb){ nb.classList.toggle('on', id===p); if(id===p)openNavGroupFor('nav-'+id); }
     const mn=document.getElementById('mn-'+id);
@@ -2530,6 +2814,7 @@ function setPage(p){
   if(p==='users') Users.render();
   if(p==='stock') STK.open();
   if(p==='issue') ALMUI.open();
+  if(p==='manual') MAN.open();
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -2776,7 +3061,7 @@ function _renderStatusInner(){
   _spVisibleIds=orders.map(function(o){return o.id;});
   function miniProgress(mOrder){
     var mSteps=getStepsForType(mOrder&&mOrder.step_type);
-    return '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'
+    return '<div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">'
       +mSteps.map(function(s){
         var st=getStepSt(mOrder,s.id);
         var isDone=st.s==='done', isRun=st.s==='run';
@@ -2789,8 +3074,10 @@ function _renderStatusInner(){
         if(s.id===INSPECT_STEP&&isDone&&st.result==='불합격'){bg='#f43f5e';col='#fff';label='검사✕';}
         if(s.id===INSPECT_STEP&&isDone&&st.result==='보류'){bg='#E0922F';col='#fff';label='검사?';}
         var title=isDone?s.id+' 완료('+(st.worker||'?')+')'+(st.result?' '+st.result:''):isRun?s.id+' 진행중':s.id+' 대기';
-        return '<span title="'+title+'" style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+bg
-          +';color:'+col+';opacity:'+op+';white-space:nowrap'+anim+'">'+label+'</span>';
+        // 노트북 화면에서 한 줄에 들어가도록 긴 이름은 줄여 쓴다. 전체 이름은 마우스를 올리면 보인다.
+        var shown=label.length>3?label.replace(/[&·\/].*$/,'').slice(0,3):label;
+        return '<span title="'+title+'" style="font-size:9.5px;font-weight:700;padding:2px 5px;border-radius:4px;background:'+bg
+          +';color:'+col+';opacity:'+op+';white-space:nowrap'+anim+'">'+hEsc(shown)+'</span>';
       }).join('')+'</div>';
   }
   // ── 모바일: 카드 리스트 (목업 스타일) ──
@@ -2917,9 +3204,6 @@ function _renderStatusInner(){
         +(done?'<span style="font-size:10px;font-weight:700;color:var(--green)">✅ 완료</span>':'')
       +'</div></td>'
       +'<td style="text-align:center">'+alarmDot(o)+'</td>'
-      +'<td style="text-align:center">'
-        +(o.qr_printed?'<div title="'+fmtQRDate(o.qr_printed_at)+'" style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:14px">✅</span><span style="font-size:9px;color:var(--tx3);font-family:var(--mono)">'+fmtQRDate(o.qr_printed_at)+'</span></div>':'<span style="font-size:16px;color:var(--tx3)" title="미출력">○</span>')
-      +'</td>'
       +'</tr>';
   }
   function _projKey(o){return (o.project||'').trim()||'(미지정)';}
@@ -2930,7 +3214,7 @@ function _renderStatusInner(){
     orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!_cm[k]){_cm[k]={key:k,items:[]};_cs.push(_cm[k]);}_cm[k].items.push(o);});
     _cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
     _cs.forEach(function(g){
-      rows+='<tr><td colspan="12" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
+      rows+='<tr><td colspan="11" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
       g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
     });
   } else if(_spGroup){
@@ -2954,30 +3238,31 @@ function _renderStatusInner(){
   var canEditHd=(typeof AUTH==='undefined'||AUTH.isAdmin());
   var allSel=_spVisibleIds.length>0&&_spVisibleIds.every(function(id){return _selOrders.has(id);});
   var cols=[
-    {h:'',key:null,w:34,al:'center'},
-    {h:'고객사',key:'customer',w:120},
-    {h:'PO / Order Lines / Del Lines',key:'po',w:210},
-    {h:'프로젝트',key:'project',w:130},
-    {h:'도면번호',key:'dwg_no',w:175},
-    {h:'Rev',key:'rev',w:52,al:'center'},
-    {h:'호기',key:'unit',w:55,al:'center'},
-    {h:'수량',key:'qty',w:55,al:'center'},
-    {h:'납기',key:'due',w:88},
-    {h:'현황판',key:'progress',w:200},
-    {h:'상태',key:'alarm',w:56,al:'center'},
-    {h:'QR 출력',key:'qr_printed',w:64,al:'center'}
+    {h:'',key:null,w:32,al:'center'},
+    {h:'고객사',key:'customer',w:96},
+    {h:'PO / Order Lines / Del Lines',key:'po',w:142},
+    {h:'프로젝트',key:'project',w:106},
+    {h:'도면번호',key:'dwg_no',w:150},
+    {h:'Rev',key:'rev',w:46,al:'center'},
+    {h:'호기',key:'unit',w:48,al:'center'},
+    {h:'수량',key:'qty',w:48,al:'center'},
+    {h:'납기',key:'due',w:94},
+    {h:'현황판',key:'progress',w:300},
+    {h:'상태',key:'alarm',w:48,al:'center'}
   ];
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
   var colWidths=(savedCols&&savedCols.length===cols.length)?savedCols:cols.map(function(c){return c.w;});
   var colgroup='<colgroup>'+colWidths.map(function(w){return '<col style="width:'+w+'px">';}).join('')+'</colgroup>';
   var thead='<thead><tr>'+cols.map(function(c,i){
     var align=c.al==='center'?'text-align:center;':'';
+    // 헤더 글자가 길다고 열이 넓어지면 안 된다. 두 줄로 접히게 둔다.
+    align+='white-space:normal;line-height:1.25;';
     if(i===0){
       return '<th style="text-align:center;position:relative">'+(canEditHd?'<input type="checkbox"'+(allSel?' checked':'')+' onchange="toggleAllOrders(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)" title="전체 선택">':'')+'</th>';
     }
     var arrow=_spSort.key===c.key?(_spSort.dir==='asc'?' ▲':' ▼'):'';
     var arrowColor=_spSort.key===c.key?'var(--blue)':'var(--tx3)';
-    return '<th onclick="setSpSort(\''+c.key+'\')" style="position:relative;'+align+'user-select:none;overflow:hidden;white-space:nowrap;cursor:pointer" title="클릭하여 정렬">'
+    return '<th onclick="setSpSort(\''+c.key+'\')" style="position:relative;'+align+'user-select:none;overflow:hidden;cursor:pointer" title="클릭하여 정렬">'
       +'<span>'+c.h+'</span><span style="color:'+arrowColor+';font-size:9px">'+arrow+'</span>'
       +'<div class="col-rz" data-col="'+i+'" onmousedown="event.stopPropagation();startColResize(event,'+i+')"></div></th>';
   }).join('')+'</tr></thead>';
@@ -3962,8 +4247,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.51';
+var APP_VER='v6.53';
 var VER_LOG=[
+  {v:'v6.53',d:'2026-08', t:'[사용 설명서] 팝업으로 뜨던 매뉴얼을 사이드바 화면으로 옮기고 다시 썼습니다. 화면별 탭(공정현황·QR 스캔·공정 이슈·재고 현황·도면 QR·작업지시서 QR·공정 설정·문제가 생기면)으로 나누고, 각 탭을 카드 몇 장으로 구성했습니다. 카드마다 무엇을 하는 곳인지 한 줄 설명과 번호가 붙은 순서를 넣었고, 주의할 것은 색 띠로 구분했습니다. 작업자에게는 공정현황·QR 스캔·문제가 생기면 세 탭만 보입니다'},
+  {v:'v6.52',d:'2026-08', t:'[화면 폭] 노트북(1366px) 기준으로 열 너비를 다시 잡았습니다. 공정현황에서 QR 출력 열을 뺐고(공정 이슈에서 확인), 기본 너비 합계를 노트북 화면에 딱 맞춰 가로 스크롤을 없앴습니다. 긴 헤더가 잘리던 문제와, 헤더 때문에 열이 넓어지던 문제를 고쳤습니다. 현황판 공정 배지를 조금 작게 하고 긴 이름(납땜&조립 등)은 줄여 쓰되 마우스를 올리면 전체가 보입니다. 공정 이슈 표도 같은 기준으로 너비를 지정했고, 지표 카드는 화면 폭에 따라 자동으로 줄바꿈됩니다'},
   {v:'v6.51',d:'2026-08', t:'[도면 QR] ① 회전된 도면이 옆으로 누운 채 나오던 문제 수정 — 도면에 붙어 있는 회전 속성(AXCELIS 도면에 270°가 흔함)을 살려 글자가 바로 서게 출력합니다. ② 여러 장짜리 도면은 QR을 첫 장에만 넣습니다(설정에서 모든 장으로 바꿀 수 있음). ③ 머릿말을 위 가운데 정렬로 바꿨습니다'},
   {v:'v6.50',d:'2026-08', t:'[공정현황] 표가 한 줄에 너무 많아 가로로 밀리고 글자가 겹치던 문제 개선. PO No·Order Line·Del Line 세 칸을 [PO / Order Lines / Del Lines] 한 칸으로 합쳤습니다(값은 47268 KF / 3 / 1 처럼 / 로 구분, 뒤쪽 값이 없으면 생략). 등록일 열은 감췄고 도면번호에 마우스를 올리면 보입니다(CSV·엑셀에는 그대로 들어갑니다). 15열 → 12열이 되어 가로 스크롤이 없어졌습니다'},
   {v:'v6.49',d:'2026-08', t:'[긴급] 도면 QR 재설계(A4 통일·머릿말 확대·QR 고정 위치)가 [병합 저장]에는 적용되지 않던 문제 수정. 병합 저장이 개별 저장과 다른 경로로 그리고 있어 개별 저장에만 반영됐습니다. 이제 두 경로가 같은 함수를 씁니다. 저장 파일 이름도 탭에 맞게 고쳤습니다(도면 QR 인데 작업지시서로 저장되던 것). 사이드바 하위 항목 앞에 ㄴ 모양 선을 넣어 상위에 딸린 항목임이 보이게 했습니다'},
@@ -6962,7 +7249,7 @@ var MOB_SHEET=[
   {ic:'📷',nm:'QR 스캔',role:'all',page:'scan',fn:function(){setPage('scan');}}
 ];
 var _mobVisible=[];
-var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황',issue:'공정 이슈'};
+var MOB_TITLES={status:'공정현황',scan:'QR 스캔',stamp:'QR 스탬프','stamp-single':'단건 QR 스탬프',qrhist:'QR 이력',analytics:'분석',users:'사용자 관리',workorder:'작업지시서 QR',dwgqr:'도면 QR',stock:'재고 현황',issue:'공정 이슈',manual:'사용 설명서'};
 function buildMobSheet(){
   var grid=document.getElementById('mob-sheet-grid');if(!grid)return;
   var admin=(typeof AUTH!=='undefined'&&AUTH.isAdmin&&AUTH.isAdmin());
