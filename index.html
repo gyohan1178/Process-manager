@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.74</title>
+<title>하네스 공정관리 v6.75</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -533,7 +533,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.74</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.75</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.74 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.75 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -781,11 +781,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <!-- 붙여넣기 (EDWARDS) -->
           <div id="wo-paste-box" style="margin-top:14px;display:none">
             <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">PO 붙여넣기</div>
-            <textarea id="wo-paste" rows="6" placeholder="엑셀에서 도면번호 · 품명 · 수량 세 열을 복사해 그대로 붙여넣으세요&#10;&#10;NXR206417&#9;CABLE PUMP FEEDBACK IXH&#9;4"
+            <textarea id="wo-paste" rows="6" placeholder=""
               style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;font-family:var(--mono);line-height:1.7;resize:vertical" oninput="clearTimeout(window.__pvT);window.__pvT=setTimeout(function(){WOC.preview();},250)"></textarea>
-            <div style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6">
-              탭·여러 칸 띄어쓰기 어느 쪽이든 됩니다. 수량이 없으면 1로 봅니다.
-            </div>
+            <div id="wo-paste-help" style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6"></div>
             <div style="display:flex;gap:9px;margin-top:10px;align-items:center">
               <button class="btn btn-pr" onclick="WOC.readPaste()">📋 읽어서 등록</button>
               <button class="btn btn-outline" onclick="WOC.preview()">먼저 확인만</button>
@@ -2244,6 +2242,7 @@ var WOC={
       : (rec.dwg?'도면마다 <b>작업지시서 1부 + 도면 '+rec.dwg+'부</b> 가 이어집니다.'
                :'<b>작업지시서만</b> 뽑습니다.');
     WOC.paintPO();
+    WOC.paintPasteHint();
     WOC.paintPaths();
     WOC.paintFolder();
     // 사이드바에서 지금 고른 고객사만 진하게
@@ -2401,9 +2400,15 @@ var WOC={
 
     var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
     var noPO=r.rows.filter(function(x){ return !x.po; }).length;
+    // AXCELIS 는 PO 가 있어야 정상이다. 하나도 없으면 다른 고객사 자료일 수 있다.
+    var wrongTab=(WOC.cust==='axcelis' && noPO===r.rows.length);
     var noDue=r.rows.filter(function(x){ return !x.due; }).length;
 
-    el.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap">'
+    el.innerHTML=(wrongTab?'<div style="background:#fef2f2;border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 13px;margin-bottom:9px;font-size:12.5px;color:var(--tx2);line-height:1.7">'
+        +'\u26a0\ufe0f <b>PO \uac00 \ud558\ub098\ub3c4 \uc5c6\uc2b5\ub2c8\ub2e4.</b> AXCELIS \uc790\ub8cc\uac00 \ub9de\ub294\uc9c0 \ud655\uc778\ud558\uc138\uc694.<br>'
+        +'<span style="color:var(--tx3)">EDWARDS \uc790\ub8cc\ub77c\uba74 \uc67c\ucabd \uba54\ub274\uc5d0\uc11c EDWARDS \ud0ed\uc744 \uace0\ub974\uc138\uc694. '
+        +'AXCELIS \uc790\ub8cc\uc778\ub370 \uc774\ub807\uac8c \ub098\uc624\uba74 CCN\u00b7PO \uc5f4\uae4c\uc9c0 \ud568\uaed8 \ubcf5\uc0ac\ud588\ub294\uc9c0 \ubcf4\uc138\uc694.</span></div>':'')
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap">'
         +'<span style="font-size:11.5px;font-weight:700;color:var(--purple);background:var(--purple-lt);border:1px solid #ddd6fe;padding:2px 9px;border-radius:20px">'+hEsc(r.mode)+'</span>'
         +'<span style="font-size:12px;color:var(--tx3)">읽은 대로 보여 줍니다. 칸이 밀렸으면 등록하지 마세요.</span></div>'
       +'<div style="border:1px solid var(--border);border-radius:var(--r);overflow:auto;max-height:280px">'
@@ -2473,6 +2478,9 @@ var WOC={
       +(f.rel?'\n  \ubd88\ucd9c\uc77c '+f.rel:'')
       +(r.bad.length?'\n\n\u203b \ubabb \uc77d\uc740 \uc904 '+r.bad.length+'\uac1c\ub294 \uac74\ub108\ub701\ub2c8\ub2e4.':'')
       +'\n\n\ub4f1\ub85d\ud560\uae4c\uc694?';
+    if(WOC.cust==='axcelis' && !withPO){
+      if(!confirm('PO \uac00 \ud558\ub098\ub3c4 \uc5c6\uc2b5\ub2c8\ub2e4.\n\nAXCELIS \ub294 PO \ub85c \uac19\uc740 \uac74\uc744 \uac00\ub824\ub0b4\ubbc0\ub85c,\nPO \uc5c6\uc774 \ub4f1\ub85d\ud558\uba74 \ub098\uc911\uc5d0 \ub9de\ucd94\uae30 \uc5b4\ub835\uc2b5\ub2c8\ub2e4.\n\n\uadf8\ub798\ub3c4 \ub4f1\ub85d\ud560\uae4c\uc694?'))return;
+    }
     if(!confirm(msg))return;
     var list=r.rows.map(function(x){
       return {dwg_no:x.dwg_no, rev:x.rev||'', customer:cust, project:f.proj, unit:f.unit,
@@ -2665,6 +2673,31 @@ WOC._copyFallback=function(p,done){
   document.body.removeChild(ta);
   if(ok)done(); else prompt('아래 경로를 복사하세요', p);
 };
+// 붙여넣기 예시·안내는 고객사마다 다르다.
+//   AXCELIS 는 CCN·PO·라인이 있고, EDWARDS 는 도면번호·품명·수량뿐이다.
+WOC.PASTE_HINT={
+  axcelis:{
+    ph:'AXCELIS PO 를 엑셀에서 복사해 그대로 붙여넣으세요 (머리글 줄이 있어도 됩니다)\n\n'
+      +'B\t160020221\tE\tE\t821042\t3\t1\t8\tEA\t2026-10-09',
+    help:'CCN · 도면번호 · REV · PO · Order Line · Del Line · 수량 · 납기 를 읽습니다. '
+      +'머리글(CCN·Item·OrderNumber…)이 함께 있어도 되고, 자료만 붙여넣어도 됩니다.'
+  },
+  edwards:{
+    ph:'EDWARDS PO 목록을 엑셀에서 복사해 그대로 붙여넣으세요\n\n'
+      +'NXR206417\tCABLE PUMP FEEDBACK IXH\t4',
+    help:'도면번호 · 품명 · 수량 을 읽습니다. 수량이 없으면 1로 봅니다. 납기는 위 <b>제작납기</b> 값을 씁니다.'
+  },
+  harness:{
+    ph:'도면번호 · 품명 · 수량 을 복사해 붙여넣으세요\n\n1600791\t케이블 어셈블리\t5',
+    help:'도면번호 · 품명 · 수량 을 읽습니다. 탭·여러 칸 띄어쓰기 어느 쪽이든 됩니다.'
+  }
+};
+WOC.paintPasteHint=function(){
+  var t=WOC.PASTE_HINT[WOC.cust]||WOC.PASTE_HINT.harness;
+  var ta=document.getElementById('wo-paste'); if(ta)ta.placeholder=t.ph;
+  var hp=document.getElementById('wo-paste-help'); if(hp)hp.innerHTML=t.help;
+};
+
 WOC.paintPaths=function(){
   ['ocr','dwg'].forEach(function(k){
     var el=document.getElementById('wo-path-'+k); if(!el)return;
@@ -5153,8 +5186,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.74';
+var APP_VER='v6.75';
 var VER_LOG=[
+  {v:'v6.75',d:'2026-08', t:'[붙여넣기 안내] 예시와 설명이 고객사에 맞게 나옵니다. AXCELIS 는 CCN·PO·라인이 들어간 예시를, EDWARDS 는 도면번호·품명·수량 예시를 보여 줍니다. AXCELIS 탭인데 PO 가 하나도 없으면 다른 고객사 자료일 수 있으므로 붉은 안내가 뜨고, 그대로 등록하려 하면 한 번 더 물어봅니다'},
   {v:'v6.74',d:'2026-08', t:'[붙여넣기 확인] 붙여넣으면 곧바로 읽은 결과가 표로 나옵니다. 도면번호·REV·CCN·PO·Order Line·Del Line·수량·납기 중 값이 있는 칸만 보여 주므로, 칸이 밀렸는지 등록 전에 눈으로 확인할 수 있습니다. EDWARDS 처럼 품명만 있는 자료는 그에 맞는 칸만 나옵니다. PO 나 납기가 빈 행이 있으면 어떻게 처리되는지 함께 알리고, 못 읽은 줄은 그대로 보여 줍니다'},
   {v:'v6.73',d:'2026-08', t:'[붙여넣기] 머리글 없이 자료만 붙여넣어도 AXCELIS 형식을 알아봅니다. 첫 칸이 CCN(B/K)이면 두 번째 칸을 도면번호로 보고, PO·오더라인·납품라인·수량·납기를 자리로 찾습니다. 도번과 REV 가 한 칸에 붙어 온 것(1600791 M)도 나눠서 읽습니다. PO 를 한 건만 넣었는데 등록이 안 돼 옛 자료 건수가 나오던 문제도 함께 해결됩니다'},
   {v:'v6.72',d:'2026-08', t:'[바로잡음] 아무것도 올리지 않았는데 화면에 건수가 떠 있던 문제 수정. 공정현황에 이미 등록돼 있던 건까지 세고 있었습니다. 이제 이번에 올린 PO 만 셉니다. 고객사 탭을 옮기면 앞서 올린 내용과 고른 폴더가 함께 비워져, 다른 고객사 자료가 섞이지 않습니다'},
