@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.46</title>
+<title>하네스 공정관리 v6.47</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -506,7 +506,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.46</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.47</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -646,7 +646,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.46 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.47 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <button onclick="openStepSettings()" style="width:100%;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans)" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)';this.style.background='var(--blue-lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx2)';this.style.background='var(--bg)'">
@@ -2091,10 +2091,10 @@ function almIssues(){
       var last='', logs=logsFor(o.dwg_no);
       for(var j=0;j<logs.length;j++){
         var l=logs[j]; if(!logMatch(l,o))continue;
-        var t=(l.ended_at||l.started_at||'').slice(0,10);
+        var t=isoToLocalYMD(l.ended_at||l.started_at);
         if(t&&t>last)last=t;
       }
-      var since=last||(o.created_at||'').slice(0,10);
+      var since=last||isoToLocalYMD(o.created_at);
       if(since){
         var gap=almBizBetween(since,today);
         if(gap>=ALM.stuckDays){
@@ -2855,7 +2855,7 @@ function _renderStatusInner(){
           return '<span style="color:var(--tx2)">'+lbl+'</span>';
         })()
       +'</td>'
-      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(o.created_at.slice(0,10)):'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx3)">'+(o.created_at?fmtYYMMDD(isoToLocalYMD(o.created_at)):'—')+'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'+typeBadge
         +miniProgress(o)
         +(done?'<span style="font-size:10px;font-weight:700;color:var(--green)">✅ 완료</span>':'')
@@ -3000,6 +3000,17 @@ function renderBulkBar(){
   if(!el){renderStatus();return;}
   var canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
   el.innerHTML=bulkBarHTML(canEdit);
+}
+// 서버에 저장된 시각은 UTC 다. 앞 10글자를 그대로 자르면
+// 오전 9시 이전에 등록한 건이 전날로 보인다 (한국은 UTC+9).
+// 반드시 이 함수로 우리 시각의 날짜를 얻는다.
+function isoToLocalYMD(v){
+  if(!v)return '';
+  var s=String(v);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;              // 이미 날짜만
+  var d=new Date(s);
+  if(isNaN(d))return s.slice(0,10);
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
 }
 function fmtYYMMDD(val){
   if(!val)return '';
@@ -3898,8 +3909,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.46';
+var APP_VER='v6.47';
 var VER_LOG=[
+  {v:'v6.47',d:'2026-08', t:'[현장 확인 반영] ① 오전 9시 이전에 등록한 건이 전날 날짜로 보이던 문제 수정 — 서버 시각(UTC)을 그대로 잘라 쓰던 것을 우리 시각으로 바꿨습니다. ② 도면 QR 출력 재설계 — 도면을 위아래 1cm 여백이 남게 축소해 넣고, 그 여백에 머릿말·꼬리말이 들어갑니다. ③ QR은 도면이 얼마나 줄었든 상관없이 페이지 모서리 기준 같은 자리·같은 크기(기본 25mm)로 찍힙니다. 전에는 도면 크기에 따라 자리가 제각각이었습니다. ④ 머릿말·꼬리말 글씨가 알아볼 수 없게 작던 문제 수정 — 띠를 1cm로 키우고 글자를 약 5mm로 키웠습니다. 글자가 넘치면 가로로 눌러 붙이지 않고 간격→글자크기→줄임표 순으로 처리합니다'},
   {v:'v6.46',d:'2026-08', t:'[공정 이슈] 영업 요청 — 납기가 지났는데 방치된 건에 강력한 알람. 신규 메뉴 [공정 이슈]에서 다섯 가지를 한 곳에 모읍니다: 납기 지남 / 출하준비 늦음 / 공정 정체 / 작업중단 / 현장 등록. 납기 며칠 전까지 출하가 끝나 있어야 하는지(출하 여유일)와, 한 공정에 며칠 이상 멈추면 정체로 볼지(공정 정체 기준)를 설정으로 정합니다. 날짜는 주말과 등록한 공휴일을 빼고 셉니다. 납기 지난 건이 있으면 사이드바에 빨간 건수 배지가 뜨고 하루 한 번 팝업으로 알립니다. 현장에서 미등록 도면을 찍어 등록한 건은 현장 등록으로 표시되어 관리자가 확인할 수 있습니다. 열 너비 조정·엑셀 내보내기 지원. ※ 컬럼 추가 SQL 1회 실행 필요(harness_field_reg)'},
   {v:'v6.45',d:'2026-08', t:'[스캔] 등록되지 않은 도면을 막지 않고 물어봅니다. v6.44에서 \'출도부터 하세요\'로 막았는데, 앞 공정을 건너뛰고 바로 재단·제작부터 찍는 현장이 막히는 문제가 있었습니다. 이제 어느 공정에서 찍든 QR 내용(도번·Rev·PO·수량)을 보여 주고 확인을 받아 그 자리에서 등록하며, 아니오를 누르면 아무것도 남지 않습니다. 고른 공정이 기본(A형)에 없으면 그 공정을 가진 타입으로 등록하므로, B형 도면을 하우징부터 찍어도 다음 스캔이 막히지 않습니다'},  {v:'v6.44',d:'2026-08', t:'[스캔·오프라인] ① 등록되지 않은 도면을 스캔하면 막습니다 — 예전에는 초록불이 뜨고 기록만 남아, 주문이 없어 현황판에도 재고에도 안 나타났습니다. 출도는 등록하는 공정이므로 그대로 통과합니다. ② B형 전용 공정(넘버링·하우징·압착·라벨) QR이 \'알 수 없는 공정\'으로 뜨던 문제 수정 — 기본 공정에 없으면 다른 공정 타입에서도 찾습니다. ③ 인터넷이 끊겨 pdf.js를 못 받으면 화면이 통째로 안 뜨던 문제 수정. ④ 미전송 대기열 추가 — 서버 저장이 실패한 스캔 기록을 담아 두었다가 연결되면 자동으로 다시 보냅니다. 예전에는 오프라인 스캔이 로컬에만 남고, 다시 연결돼 자료를 불러오는 순간 덮여 사라졌습니다. 상단 빨간 띠에 미전송 건수가 표시되고, 누르면 다시 보냅니다'},
   {v:'v6.43',d:'2026-08', t:'[재고 현황] ① 표 열 너비를 끌어서 조정할 수 있게 했습니다 (두 번 누르면 그 열만 원래대로, [열 너비 초기화]로 전체 되돌리기). ② 기초재고 엑셀 일괄 업로드에 되돌리기를 붙였습니다 — 업로드 직전 상태를 저장하고 [되돌리기] 버튼으로 복구합니다. ③ 엑셀 내보내기 추가 (필터 포함, 기존 CSV도 유지)'},
@@ -4755,7 +4767,7 @@ DQ.a4=true;            // A4 로 맞춰 출력
 DQ.qrMm=25;            // QR 한 변 (mm) — 도면 크기와 무관하게 항상 같다
 DQ.hfLabel=true;       // 항목 이름을 값 앞에 붙인다
 DQ.hfGap=12;           // 항목 사이 간격 (mm)
-DQ.hfBandMm=9;         // 머릿말·꼬리말 띠 높이 (mm)
+DQ.hfBandMm=10;        // 머릿말·꼬리말 띠 높이 (mm) — 1cm
 
 var MM2PT=72/25.4;
 var A4_LONG=297*MM2PT, A4_SHORT=210*MM2PT;
@@ -4808,56 +4820,85 @@ DQ.hfItems=function(text,o,pg,total){
 
 // 띠 하나를 캔버스로 그려 PNG 로 (pdf-lib 기본 폰트는 한글을 못 그린다)
 var _dqBandCache={};
+// 띠 하나를 캔버스로 그려 PNG 로 (pdf-lib 기본 폰트는 한글을 못 그린다)
+//   글자가 넘치면 ① 간격을 줄이고 ② 글자를 조금 줄이고 ③ 그래도 넘치면 잘라낸다.
+//   예전에는 가로로만 눌러 붙여서(scale) 글씨가 알아볼 수 없게 납작해졌다.
 DQ.bandPng=function(items,widthPt,heightPt,align){
   var key=JSON.stringify(items)+'|'+Math.round(widthPt)+'|'+Math.round(heightPt)+'|'+align+'|'+this.hfGap;
   if(_dqBandCache[key])return _dqBandCache[key];
-  var SC=3;
+  var SC=4;                                    // 인쇄해도 뭉개지지 않게 4배로 그린다
   var W=Math.max(1,Math.round(widthPt*SC)), H=Math.max(1,Math.round(heightPt*SC));
   var cv=document.createElement('canvas'); cv.width=W; cv.height=H;
   var ctx=cv.getContext('2d');
   ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
-  var fs=Math.round(H*0.46);
-  var fL='500 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
-  var fV='700 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
-  var gap=this.hfGap*MM2PT*SC, pad=4*MM2PT*SC;
-  var segs=items.map(function(it){
-    ctx.font=fL; var wl=it.lab?ctx.measureText(it.lab+' ').width:0;
-    ctx.font=fV; var wv=ctx.measureText(String(it.val)).width;
-    return {lab:it.lab?it.lab+' ':'',val:String(it.val),wl:wl,wv:wv};
-  });
-  var total=segs.reduce(function(s,x){return s+x.wl+x.wv;},0)+gap*Math.max(0,segs.length-1);
-  // 넘치면 간격부터 줄이고, 그래도 넘치면 글자를 줄인다
-  if(total>W-pad*2&&segs.length>1){
-    gap=Math.max(0,(W-pad*2-segs.reduce(function(s,x){return s+x.wl+x.wv;},0))/(segs.length-1));
-    total=segs.reduce(function(s,x){return s+x.wl+x.wv;},0)+gap*(segs.length-1);
+
+  var pad=5*MM2PT*SC;
+  var avail=W-pad*2;
+  var baseFs=Math.round(H*0.52);               // 띠 높이의 절반 정도 = 10mm 띠에 약 5mm 글자
+  var gap=this.hfGap*MM2PT*SC;
+
+  function measure(fs,g,cut){
+    ctx.font='700 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+    var segs=items.map(function(it){
+      var val=String(it.val);
+      if(cut&&val.length>cut)val=val.slice(0,cut)+'…';
+      ctx.font='500 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+      var wl=it.lab?ctx.measureText(it.lab+' ').width:0;
+      ctx.font='700 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+      var wv=ctx.measureText(val).width;
+      return {lab:it.lab?it.lab+' ':'',val:val,wl:wl,wv:wv};
+    });
+    var total=segs.reduce(function(s,x){return s+x.wl+x.wv;},0)+g*Math.max(0,segs.length-1);
+    return {segs:segs,total:total};
   }
-  var sx=1;
-  if(total>W-pad*2){ sx=(W-pad*2)/total; }
-  var x=(align==='center')?Math.max(pad,(W-total*sx)/2):pad;
+
+  var fs=baseFs, m=measure(fs,gap,0);
+  // ① 간격부터 줄인다 (최소 3mm)
+  if(m.total>avail&&items.length>1){
+    var minGap=3*MM2PT*SC;
+    var need=m.segs.reduce(function(s,x){return s+x.wl+x.wv;},0);
+    gap=Math.max(minGap,(avail-need)/(items.length-1));
+    m=measure(fs,gap,0);
+  }
+  // ② 글자를 줄인다 (원래의 78% 까지만)
+  var minFs=Math.round(baseFs*0.78);
+  while(m.total>avail&&fs>minFs){ fs-=1; m=measure(fs,gap,0); }
+  // ③ 그래도 넘치면 값을 잘라낸다
+  var cut=0;
+  if(m.total>avail){
+    for(cut=28;cut>=6;cut-=2){ m=measure(fs,gap,cut); if(m.total<=avail)break; }
+  }
+
+  var x=(align==='center')?Math.max(pad,(W-m.total)/2):pad;
   var y=H/2;
   ctx.textBaseline='middle';
-  ctx.save(); ctx.scale(sx,1); x=x/sx;
-  segs.forEach(function(s){
-    if(s.lab){ ctx.font=fL; ctx.fillStyle='#969eac'; ctx.fillText(s.lab,x,y); x+=s.wl; }
-    ctx.font=fV; ctx.fillStyle='#1e2430'; ctx.fillText(s.val,x,y); x+=s.wv+gap;
+  m.segs.forEach(function(s){
+    if(s.lab){
+      ctx.font='500 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+      ctx.fillStyle='#8a92a3'; ctx.fillText(s.lab,x,y); x+=s.wl;
+    }
+    ctx.font='700 '+fs+"px 'Malgun Gothic','Noto Sans KR',sans-serif";
+    ctx.fillStyle='#111827'; ctx.fillText(s.val,x,y); x+=s.wv+gap;
   });
-  ctx.restore();
   var url=cv.toDataURL('image/png');
   if(Object.keys(_dqBandCache).length>400)_dqBandCache={};
   _dqBandCache[key]=url;
   return url;
 };
 
-// 도면 한 건 → A4 정규화 + 고정 크기 QR + 띠
+// 도면 한 건 → A4 정규화 + 위아래 띠 + 고정 위치·고정 크기 QR
+//   도면은 위아래 띠(각 10mm)를 뺀 자리에 비율 그대로 축소해 넣는다.
+//   QR 은 도면이 얼마나 줄었든 상관없이 페이지 모서리 기준으로 같은 자리·같은 크기에 찍는다.
 DQ.buildOne=async function(t){
   var self=this;
   var PDFDocument=PDFLib.PDFDocument;
   var out=await PDFDocument.create();
   var src=await PDFDocument.load(await self.ensureBytes(t),{ignoreEncryption:true});
-  var qrPng=await out.embedPng(self.dataURLtoBytes(makeQRPng(self.woPayload(t.order),500)));
+  var qrPng=await out.embedPng(self.dataURLtoBytes(makeQRPng(self.woPayload(t.order),600)));
   var idxs=src.getPageIndices();
-  var topB=self.header.on?self.hfBandMm*MM2PT:0;
-  var botB=self.footer.on?self.hfBandMm*MM2PT:0;
+  var band=self.hfBandMm*MM2PT;
+  var topB=self.header.on?band:0;
+  var botB=self.footer.on?band:0;
   for(var i=0;i<idxs.length;i++){
     var sp=src.getPage(idxs[i]);
     var sw=sp.getWidth(), sh=sp.getHeight();
@@ -4866,20 +4907,23 @@ DQ.buildOne=async function(t){
     if(self.a4){ var land=(sw>=sh); pw=land?A4_LONG:A4_SHORT; ph=land?A4_SHORT:A4_LONG; }
     else { pw=sw; ph=sh; }
     var pg=out.addPage([pw,ph]);
-    // 도면을 띠 사이에 비율 그대로 끼워 넣는다
-    var boxH=Math.max(1,ph-topB-botB);
-    var sc=Math.min(pw/sw, boxH/sh);
+
+    // 도면 — 위아래 띠를 뺀 자리에 비율 그대로
+    var padX=3*MM2PT;
+    var boxW=Math.max(1,pw-padX*2), boxH=Math.max(1,ph-topB-botB);
+    var sc=Math.min(boxW/sw, boxH/sh);
     var dw=sw*sc, dh=sh*sc;
     var dx=(pw-dw)/2, dy=botB+(boxH-dh)/2;
     pg.drawPage(emb,{x:dx,y:dy,xScale:sc,yScale:sc});
-    // QR — 도면 영역 모서리, 항상 같은 mm
+
+    // QR — 도면 축소와 무관하게 페이지 모서리 기준
     var qs=self.qrMm*MM2PT;
-    if(qs>dw*0.5)qs=dw*0.5;
-    if(qs>dh*0.5)qs=dh*0.5;
-    var inset=4*MM2PT, p=self.dwgPos;
-    var qx=(p==='tl'||p==='bl')?(dx+inset):(dx+dw-qs-inset);
-    var qy=(p==='tl'||p==='tr')?(dy+dh-qs-inset):(dy+inset);
+    var ins=5*MM2PT, p=self.dwgPos;
+    var qx=(p==='tl'||p==='bl')?ins:(pw-qs-ins);
+    var qy=(p==='tl'||p==='tr')?(ph-topB-qs-ins):(botB+ins);
+    pg.drawRectangle({x:qx-2,y:qy-2,width:qs+4,height:qs+4,color:PDFLib.rgb(1,1,1)});
     pg.drawImage(qrPng,{x:qx,y:qy,width:qs,height:qs});
+
     // 머릿말 · 꼬리말
     if(topB>0){
       var hi=self.hfItems(self.header.text,t.order,i+1,idxs.length);
