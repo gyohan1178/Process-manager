@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.56</title>
+<title>하네스 공정관리 v6.57</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -524,7 +524,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.56</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.57</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -677,7 +677,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.56 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.57 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -834,7 +834,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
           <div style="font-size:15px;font-weight:700;color:var(--tx)">2. 작업지시서 PDF 올리기</div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
-            파일명은 <b>작업지시서_1631500_D_01.pdf</b> 또는 <b>1631500_D_01.pdf</b> 형식이면 인식됩니다. 여러 개를 한 번에 올릴 수 있습니다.
+            파일명은 <b>도면번호_PO_오더라인_납품라인.pdf</b> 형식을 권합니다 — 예) <b>160021769_47324KF_3_1.pdf</b><br>
+            <span style="color:var(--tx2)">뒤 두 자리는 없어도 되고(<b>160021769_47324KF.pdf</b>), 도면번호만 있어도(<b>160021769.pdf</b>) 인식합니다.
+            앞에 <b>작업지시서_</b> 가 붙어 있어도 됩니다. PO 안의 공백은 빼 주세요 (47268 KF → 47268KF).</span>
           </div>
           <div id="wo-drop" style="margin-top:14px;border:2px dashed #d7dbe6;border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;background:#fafbfd;transition:all .15s"
             onclick="document.getElementById('wo-file').click()">
@@ -2125,6 +2127,18 @@ var WOC={
   },
   paint:function(){
     var m=WOC.MODE[WOC.cust]||WOC.MODE.harness;
+    // 이 고객사 탭에 저장해 둔 머릿말·꼬리말을 불러온다
+    try{
+      var raw=localStorage.getItem('hs_wo_hf_'+WOC.cust);
+      if(raw){ var o=JSON.parse(raw); if(o.h)WO.header=o.h; if(o.f)WO.footer=o.f; }
+      else { WO.header={on:true,text:'{프로젝트} {도번} {REV}'};
+             WO.footer={on:true,text:'{페이지} / {전체} {수량} {납기}'}; }
+    }catch(e){}
+    var a=document.getElementById('wo-hd-on'), b=document.getElementById('wo-hd-tx'),
+        c=document.getElementById('wo-ft-on'), d=document.getElementById('wo-ft-tx');
+    if(a)a.checked=WO.header.on; if(b)b.value=WO.header.text;
+    if(c)c.checked=WO.footer.on; if(d)d.value=WO.footer.text;
+    if(WO.previewHF)WO.previewHF();
     var nm=document.getElementById('wo-cust-name'); if(nm)nm.textContent=m.name;
     var de=document.getElementById('wo-cust-desc'); if(de)de.textContent=m.desc;
     var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(m.how==='paste')?'':'none';
@@ -4595,8 +4609,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.56';
+var APP_VER='v6.57';
 var VER_LOG=[
+  {v:'v6.57',d:'2026-08', t:'[작업지시서] ① 머릿말·꼬리말을 고객사 탭별로 따로 저장합니다. 탭을 열면 그 탭에 저장해 둔 문구가 기본으로 나옵니다. 예전에 저장한 문구는 하네스 탭으로 옮겨집니다. ② AXCELIS 작업지시서 파일명 규칙을 인식합니다 — 도면번호_PO_오더라인_납품라인.pdf (예 160021769_47324KF_3_1.pdf). 같은 도면이 여러 PO로 나뉘어 있어도 정확히 그 건을 찾습니다. 뒤 두 자리는 생략해도 되고, 앞에 작업지시서_ 가 붙어 있어도 됩니다'},
   {v:'v6.56',d:'2026-08', t:'[작업지시서] 고객사별 출력 구성. 하네스는 작업지시서만, AXCELIS는 작업지시서 1부 + 도면 2부, EDWARDS는 갑지 뒤에 도면마다 [작업지시서 1부 + 도면 2부]로 이어집니다. QR은 작업지시서에만 넣고 도면에는 넣지 않습니다. 도면도 A4로 맞추고 회전된 것은 바로 세웁니다. 도면 폴더를 고르면 도면번호로 찾아 주며, 찾은 수와 못 찾은 도번을 미리 보여 줍니다. 그림 그리는 엔진은 하나만 두고 조립 순서만 고객사별로 갖습니다. ※ EDWARDS 갑지는 아직 미구현'},
   {v:'v6.55',d:'2026-08', t:'[작업지시서] 고객사별로 나눴습니다 — 사이드바 작업지시서 QR 아래 하네스·AXCELIS·EDWARDS. 화면은 하나이고 수주 등록 방식만 바뀝니다(화면을 셋으로 복사하면 한쪽만 고쳐져 어긋나기 때문). EDWARDS 는 PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다(도면번호·품명·수량). 탭·띄어쓰기 어느 쪽이든 읽고, [먼저 확인만] 으로 등록 전에 결과를 봅니다. 프로젝트·호기·불출일·제작납기를 함께 넣으며, 제작납기가 공정현황의 납기가 되고 불출일은 작업지시서에 찍힙니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_item_release)'},
   {v:'v6.54',d:'2026-08', t:'[도면 QR] 작업지시서 중심으로 방향이 바뀌어 도면 QR 메뉴를 감췄습니다. 화면과 기능은 그대로 남아 있어, 코드의 SHOW_DWGQR 값을 true 로 바꾸면 바로 되살아납니다. A4 통일·회전 바로 세우기·QR 삽입 기능은 앞으로 작업지시서 출력에 그대로 씁니다'},
@@ -5058,6 +5073,22 @@ var WO={
       pool.sort(function(a,b){return (normDueToISO(a.due)||'9999')<(normDueToISO(b.due)||'9999')?-1:1;});
       return pool[0];
     };
+    // 0) 도번_PO_오더라인_납품라인 — AXCELIS 작업지시서 파일명 규칙.
+    //    관련부서에 이 형식으로 저장하도록 전달했다. 가장 정확하므로 먼저 본다.
+    //    예) 160021769_47324KF_3_1.pdf  ·  뒤 두 자리는 없어도 된다.
+    var seg=dwg.split('_');
+    if(seg.length>=2){
+      var _d=seg[0], _po=seg[1], _ol=seg[2]||'', _dl=seg[3]||'';
+      var flat=function(v){ return String(v||'').replace(/[\s_-]/g,'').toUpperCase(); };
+      var hit=HS.orders.filter(function(o){
+        if((o.dwg_no||'').trim()!==_d)return false;
+        if(flat(o.po)!==flat(_po))return false;
+        if(_ol&&flat(o.ord_ln)!==flat(_ol))return false;
+        if(_dl&&flat(o.del_ln)!==flat(_dl))return false;
+        return true;
+      });
+      if(hit.length)return pick(hit);
+    }
     // 1) 도면번호 정확히 일치
     var r=pick(HS.orders.filter(function(o){return (o.dwg_no||'').trim()===dwg;}));
     if(r)return r;
@@ -5263,6 +5294,11 @@ var WO={
     }
     return await out.save();
   },
+  // 저장 자리. 작업지시서는 고객사별로 나눈다.
+  hfKey:function(){
+    if(this.mode==='dwg')return 'hs_dq_hf';
+    return 'hs_wo_hf_'+((typeof WOC!=='undefined'&&WOC.cust)||'harness');
+  },
   setHF:function(){ var self=this;
     var a=WO_ctx().$('wo-hd-on'),b=WO_ctx().$('wo-hd-tx'),
         c=WO_ctx().$('wo-ft-on'),d=WO_ctx().$('wo-ft-tx');
@@ -5270,7 +5306,9 @@ var WO={
     if(b)self.header.text=b.value;
     if(c)self.footer.on=c.checked;
     if(d)self.footer.text=d.value;
-    try{localStorage.setItem('hs_wo_hf',JSON.stringify({h:self.header,f:self.footer}));}catch(e){}
+    // 작업지시서는 고객사마다 쓰는 문구가 다르다. 탭별로 따로 저장한다.
+    try{ localStorage.setItem(self.hfKey?self.hfKey():'hs_wo_hf',
+         JSON.stringify({h:self.header,f:self.footer})); }catch(e){}
     self.previewHF();
   },
   tok:function(t){ var self=this;
@@ -5439,7 +5477,14 @@ DQ.setPos=function(p){
   this.paintMode();
 };
 setTimeout(function(){
-  woRestore(WO,'hs_wo_mode','hs_wo_pos','hs_wo_hf');
+  // 예전에는 고객사 구분 없이 한 곳에 저장했다. 하네스 탭으로 한 번만 옮긴다.
+  try{
+    var oldHF=localStorage.getItem('hs_wo_hf');
+    if(oldHF&&!localStorage.getItem('hs_wo_hf_harness')){
+      localStorage.setItem('hs_wo_hf_harness',oldHF);
+    }
+  }catch(e){}
+  woRestore(WO,'hs_wo_mode','hs_wo_pos','hs_wo_hf_'+((typeof WOC!=='undefined'&&WOC.cust)||'harness'));
   woRestore(DQ,null,'hs_dq_pos','hs_dq_hf');
   DQ.mode='dwg';
   if(!localStorage.getItem('hs_dq_pos'))DQ.dwgPos='br';
