@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.54</title>
+<title>하네스 공정관리 v6.56</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -524,7 +524,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.54</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.56</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -660,7 +660,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div class="sn-sect" id="grp-qr">
         <button class="sn-item" id="nav-dwgqr" onclick="setPage('dwgqr')"><span class="sn-ic">📐</span> 도면 QR <span style="font-size:8px;background:var(--blue-lt2);color:var(--blue);padding:1px 5px;border-radius:8px;margin-left:auto;font-weight:700">NEW</span></button>
         <button class="sn-item sn-sub" id="nav-qrhist" onclick="setPage('qrhist')"><span class="sn-ic">📋</span> QR 이력</button>
-        <button class="sn-item" id="nav-workorder" onclick="setPage('workorder')"><span class="sn-ic">📄</span> 작업지시서 QR</button>
+        <button class="sn-item" id="nav-workorder" onclick="WOC.go('harness')"><span class="sn-ic">📄</span> 작업지시서 QR</button>
+        <button class="sn-item sn-sub" id="nav-wo-harness" onclick="WOC.go('harness')"><span class="sn-ic">🔌</span> 하네스</button>
+        <button class="sn-item sn-sub" id="nav-wo-axcelis" onclick="WOC.go('axcelis')"><span class="sn-ic">🅰️</span> AXCELIS</button>
+        <button class="sn-item sn-sub" id="nav-wo-edwards" onclick="WOC.go('edwards')"><span class="sn-ic">🅴</span> EDWARDS</button>
         <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
       </div>
 
@@ -674,7 +677,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.54 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.56 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -761,9 +764,75 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           </div>
         </div>
 
-        <!-- 1. 파일 -->
+
+        <!-- 고객사별 수주 등록 -->
+        <div id="wo-cust-card" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">1. 수주 등록 <span id="wo-cust-name" style="font-size:12px;font-weight:700;color:var(--purple);background:var(--purple-lt);border:1px solid #ddd6fe;padding:2px 9px;border-radius:20px;margin-left:6px"></span></div>
+          <div id="wo-cust-desc" style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6"></div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
+            <div style="flex:1;min-width:150px">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">프로젝트</div>
+              <input type="text" id="wo-c-proj" placeholder="예) ASML 9B" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;font-family:var(--sans)">
+            </div>
+            <div style="width:110px">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">호기</div>
+              <input type="text" id="wo-c-unit" placeholder="#1" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;font-family:var(--sans)">
+            </div>
+            <div style="width:150px">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">불출일</div>
+              <input type="date" id="wo-c-rel" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono)">
+            </div>
+            <div style="width:150px">
+              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">제작납기</div>
+              <input type="date" id="wo-c-due" style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:13px;font-family:var(--mono)">
+            </div>
+          </div>
+
+          <!-- 붙여넣기 방식 (EDWARDS) -->
+          <div id="wo-paste-box" style="margin-top:14px;display:none">
+            <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:5px">PO 붙여넣기</div>
+            <textarea id="wo-paste" rows="7" placeholder="엑셀에서 도면번호 · 품명 · 수량 세 열을 복사해 그대로 붙여넣으세요&#10;&#10;NXR206417&#9;CABLE PUMP FEEDBACK IXH&#9;4&#10;NXR206419&#9;CABLE PUMP FEEDBACK PXH6000&#9;4"
+              style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;font-family:var(--mono);line-height:1.7;resize:vertical"></textarea>
+            <div style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6">
+              탭·여러 칸 띄어쓰기 어느 쪽이든 됩니다. 수량이 없으면 1로 봅니다.
+              <b>제작납기</b>가 공정현황의 납기가 되고, <b>불출일</b>은 작업지시서에 찍힙니다.
+            </div>
+            <div style="display:flex;gap:9px;margin-top:12px;align-items:center">
+              <button class="btn btn-pr" onclick="WOC.readPaste()">📋 읽어서 등록</button>
+              <button class="btn btn-outline" onclick="WOC.preview()">먼저 확인만</button>
+              <span id="wo-paste-cnt" style="font-size:12px;color:var(--tx3);margin-left:auto"></span>
+            </div>
+            <div id="wo-paste-prev" style="margin-top:12px"></div>
+          </div>
+
+          <!-- 도면 폴더 (AXCELIS · EDWARDS) -->
+          <div id="wo-folder-box" style="margin-top:16px;padding-top:14px;border-top:1px solid #eceff5;display:none">
+            <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">도면 폴더</div>
+            <div id="wo-folder-desc" style="font-size:11.5px;color:var(--tx3);margin:3px 0 9px;line-height:1.6"></div>
+            <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+              <button class="btn btn-outline" onclick="document.getElementById('wo-folder').click()">📁 도면 폴더 선택</button>
+              <input type="file" id="wo-folder" webkitdirectory directory multiple style="display:none" onchange="WOC.pickFolder(this)">
+              <span style="font-size:11.5px;color:var(--tx3)">새로고침하면 다시 골라야 합니다</span>
+            </div>
+            <div id="wo-folder-info" style="margin-top:11px"></div>
+          </div>
+
+          <!-- 엑셀 방식 (하네스 · AXCELIS) -->
+          <div id="wo-xls-box" style="margin-top:14px;display:none">
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <button class="btn btn-pr" onclick="document.getElementById('wo-c-file').click()">📋 PO 엑셀 올리기</button>
+              <input type="file" id="wo-c-file" accept=".xlsx,.xls" style="display:none" onchange="WOC.readExcel(this)">
+            </div>
+            <div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.6">
+              열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다.
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 파일 -->
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">1. 파일 올리기</div>
+          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. 작업지시서 PDF 올리기</div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             파일명은 <b>작업지시서_1631500_D_01.pdf</b> 또는 <b>1631500_D_01.pdf</b> 형식이면 인식됩니다. 여러 개를 한 번에 올릴 수 있습니다.
           </div>
@@ -821,6 +890,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <!-- 4. 만들기 -->
         <div id="wo-actions" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
           <div style="font-size:15px;font-weight:700;color:var(--tx)">3. 만들기</div>
+          <div id="wo-out-desc" style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6"></div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             출력 순서는 도면번호 기준이며, 버튼으로 오름/내림을 바꿀 수 있습니다.
           </div>
@@ -1962,7 +2032,8 @@ function hsOrderRow(o){
           alarm:o.alarm||false,alarm_reason:o.alarm_reason||null,alarm_step:o.alarm_step||null,
           alarm_at:o.alarm_at||null,alarm_by:o.alarm_by||null,
           alarm_cleared_at:o.alarm_cleared_at||null,alarm_cleared_by:o.alarm_cleared_by||null,
-          field_reg:o.field_reg||false,field_reg_at:o.field_reg_at||null,field_reg_by:o.field_reg_by||null};
+          field_reg:o.field_reg||false,field_reg_at:o.field_reg_at||null,field_reg_by:o.field_reg_by||null,
+          item_name:o.item_name||null,release_date:o.release_date||null};
 }
 function hsLogRow(l){
   return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -2031,6 +2102,278 @@ async function hsDeleteLog(id){
 
 
 
+
+
+// ════════════════════════════════════════
+// 작업지시서 — 고객사별 수주 등록 (v6.55)
+//   화면은 하나다. 사이드바에서 고객사를 고르면 등록 카드만 바뀐다.
+//   화면을 셋으로 복사하지 않는 이유: 같은 일을 하는 코드가 두 벌이 되면
+//   한쪽만 고쳐져 어긋난다 (병합 저장이 개별 저장과 달랐던 사고와 같은 종류).
+// ════════════════════════════════════════
+var WOC={
+  cust:'harness',
+  MODE:{
+    harness:{name:'하네스',  how:'xls',   desc:'하네스 등록 양식 엑셀을 올립니다. 고객사·프로젝트·호기가 엑셀에 들어 있습니다.'},
+    axcelis:{name:'AXCELIS', how:'xls',   desc:'AXCELIS PO 엑셀(QR업로드용)을 올립니다. Item·SRev·OrderNumber 열을 읽습니다.'},
+    edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'}
+  },
+  go:function(k){
+    WOC.cust=k||'harness';
+    try{ localStorage.setItem('hs_wo_cust',WOC.cust); }catch(e){}
+    setPage('workorder');
+    WOC.paint();
+  },
+  paint:function(){
+    var m=WOC.MODE[WOC.cust]||WOC.MODE.harness;
+    var nm=document.getElementById('wo-cust-name'); if(nm)nm.textContent=m.name;
+    var de=document.getElementById('wo-cust-desc'); if(de)de.textContent=m.desc;
+    var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(m.how==='paste')?'':'none';
+    var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(m.how==='xls')?'':'none';
+    // 출력 구성에 따라 도면 폴더 칸을 보인다
+    var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
+    var fb=document.getElementById('wo-folder-box');
+    if(fb)fb.style.display=rec.dwg?'':'none';
+    var fd=document.getElementById('wo-folder-desc');
+    if(fd)fd.innerHTML=rec.dwg
+      ? '도면번호로 도면을 찾아 <b>작업지시서 1부 + 도면 '+rec.dwg+'부</b> 로 이어서 뽑습니다. QR 은 작업지시서에만 들어갑니다.'
+      : '';
+    var od=document.getElementById('wo-out-desc');
+    if(od)od.innerHTML=rec.cover
+      ? '<b>갑지(발주도면 리스트 · 절단표)</b> 뒤에 도면마다 [작업지시서 1부 + 도면 '+rec.dwg+'부] 가 이어집니다.'
+      : (rec.dwg?'도면마다 <b>작업지시서 1부 + 도면 '+rec.dwg+'부</b> 가 이어집니다.'
+               :'<b>작업지시서만</b> 뽑습니다.');
+    WOC.paintFolder();
+    // 사이드바에서 지금 고른 고객사만 진하게
+    ['harness','axcelis','edwards'].forEach(function(k){
+      var b=document.getElementById('nav-wo-'+k);
+      if(b)b.classList.toggle('on',WOC.cust===k);
+    });
+  },
+
+  // ── 붙여넣기 읽기 ──
+  //   탭 / 여러 칸 띄어쓰기 둘 다 받는다. 품명에 띄어쓰기가 있으므로
+  //   맨 앞을 도면번호, 맨 뒤 숫자를 수량, 가운데를 품명으로 본다.
+  parse:function(txt){
+    var out=[], bad=[];
+    String(txt||'').split(/\r?\n/).forEach(function(raw){
+      var line=raw.replace(/\u00a0/g,' ').trim();
+      if(!line)return;
+      var cells=line.indexOf('\t')>=0 ? line.split('\t') : line.split(/\s{2,}/);
+      cells=cells.map(function(c){return c.trim();}).filter(function(c){return c!=='';});
+      if(!cells.length)return;
+      var dwg=cells[0];
+      if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(dwg)){ bad.push(line.slice(0,40)); return; }
+      var qty=1, name='';
+      if(cells.length>=2){
+        var last=cells[cells.length-1].replace(/,/g,'');
+        if(/^\d+(\.\d+)?$/.test(last)){
+          qty=parseInt(last,10)||1;
+          name=cells.slice(1,cells.length-1).join(' ');
+        }else{
+          name=cells.slice(1).join(' ');
+        }
+      }
+      out.push({dwg_no:dwg, name:name.trim(), qty:qty});
+    });
+    return {rows:out, bad:bad};
+  },
+
+  form:function(){
+    var g=function(id){ var e=document.getElementById(id); return e?String(e.value||'').trim():''; };
+    return {proj:g('wo-c-proj'), unit:g('wo-c-unit'), rel:g('wo-c-rel'), due:g('wo-c-due')};
+  },
+
+  preview:function(){
+    var r=WOC.parse((document.getElementById('wo-paste')||{}).value);
+    var el=document.getElementById('wo-paste-prev'); if(!el)return;
+    var cnt=document.getElementById('wo-paste-cnt');
+    if(cnt)cnt.textContent=r.rows.length+'행'+(r.bad.length?' · 못 읽음 '+r.bad.length:'');
+    if(!r.rows.length){
+      el.innerHTML='<div style="font-size:12.5px;color:var(--tx3);padding:10px 0">읽을 수 있는 행이 없습니다.</div>';
+      return;
+    }
+    var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
+    el.innerHTML='<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="background:var(--bg2)">'
+      +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2);width:130px">도면번호</th>'
+      +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">품명</th>'
+      +'<th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--tx2);width:60px">수량</th></tr></thead><tbody>'
+      +r.rows.slice(0,12).map(function(x){
+        return '<tr style="border-top:1px solid var(--border)">'
+          +'<td style="padding:6px 10px;font-family:var(--mono);font-weight:700">'+hEsc(x.dwg_no)+'</td>'
+          +'<td style="padding:6px 10px;color:var(--tx2)">'+hEsc(x.name||'—')+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;font-family:var(--mono)">'+x.qty+'</td></tr>';
+      }).join('')
+      +'</tbody></table></div>'
+      +'<div style="font-size:12px;color:var(--tx3);margin-top:8px;line-height:1.6">'
+        +'모두 <b>'+r.rows.length+'행</b>'+(r.rows.length>12?' (위 12행만 보임)':'')
+        +' · 이미 있는 건 <b>'+already+'</b>'
+        +(r.bad.length?' · <span style="color:var(--amber)">못 읽은 줄 '+r.bad.length+'</span>':'')
+      +'</div>';
+  },
+
+  _exists:function(x){
+    var f=WOC.form();
+    return HS.orders.some(function(o){
+      return (o.dwg_no||'')===x.dwg_no && (o.project||'')===f.proj && (o.unit||'')===f.unit;
+    });
+  },
+
+  readPaste:function(){
+    var f=WOC.form();
+    var r=WOC.parse((document.getElementById('wo-paste')||{}).value);
+    if(!r.rows.length){ toast('읽을 수 있는 행이 없습니다','err'); return; }
+    if(!f.due){ toast('제작납기를 넣으세요','warn'); return; }
+    var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
+    var msg=r.rows.length+'행을 읽었습니다.\n\n'
+      +'  신규 등록 '+(r.rows.length-already)+'건\n'
+      +'  이미 있는 건 '+already+'건 (덮어쓰지 않습니다)\n\n'
+      +'고객사 EDWARDS'
+      +(f.proj?' · 프로젝트 '+f.proj:'')
+      +(f.unit?' · 호기 '+f.unit:'')
+      +'\n  제작납기 '+f.due+(f.rel?'\n  불출일 '+f.rel:'')
+      +(r.bad.length?'\n\n※ 못 읽은 줄 '+r.bad.length+'개는 건너뜁니다.':'')
+      +'\n\n등록할까요?';
+    if(!confirm(msg))return;
+    var list=r.rows.map(function(x){
+      return {dwg_no:x.dwg_no, rev:'', customer:'Edwards', project:f.proj, unit:f.unit,
+              qty:x.qty, po:'', ord_ln:'', del_ln:'', due:f.due,
+              step_type:'A', item_name:x.name, release_date:f.rel||''};
+    });
+    var res=hsRegisterOrders(list,{matchBy:'projunit'});
+    if(typeof renderStatus==='function')renderStatus();
+    if(typeof renderOrderStampList==='function')renderOrderStampList();
+    toast('신규 '+res.added+'건 등록 · 기존 '+res.skipped+'건 유지','ok');
+    WOC.preview();
+  },
+
+  readExcel:function(input){
+    // 하네스·AXCELIS 는 이미 있는 양식 판별기를 그대로 쓴다
+    var f=WOC.form();
+    var pj=document.getElementById('dq-xl-proj');
+    if(pj)pj.value=f.proj;
+    DQ.readExcel(input);
+  }
+};
+
+
+// ════════════════════════════════════════
+// 작업지시서 출력 구성 (v6.56)
+//   고객사마다 뽑는 모양이 다르다. 그림 그리는 엔진은 하나만 두고
+//   조립 순서(recipe)만 고객사별로 갖는다.
+//
+//     하네스   작업지시서 1부
+//     AXCELIS  작업지시서 1부 + 도면 2부
+//     EDWARDS  갑지(리스트·절단표) + 도면마다 [작업지시서 1부 + 도면 2부]
+//
+//   QR 은 작업지시서에만 넣는다. 도면에는 넣지 않는다.
+//   머릿말·꼬리말은 셋 다 그대로 쓴다.
+// ════════════════════════════════════════
+WOC.RECIPE={
+  harness:{wo:1, dwg:0, cover:false},
+  axcelis:{wo:1, dwg:2, cover:false},
+  edwards:{wo:1, dwg:2, cover:true }
+};
+WOC.dwgIndex=null;      // {도번: [{file,rev,ed,name}]}
+WOC.dwgFolder='';
+WOC.dwgCount=0;
+
+// 도면 폴더 고르기 — 도면 QR 에서 쓰던 것을 그대로 쓴다
+WOC.pickFolder=function(input){
+  var all=Array.prototype.slice.call(input.files||[]);
+  input.value='';
+  if(!all.length){ toast('폴더에 파일이 없습니다','warn'); return; }
+  var pdfs=all.filter(function(f){ return /\.pdf$/i.test(f.name)&&!/^~\$/.test(f.name); });
+  var idx={}, bad=[];
+  pdfs.forEach(function(f){
+    var stem=f.name.replace(/\.pdf$/i,'').trim();
+    var m=DQ_FNAME.exec(stem);
+    if(!m){
+      // 도번만으로 된 이름도 받는다 (NXR206417.pdf)
+      if(/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(stem)){
+        (idx[stem]=idx[stem]||[]).push({file:f,rev:'',ed:0,name:f.name});
+      }else bad.push(f.name);
+      return;
+    }
+    var dwg=m[1], rev=m[2].toUpperCase(), ed=parseInt(m[3]||'0',10);
+    (idx[dwg]=idx[dwg]||[]).push({file:f,rev:rev,ed:ed,name:f.name});
+  });
+  WOC.dwgIndex=idx; WOC.dwgCount=pdfs.length; WOC.badNames=bad;
+  WOC.dwgFolder=(all[0].webkitRelativePath||'').split('/')[0]||'(폴더)';
+  toast('도면 폴더 읽음 — PDF '+pdfs.length+'개 · 도번 '+Object.keys(idx).length+'종','ok');
+  WOC.paintFolder();
+};
+
+// 한 건에 맞는 도면 고르기. REV 가 있으면 맞추고, 없으면 최신판.
+WOC.findDwg=function(order){
+  if(!WOC.dwgIndex)return null;
+  var dwg=String(order.dwg_no||'').trim();
+  var c=WOC.dwgIndex[dwg];
+  if(!c||!c.length)return null;
+  var rv=String(order.rev||'').toUpperCase();
+  if(rv){
+    var same=c.filter(function(x){ return x.rev===rv; });
+    if(same.length)return same.reduce(function(a,x){ return x.ed>a.ed?x:a; });
+  }
+  return c.reduce(function(a,x){
+    var ra=(a.rev||'').charCodeAt(0)||0, rx=(x.rev||'').charCodeAt(0)||0;
+    if(rx!==ra)return rx>ra?x:a;
+    return x.ed>a.ed?x:a;
+  });
+};
+
+WOC.paintFolder=function(){
+  var el=document.getElementById('wo-folder-info'); if(!el)return;
+  var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
+  if(!rec.dwg){ el.innerHTML=''; return; }
+  if(!WOC.dwgIndex){
+    el.innerHTML='<div style="font-size:12px;color:var(--tx3);line-height:1.6">'
+      +'아직 폴더를 고르지 않았습니다. 도면 없이 <b>작업지시서만</b> 나옵니다.</div>';
+    return;
+  }
+  // 등록된 건 중 도면을 찾은 수
+  var tgt=(WO_ctx&&WO_ctx().files)||[];
+  var have=0, miss=[];
+  tgt.forEach(function(t){
+    if(!t.order)return;
+    if(WOC.findDwg(t.order))have++; else miss.push(t.order.dwg_no);
+  });
+  el.innerHTML='<div style="display:flex;gap:9px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:120px;background:#fafbfd;border:1px solid var(--border);border-radius:10px;padding:11px 13px">'
+      +'<div style="font-size:11.5px;color:var(--tx3)">폴더 PDF</div>'
+      +'<div style="font-size:21px;font-weight:800;margin-top:1px">'+WOC.dwgCount+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3)">'+hEsc(WOC.dwgFolder)+'</div></div>'
+    +'<div style="flex:1;min-width:120px;background:var(--green-lt);border:1px solid #a7f3d0;border-radius:10px;padding:11px 13px">'
+      +'<div style="font-size:11.5px;color:var(--tx3)">도면 찾음</div>'
+      +'<div style="font-size:21px;font-weight:800;margin-top:1px;color:var(--green)">'+have+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3)">작업지시서 1 + 도면 '+rec.dwg+'</div></div>'
+    +(miss.length?'<div style="flex:1;min-width:120px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:11px 13px">'
+      +'<div style="font-size:11.5px;color:var(--tx3)">도면 없음</div>'
+      +'<div style="font-size:21px;font-weight:800;margin-top:1px;color:var(--red)">'+miss.length+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3)">'+hEsc(miss.slice(0,2).join(', '))+(miss.length>2?' 외':'')+'</div></div>':'')
+    +'</div>';
+};
+
+// ── 한 건을 고객사 구성대로 조립한다 ──
+//   반환: [PDF바이트, ...] — 부르는 쪽에서 이어 붙인다
+WOC.buildOneSet=async function(t, pgFrom, pgTotal){
+  var self=WO_ctx();
+  var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
+  var out=[];
+  // ① 작업지시서 — QR 을 넣는다
+  out.push(await self.buildOne(t,{pgFrom:pgFrom, pgTotal:pgTotal}));
+  // ② 도면 — QR 을 넣지 않는다. A4 로 맞추고 회전만 바로 세운다.
+  if(rec.dwg&&t.order){
+    var hit=WOC.findDwg(t.order);
+    if(hit){
+      var one=await DQ.buildOne({file:hit.file, order:t.order},
+                {noQr:true, pgFrom:pgFrom, pgTotal:pgTotal});
+      for(var i=0;i<rec.dwg;i++)out.push(one);
+    }
+  }
+  return out;
+};
 
 // ════════════════════════════════════════
 // 사용 설명서 (v6.53)
@@ -2819,6 +3162,7 @@ function setPage(p){
   if(p==='stock') STK.open();
   if(p==='issue') ALMUI.open();
   if(p==='manual') MAN.open();
+  if(p==='workorder') WOC.paint();
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -4251,8 +4595,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.54';
+var APP_VER='v6.56';
 var VER_LOG=[
+  {v:'v6.56',d:'2026-08', t:'[작업지시서] 고객사별 출력 구성. 하네스는 작업지시서만, AXCELIS는 작업지시서 1부 + 도면 2부, EDWARDS는 갑지 뒤에 도면마다 [작업지시서 1부 + 도면 2부]로 이어집니다. QR은 작업지시서에만 넣고 도면에는 넣지 않습니다. 도면도 A4로 맞추고 회전된 것은 바로 세웁니다. 도면 폴더를 고르면 도면번호로 찾아 주며, 찾은 수와 못 찾은 도번을 미리 보여 줍니다. 그림 그리는 엔진은 하나만 두고 조립 순서만 고객사별로 갖습니다. ※ EDWARDS 갑지는 아직 미구현'},
+  {v:'v6.55',d:'2026-08', t:'[작업지시서] 고객사별로 나눴습니다 — 사이드바 작업지시서 QR 아래 하네스·AXCELIS·EDWARDS. 화면은 하나이고 수주 등록 방식만 바뀝니다(화면을 셋으로 복사하면 한쪽만 고쳐져 어긋나기 때문). EDWARDS 는 PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다(도면번호·품명·수량). 탭·띄어쓰기 어느 쪽이든 읽고, [먼저 확인만] 으로 등록 전에 결과를 봅니다. 프로젝트·호기·불출일·제작납기를 함께 넣으며, 제작납기가 공정현황의 납기가 되고 불출일은 작업지시서에 찍힙니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_item_release)'},
   {v:'v6.54',d:'2026-08', t:'[도면 QR] 작업지시서 중심으로 방향이 바뀌어 도면 QR 메뉴를 감췄습니다. 화면과 기능은 그대로 남아 있어, 코드의 SHOW_DWGQR 값을 true 로 바꾸면 바로 되살아납니다. A4 통일·회전 바로 세우기·QR 삽입 기능은 앞으로 작업지시서 출력에 그대로 씁니다'},
   {v:'v6.53',d:'2026-08', t:'[사용 설명서] 팝업으로 뜨던 매뉴얼을 사이드바 화면으로 옮기고 다시 썼습니다. 화면별 탭(공정현황·QR 스캔·공정 이슈·재고 현황·도면 QR·작업지시서 QR·공정 설정·문제가 생기면)으로 나누고, 각 탭을 카드 몇 장으로 구성했습니다. 카드마다 무엇을 하는 곳인지 한 줄 설명과 번호가 붙은 순서를 넣었고, 주의할 것은 색 띠로 구분했습니다. 작업자에게는 공정현황·QR 스캔·문제가 생기면 세 탭만 보입니다'},
   {v:'v6.52',d:'2026-08', t:'[화면 폭] 노트북(1366px) 기준으로 열 너비를 다시 잡았습니다. 공정현황에서 QR 출력 열을 뺐고(공정 이슈에서 확인), 기본 너비 합계를 노트북 화면에 딱 맞춰 가로 스크롤을 없앴습니다. 긴 헤더가 잘리던 문제와, 헤더 때문에 열이 넓어지던 문제를 고쳤습니다. 현황판 공정 배지를 조금 작게 하고 긴 이름(납땜&조립 등)은 줄여 쓰되 마우스를 올리면 전체가 보입니다. 공정 이슈 표도 같은 기준으로 너비를 지정했고, 지표 카드는 화면 폭에 따라 자동으로 줄바꿈됩니다'},
@@ -5025,10 +5371,15 @@ var WO={
       //   A4 정규화·머릿말 재설계가 [개별 저장]에만 먹히고 [병합 저장]에는 안 먹혔다.
       for(var i=0;i<targets.length;i++){
         var t=targets[i];
-        var oneBytes=await self.buildOne(t,{pgFrom:_pgNo+1,pgTotal:_pgTotal});
-        var one=await PDFDocument.load(oneBytes);
-        var pages=await merged.copyPages(one,one.getPageIndices());
-        for(var pi=0;pi<pages.length;pi++){ merged.addPage(pages[pi]); _pgNo++; }
+        // 고객사 구성대로 조립한다 (작업지시서만 / +도면 2부 / 갑지 포함)
+        var parts=(self.mode==='wo'&&typeof WOC!=='undefined')
+          ? await WOC.buildOneSet(t,_pgNo+1,_pgTotal)
+          : [await self.buildOne(t,{pgFrom:_pgNo+1,pgTotal:_pgTotal})];
+        for(var bi=0;bi<parts.length;bi++){
+          var one=await PDFDocument.load(parts[bi]);
+          var pages=await merged.copyPages(one,one.getPageIndices());
+          for(var pi=0;pi<pages.length;pi++){ merged.addPage(pages[pi]); _pgNo++; }
+        }
         // 출력 표시
         if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();
           addQRHistoryEntry({drawingNo:t.order.dwg_no,customer:t.order.customer,project:t.order.project,unit:t.order.unit,qty:t.order.qty,po:t.order.po,qrSize:'공정'},self.outName()+'_병합.pdf');}
@@ -5285,7 +5636,7 @@ DQ.buildOne=async function(t,opt){
 
     // QR — 도면 축소·회전과 무관하게 페이지 모서리 기준.
     //   여러 장짜리 도면은 첫 장에만 넣는다 (설정으로 끌 수 있다).
-    if(i===0||!self.qrFirstOnly){
+    if(!opt.noQr && (i===0||!self.qrFirstOnly)){
       var qs=self.qrMm*MM2PT;
       var ins=5*MM2PT, p=self.dwgPos;
       var qx=(p==='tl'||p==='bl')?ins:(pw-qs-ins);
@@ -7148,6 +7499,9 @@ function hsRegisterOrders(list, opt){
   //   프로젝트·호기는 엑셀에 없어 사람이 채우는 값이라, 합치키에 넣으면
   //   프로젝트명을 바꿔 다시 올릴 때마다 같은 PO 가 새 건으로 쌓인다.
   var byLine=(opt.matchBy==='poline');
+  // matchBy:'projunit' — PO 가 없는 붙여넣기 등록(EDWARDS)용.
+  //   도번+프로젝트+호기 로 같은 건인지 본다.
+  var byPU=(opt.matchBy==='projunit');
   var added=0, skipped=0, touched=[], out=[], filled=0;
   // 한꺼번에 만들 때 id 가 겹치지 않게 (hsGenId 는 같은 ms 안에서 겹칠 수 있다)
   var used={};
@@ -7161,7 +7515,12 @@ function hsRegisterOrders(list, opt){
     if(!dwg){ out.push(null); return; }
     var ref={dwg_no:dwg, po:n.po||'', ord_ln:n.ord_ln||'', del_ln:n.del_ln||'',
              project:n.project||'', unit:n.unit||''};
-    var ex=byLine
+    var ex=byPU
+      ? HS.orders.find(function(o){
+          return (o.dwg_no||'')===dwg && (o.project||'')===(n.project||'')
+              && (o.unit||'')===(n.unit||'');
+        })
+      : byLine
       ? HS.orders.find(function(o){
           return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
               && (o.ord_ln||'')===(n.ord_ln||'') && (o.del_ln||'')===(n.del_ln||'');
@@ -7185,6 +7544,7 @@ function hsRegisterOrders(list, opt){
              po:String(n.po||'').trim(), ord_ln:String(n.ord_ln||'').trim(),
              del_ln:String(n.del_ln||'').trim(), due:n.due||'',
              step_type:n.step_type||'A', manually_done:false,
+             item_name:n.item_name||null, release_date:n.release_date||null,
              created_at:new Date().toISOString()};
       HS.orders.push(o); touched.push(o); added++; out.push(o);
     }
@@ -7386,6 +7746,7 @@ var AUTH={
     show('nav-qrhist',admin);
     show('nav-users',admin); // 관리자도 사용자 관리(승인) 접근
     show('nav-workorder',admin);
+    ['harness','axcelis','edwards'].forEach(function(k){ show('nav-wo-'+k,admin); });
     // nav-dwgqr 은 위에서 SHOW_DWGQR 로 정한다
     var stepBtn=document.querySelector('[onclick="openStepSettings()"]');if(stepBtn)stepBtn.style.display=admin?'':'none';
     var box=document.getElementById('au-userbox');
@@ -7422,6 +7783,7 @@ var AUTH={
     try{if(isMobile){setPage('scan');}else{setPage('status');refreshSpTab();}}catch(e){}
     this.applyRole();
     restoreNavGroups();
+    try{ var lc=localStorage.getItem('hs_wo_cust'); if(lc)WOC.cust=lc; }catch(e){}
     hsLoad();
   },
   init:async function(){
