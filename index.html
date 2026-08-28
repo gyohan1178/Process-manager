@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.62</title>
+<title>하네스 공정관리 v6.63</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -54,6 +54,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   font-family:var(--sans);font-size:11.5px;font-weight:700;color:var(--tx3);
   cursor:pointer;letter-spacing:.2px}
 /* 누를 수 없는 소제목 — 그룹 안에서 묶음 이름 역할만 한다 */
+.an-tab{padding:7px 13px;border:none;background:transparent;font-family:var(--sans);
+  font-size:12px;font-weight:700;color:var(--tx2);border-radius:7px;cursor:pointer;transition:all .15s}
+.an-tab:hover{background:var(--bg2)}
+.an-tab.on{background:var(--purple-lt);color:var(--purple)}
 .sn-head{display:flex;align-items:center;gap:8px;width:100%;height:31px;padding:0 10px;
   font-size:12.5px;font-weight:700;color:var(--tx2);user-select:none}
 .sn-group:hover{color:var(--tx2)}
@@ -529,7 +533,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.62</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.63</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -641,7 +645,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.62 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.63 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -703,16 +707,14 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">공정 부하·품질·리드타임·납기 준수율을 봅니다. 쌓인 스캔 기록으로 계산합니다.</div>
       </div>
       <div class="sp-bar"><div class="sp-bar-in">
-        <div style="margin-left:auto;display:flex;gap:6px">
-          <button class="btn btn-outline btn-sm" onclick="Analytics.render()">↻ 새로고침</button>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="an-tab on" id="antab-wip" onclick="Analytics.setTab('wip')">🔧 공정 부하</button>
+          <button class="an-tab" id="antab-quality" onclick="Analytics.setTab('quality')">✅ 품질</button>
+          <button class="an-tab" id="antab-leadtime" onclick="Analytics.setTab('leadtime')">⏱ 리드타임</button>
+          <button class="an-tab" id="antab-ontime" onclick="Analytics.setTab('ontime')">📅 납기 준수율</button>
         </div>
+        <div style="margin-left:auto"><button class="btn btn-outline btn-sm" onclick="Analytics.render()">↻</button></div>
       </div></div>
-      <div style="margin:0 20px 12px;padding:6px 8px 0;display:flex;gap:4px;border-bottom:1px solid var(--border);background:#fff;border-radius:var(--r2) var(--r2) 0 0;border:1px solid var(--border);border-bottom:1px solid var(--border)">
-        <button class="an-tab on" id="antab-wip" onclick="Analytics.setTab('wip')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--blue);border-bottom:2px solid var(--blue);margin-bottom:-1px;cursor:pointer">🔧 공정 부하</button>
-        <button class="an-tab" id="antab-quality" onclick="Analytics.setTab('quality')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer">✅ 품질 (합불/재작업)</button>
-        <button class="an-tab" id="antab-leadtime" onclick="Analytics.setTab('leadtime')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer">⏱ 리드타임</button>
-        <button class="an-tab" id="antab-ontime" onclick="Analytics.setTab('ontime')" style="padding:8px 16px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer">📅 납기 준수율</button>
-      </div>
       <div id="an-body" style="padding:18px 20px"></div>
     </div>
 
@@ -1367,7 +1369,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
     <div id="stab-panel-steps" style="padding:0">
       <div id="step-list"></div>
-      <div style="padding:14px 18px;border-top:1px solid var(--border);background:var(--bg)">
+      <div style="padding:12px 14px;border-top:1px solid var(--border);background:var(--bg2)">
         <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:10px">+ 공정 추가</div>
         <div style="display:grid;grid-template-columns:60px 1fr 90px 1fr;gap:8px;align-items:end">
           <div><div style="font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px">아이콘</div><button type="button" onclick="openIconPalette(this,'new')" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white);cursor:pointer;font-size:18px" title="클릭하여 선택"><span id="new-icon-preview">📦</span></button><input type="hidden" id="new-step-icon" value="📦"></div>
@@ -1905,15 +1907,15 @@ function renderStepList(){
   }
   el.innerHTML=_editSteps.map(function(s,i){
     var isFirst=i===0;
-    return '<div style="display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border)">'
+    return '<div style="display:flex;align-items:center;gap:9px;padding:7px 14px;border-bottom:1px solid var(--border)">'
       +'<div style="display:flex;flex-direction:column;gap:1px">'
-        +'<button onclick="moveStep('+i+',-1)" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1" '+(i===0?'disabled':'')+'>▲</button>'
-        +'<button onclick="moveStep('+i+',1)"  style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;padding:1px 4px;line-height:1" '+(i===_editSteps.length-1?'disabled':'')+'>▼</button>'
+        +'<button onclick="moveStep('+i+',-1)" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:10px;padding:0 3px;line-height:1" '+(i===0?'disabled':'')+'>▲</button>'
+        +'<button onclick="moveStep('+i+',1)"  style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:10px;padding:0 3px;line-height:1" '+(i===_editSteps.length-1?'disabled':'')+'>▼</button>'
       +'</div>'
-      +'<div onclick="openIconPalette(this,'+i+')" title="클릭: 아이콘 선택" style="width:32px;height:32px;border-radius:7px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;cursor:pointer;user-select:none">'+s.icon+'</div>'
+      +'<div onclick="openIconPalette(this,'+i+')" title="클릭: 아이콘 선택" style="width:26px;height:26px;border-radius:6px;background:'+s.color+'18;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;cursor:pointer;user-select:none">'+s.icon+'</div>'
       +'<div style="flex:1;min-width:0">'
-        +'<input data-sidx="'+i+'" data-field="id" value="'+s.id+'" onchange="updateEditStep(this)" style="font-size:13px;font-weight:700;color:var(--tx);border:none;background:transparent;outline:none;width:100%;padding:1px 0;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" '+(isFirst?'readonly':'')+'>'
-        +'<input data-sidx="'+i+'" data-field="desc" value="'+s.desc+'" onchange="updateEditStep(this)" style="font-size:11px;color:var(--tx3);border:none;background:transparent;outline:none;width:100%;padding:1px 0;margin-top:1px;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--blue)\'" onblur="this.style.borderColor=\'transparent\'" placeholder="설명">'
+        +'<input data-sidx="'+i+'" data-field="id" value="'+s.id+'" onchange="updateEditStep(this)" style="font-size:13px;font-weight:700;color:var(--tx);border:none;background:transparent;outline:none;width:100%;padding:1px 0;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--purple)\'" onblur="this.style.borderColor=\'transparent\'" '+(isFirst?'readonly':'')+'>'
+        +'<input data-sidx="'+i+'" data-field="desc" value="'+s.desc+'" onchange="updateEditStep(this)" style="font-size:11px;color:var(--tx3);border:none;background:transparent;outline:none;width:100%;padding:1px 0;margin-top:1px;border-bottom:1.5px solid transparent" onfocus="this.style.borderColor=\'var(--purple)\'" onblur="this.style.borderColor=\'transparent\'" placeholder="설명">'
       +'</div>'
       +'<input type="color" value="'+s.color+'" data-sidx="'+i+'" data-field="color" onchange="updateEditStep(this)" style="width:30px;height:30px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:1px;flex-shrink:0">'
       +'<button onclick="removeStep('+i+')" style="border:none;background:none;cursor:pointer;color:var(--tx3);font-size:17px;padding:4px 6px;border-radius:5px;flex-shrink:0" '+(isFirst?'disabled':'')+' onmouseover="if(!this.disabled)this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--tx3)\'">✕</button>'
@@ -4570,7 +4572,7 @@ var Analytics={
     this.tab=t;
     ['wip','quality','leadtime','ontime'].forEach(function(x){
       var b=document.getElementById('antab-'+x);
-      if(b){b.style.color=x===t?'var(--blue)':'var(--tx2)';b.style.borderBottomColor=x===t?'var(--blue)':'transparent';}
+      if(b)b.classList.toggle('on',x===t);
     });
     this.render();
   },
@@ -4584,14 +4586,21 @@ var Analytics={
     return cnt;
   },
   _wipOpen:{},
-  toggleWIP:function(stepId){this._wipOpen[stepId]=!this._wipOpen[stepId];this.render();},
   render:function(){
-    var el=document.getElementById('an-body');if(!el)return;
+    var el=document.getElementById('an-body'); if(!el)return;
     if(this.tab==='wip')this.renderWIP(el);
     else if(this.tab==='quality')this.renderQuality(el);
     else if(this.tab==='leadtime')this.renderLeadtime(el);
-    else if(this.tab==='ontime')this.renderOntime(el);
+    else this.renderOntime(el);
   },
+  toggleWIP:function(id){
+    // 한 번에 하나만 펼친다. 여러 개를 펼치면 화면이 다시 길어진다.
+    var was=!!this._wipOpen[id];
+    this._wipOpen={};
+    if(!was)this._wipOpen[id]=true;
+    this.render();
+  },
+
   // 다른 화면(공정 이슈·설명서)과 같은 카드 모양
   card:function(title,inner,note){
     return '<div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:12px">'
@@ -4627,49 +4636,60 @@ var Analytics={
     });
     var maxLoad=Math.max(1,...H_STEPS.map(function(s){return (stepLoad[s.id]||[]).length;}));
     var self=this;
-    var bars=H_STEPS.map(function(s){
-      var items=stepLoad[s.id]||[];var n=items.length;
+    var self=this;
+    // 공정을 세로 막대로 늘어놓으면 화면만 길어진다.
+    // 한 줄에 여러 칸으로 늘어놓고, 누르면 그 공정만 아래에 펼친다.
+    var cells=H_STEPS.map(function(s){
+      var items=stepLoad[s.id]||[]; var n=items.length;
       var pct=Math.round(n/maxLoad*100);
       var open=!!self._wipOpen[s.id];
-      // 고객사별 그룹
-      var byCust={};items.forEach(function(o){var k=o.customer||'(미지정)';if(!byCust[k])byCust[k]=[];byCust[k].push(o);});
-      var custKeys=Object.keys(byCust).sort(function(a,b){return byCust[b].length-byCust[a].length;});
-      var detail='';
-      if(open&&n>0){
-        detail='<div style="margin:6px 0 4px;padding:8px 10px;background:var(--bg);border-radius:6px">'
-          +custKeys.map(function(ck){
-            var list=byCust[ck];
-            var rows=list.map(function(o){
-              var run=logsFor(o.dwg_no).some(function(l){return !l.ended_at&&logMatch(l,o);});
-              return '<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0;font-size:11px;color:var(--tx2)">'
-                +'<span style="font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(o.dwg_no||'—')+(o.unit?' <span style=\'color:var(--tx3)\'>('+o.unit+')</span>':'')+'</span>'
-                +'<span style="flex-shrink:0;color:'+(run?s.color:'var(--tx3)')+';font-weight:600">'+(run?'작업중':'대기')+'</span>'
-              +'</div>';
-            }).join('');
-            return '<div style="margin-bottom:6px">'
-              +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--tx);border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:3px">'
-                +'<span>'+ck+'</span><span style="color:'+s.color+'">'+list.length+'건</span>'
-              +'</div>'+rows
-            +'</div>';
-          }).join('')
-        +'</div>';
-      }
-      var sid=(s.id+'').replace(/'/g,"");
-      return '<div style="margin-bottom:10px">'
-        +'<div onclick="Analytics.toggleWIP(\''+sid+'\')" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;cursor:'+(n>0?'pointer':'default')+'">'
-          +'<span style="font-size:12px;font-weight:600;color:var(--tx)">'+(n>0?(open?'▾ ':'▸ '):'')+s.icon+' '+s.id+'</span>'
-          +'<span style="font-size:12px;font-weight:700;color:'+(n>0?s.color:'var(--tx3)')+'">'+n+'건</span>'
+      var sid=(s.id+'').replace(/'/g,'');
+      return '<div onclick="Analytics.toggleWIP(\''+sid+'\')" '
+        +'style="cursor:'+(n>0?'pointer':'default')+';background:'+(open?s.color+'12':'#fff')+';'
+        +'border:'+(open?'2px':'1px')+' solid '+(n>0?s.color+'55':'var(--border)')+';border-radius:var(--r);padding:10px 12px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+s.icon+' '+hEsc(s.id)+'</div>'
+        +'<div style="font-size:22px;font-weight:800;font-family:var(--mono);line-height:1.2;margin-top:2px;color:'+(n>0?s.color:'var(--tx3)')+'">'+n+'</div>'
+        +'<div style="height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-top:6px">'
+          +'<div style="height:100%;width:'+pct+'%;background:'+s.color+';border-radius:3px;min-width:'+(n>0?'4px':'0')+'"></div>'
         +'</div>'
-        +'<div onclick="Analytics.toggleWIP(\''+sid+'\')" style="height:18px;background:var(--bg);border-radius:5px;overflow:hidden;cursor:'+(n>0?'pointer':'default')+'">'
-          +'<div style="height:100%;width:'+pct+'%;background:'+s.color+';border-radius:5px;transition:width .4s;min-width:'+(n>0?'4px':'0')+'"></div>'
-        +'</div>'
-        +(n>0&&!open?'<div style="font-size:9px;color:var(--tx3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+custKeys.slice(0,4).map(function(ck){return ck+' '+byCust[ck].length;}).join(' · ')+(custKeys.length>4?' 외':'')+'</div>':'')
-        +detail
       +'</div>';
     }).join('');
+
+    // 펼친 공정의 상세 (한 번에 하나만)
+    var openId=Object.keys(self._wipOpen).filter(function(k){return self._wipOpen[k];})[0];
+    var detail='';
+    if(openId&&(stepLoad[openId]||[]).length){
+      var st=H_STEPS.find(function(x){return x.id===openId;})||{color:'var(--purple)',icon:''};
+      var byCust={};
+      stepLoad[openId].forEach(function(o){ var k=o.customer||'(미지정)'; (byCust[k]=byCust[k]||[]).push(o); });
+      var keys=Object.keys(byCust).sort(function(a,b){return byCust[b].length-byCust[a].length;});
+      detail='<div style="margin-top:12px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden">'
+        +'<div style="padding:9px 13px;background:'+st.color+'12;font-size:12.5px;font-weight:800;color:var(--tx)">'
+          +st.icon+' '+hEsc(openId)+' <span style="color:var(--tx3);font-weight:600">'+stepLoad[openId].length+'건</span></div>'
+        +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<thead><tr style="background:var(--bg2);border-bottom:2px solid var(--border)">'
+          +'<th style="padding:7px 12px;text-align:left;font-weight:700;color:var(--tx2);width:130px">고객사</th>'
+          +'<th style="padding:7px 12px;text-align:left;font-weight:700;color:var(--tx2)">도면번호</th>'
+          +'<th style="padding:7px 12px;text-align:right;font-weight:700;color:var(--tx2);width:70px">상태</th></tr></thead><tbody>'
+        +keys.map(function(ck){
+          return byCust[ck].map(function(o,ri){
+            var run=logsFor(o.dwg_no).some(function(l){return !l.ended_at&&logMatch(l,o);});
+            return '<tr style="border-bottom:1px solid var(--border)">'
+              +'<td style="padding:7px 12px;color:var(--tx2)">'+(ri===0?hEsc(ck)+' <span style="color:var(--tx3)">'+byCust[ck].length+'</span>':'')+'</td>'
+              +'<td style="padding:7px 12px;font-family:var(--mono);font-weight:700">'+hEsc(o.dwg_no||'—')
+                +(o.unit?' <span style="color:var(--tx3);font-weight:400">('+hEsc(o.unit)+')</span>':'')+'</td>'
+              +'<td style="padding:7px 12px;text-align:right"><span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;'
+                +(run?'background:'+st.color+'1a;color:'+st.color:'background:var(--bg2);color:var(--tx3);border:1px solid var(--border)')+'">'
+                +(run?'작업중':'대기')+'</span></td></tr>';
+          }).join('');
+        }).join('')
+        +'</tbody></table></div>';
+    }
+
     var totalActive=activeOrders.length;
-    el.innerHTML=this.card('🔧 공정별 재공(WIP) 부하',bars,'완료건 제외, 진행중 '+totalActive+'건의 현재 공정별 분포 — 항목을 누르면 고객사별 상세가 펼쳐집니다')
-      +'<div style="font-size:11px;color:var(--tx3);text-align:center;padding:4px">※ 정체가 심한 공정 = 병목 가능성. 인력/순서 조정 검토</div>';
+    el.innerHTML=this.card('🔧 공정별 재공(WIP) 부하',
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px">'+cells+'</div>'+detail,
+        '완료 건은 뺀 진행중 '+totalActive+'건이 지금 어느 공정에 있는지 봅니다. 칸을 누르면 그 공정의 목록이 아래에 열립니다.');
   },
   // ── 품질 (합불/재작업 + 방치 알림) ──
   renderQuality:function(el){
@@ -4811,8 +4831,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.62';
+var APP_VER='v6.63';
 var VER_LOG=[
+  {v:'v6.63',d:'2026-08', t:'[분석·공정 설정] ① 분석의 새로고침 줄과 탭 줄을 한 줄로 합쳤습니다. 탭도 다른 화면과 같은 알약 모양으로 바꿨습니다. ② 공정 부하를 세로 막대에서 한 줄 칸으로 바꿨습니다 — 공정이 늘어도 화면이 길어지지 않고 한눈에 보입니다. 칸을 누르면 그 공정의 목록이 아래에 표로 열리며, 한 번에 하나만 펼쳐집니다. ③ 공정 설정 표의 행 높이와 아이콘을 줄여 불필요하게 크던 것을 정리했습니다'},
   {v:'v6.62',d:'2026-08', t:'[화면 정리] ① 검색·필터 줄이 회색 바탕 사이에 흰 띠로 떠 보이던 것을 흰 카드로 감싸 본문과 이어 붙였습니다. 공정 이슈·분석·사용자 관리도 같은 모양으로 맞췄습니다. ② PO·오더라인·납품라인을 한 줄에 몰지 않고 윗줄 PO, 아랫줄 라인으로 나눴습니다. 공정 이슈 표에도 같은 모양의 PO/라인 열을 넣었습니다(엑셀 내보내기 포함). ③ 납기 배지를 진한 채움에서 파스텔로 바꿨습니다. 표 글자와 도면번호를 키우고 현황판 공정 배지도 크게 했습니다. ④ 공정 설정이 팝업으로 뜨던 것을 화면으로 옮겼습니다. 공정 목록이 잘리지 않고 모두 보입니다'},
   {v:'v6.61',d:'2026-08', t:'[화면 톤 통일] 머리말만 바뀌고 본문은 옛 모양이던 것을 전체로 맞췄습니다. 표 헤더를 대문자 작은 회색 글씨에서 다른 화면과 같은 굵은 진회색으로 바꾸고, 줄무늬 배경을 없애 눈이 덜 피로하게 했습니다. 검색창·필터·구분 버튼의 강조색을 파랑에서 보라로 통일했고, 주요 버튼도 사내 기준대로 보라 채움으로 바꿨습니다. 분석·이력관리 안의 카드와 작은 표들도 공정 이슈·설명서와 같은 모양으로 맞췄습니다. 현장 스캔 화면은 큰 글씨·큰 버튼 기준이라 그대로 둡니다'},
   {v:'v6.60',d:'2026-08', t:'[작업지시서·화면] ① 머릿말·꼬리말을 여섯 칸으로 나눴습니다 — 위 왼쪽·가운데·오른쪽, 아래 왼쪽·가운데·오른쪽. 채운 칸만 나오며 고객사 탭마다 따로 저장됩니다. 예전에 한 칸으로 저장해 둔 문구는 가운데 칸으로 옮겨집니다. ② AXCELIS 탭은 수주 등록 없이 작업지시서 폴더만 고릅니다 — 수주는 공정현황에서 엑셀로 올린 것을 쓰고, 폴더의 파일명(도면번호_PO_오더라인_납품라인)으로 자동으로 맞춥니다. 맞은 수와 못 맞춘 파일을 미리 보여 줍니다. ③ 분석·사용자 관리·QR 이력 화면에도 제목과 한 줄 설명을 넣어 다른 화면과 모양을 맞췄습니다. 현장 스캔 화면은 큰 글씨·큰 버튼 기준이라 그대로 둡니다'},
