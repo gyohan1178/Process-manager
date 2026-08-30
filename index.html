@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.79</title>
+<title>하네스 공정관리 v6.83</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -446,7 +446,66 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .mob-nav-btn .mn-ic{font-size:21px;transition:transform .18s}
   .mob-nav-btn.on{color:var(--blue)}
   .mob-nav-btn.on .mn-ic{transform:translateY(-2px) scale(1.1)}
-  .mob-nav-btn.on::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;border-radius:0 0 4px 4px;background:var(--blue)}
+  .mob-nav-btn.on::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;border-radius:0 0 4px 4px;background:var(--purple)}
+  .mob-nav-btn.on{color:var(--purple)}
+  .mn-bd{position:absolute;top:6px;left:56%;font-size:9px;background:#dc2626;color:#fff;
+    padding:0 5px;border-radius:9px;font-weight:800;line-height:15px}
+  /* 전체 메뉴 — 아래에서 올라오는 판 */
+  #mob-sheet{position:fixed;inset:0;z-index:400;background:rgba(15,28,54,.5);display:flex;align-items:flex-end}
+  #mob-sheet.hidden{display:none}
+  .ms-panel{background:#fff;width:100%;max-height:84vh;border-radius:18px 18px 0 0;
+    display:flex;flex-direction:column;overflow:hidden;animation:msUp .18s ease-out}
+  @keyframes msUp{from{transform:translateY(26px);opacity:.5}to{transform:none;opacity:1}}
+  .ms-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+  .ms-t{font-size:16px;font-weight:800;color:var(--tx)}
+  .ms-u{font-size:12px;color:var(--tx3);margin-top:2px}
+  .ms-x{border:none;background:var(--bg2);color:var(--tx2);width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer}
+  .ms-body{flex:1;overflow-y:auto;padding:10px 12px 16px;-webkit-overflow-scrolling:touch}
+  .ms-grp{font-size:11.5px;font-weight:700;color:var(--tx3);padding:13px 8px 5px}
+  .ms-item{display:flex;align-items:center;gap:11px;width:100%;min-height:48px;padding:0 12px;
+    border:none;background:transparent;border-radius:10px;font-family:var(--sans);
+    font-size:14.5px;color:var(--tx2);text-align:left;cursor:pointer}
+  .ms-item:active{background:var(--bg2)}
+  .ms-item.on{background:var(--purple-lt);color:var(--purple);font-weight:700}
+  .ms-item .ms-ic{font-size:19px;width:24px;text-align:center;flex-shrink:0}
+  .ms-item .ms-bd{margin-left:auto;font-size:10px;font-weight:800;padding:1px 7px;border-radius:9px;background:#dc2626;color:#fff}
+  .ms-ft{display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid var(--border);background:var(--bg2)}
+  .ms-out{border:1.5px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;
+    border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+  .ms-ver{margin-left:auto;font-size:11px;color:var(--tx3);font-family:var(--mono)}
+  /* 하단 탭이 4개가 되었으므로 본문 아래 여백을 넉넉히 */
+  .app{padding-bottom:62px}
+  /* ── 관리 화면을 폰에서도 볼 수 있게 ── */
+  /* 표는 폭을 강제하지 않고 가로로 밀어 본다 */
+  #alm-table,#stk-table,.dwg-table{table-layout:auto!important;min-width:760px}
+  #alm-table colgroup,.dwg-table colgroup{display:none}
+  #pg-issue>div:last-child,#pg-stock>div:last-child{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #sp-board>div:last-child{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  /* 지표 카드는 두 칸으로 */
+  #sp-kpi,#alm-kpi,#stk-kpi{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  /* 페이지 여백·글자 */
+  #pg-issue,#pg-stock,#pg-manual,#pg-stepset,#pg-qrhist{padding:14px 12px 20px!important}
+  .sp-bar{padding:10px 12px 0!important}
+  .sp-bar-in{padding:9px 11px!important}
+  .sp-content{padding:12px 12px 20px!important}
+  /* 작업지시서 화면 */
+  #pg-workorder>div{padding:14px 12px 30px!important;max-width:none!important}
+  #wo-c-form{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #wo-hf-hl,#wo-hf-hc,#wo-hf-hr,#wo-hf-fl,#wo-hf-fc,#wo-hf-fr{font-size:12px}
+  /* 설명서는 목차를 위로 */
+  #pg-manual>div:last-child{flex-direction:column!important}
+  #man-tabs{width:100%!important;flex-direction:row!important;flex-wrap:wrap!important;position:static!important}
+  #man-tabs button{width:auto!important;flex:1 1 45%}
+  /* 표 안 글자 */
+  .dwg-table td,#alm-table td{font-size:12px}
+  /* 모달은 폰 폭에 맞춘다 */
+  .po-box{max-width:calc(100vw - 24px)!important}
+  /* 폰에서 필요 없는 것 — 열 너비는 손으로 못 끌고, 안내문도 PC 얘기다 */
+  #pg-stock button[onclick*="resetColW"],#pg-issue button[onclick*="resetColW"],
+  #pg-stock .stk-help,#stk-help{display:none!important}
+  /* 도구 단추는 두 줄까지만 */
+  #pg-stock .sp-bar-in,#pg-issue .sp-bar-in{gap:7px}
+  #pg-stock .btn,#pg-issue .sp-bar-in button{font-size:12px;padding:7px 11px}
   /* ── 메뉴 바텀시트 ── */
   .mob-sheet-ovl{display:none;position:fixed;inset:0;z-index:250;background:rgba(15,23,42,.45)}
   .mob-sheet-ovl.show{display:block}
@@ -533,7 +592,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.79</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.83</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -645,7 +704,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.79 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.83 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -735,6 +794,10 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <!-- 페이지 헤더 -->
         <div>
           <div style="font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.5px">공정 QR</div>
+          <div id="wo-pc-only" style="display:none;background:var(--amber-lt);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;padding:11px 13px;margin-bottom:12px;font-size:12.5px;color:var(--tx2);line-height:1.7">
+            ⚠️ <b>이 화면은 사무실 PC에서 씁니다.</b><br>
+            <span style="color:var(--tx3)">폰은 폴더를 고를 수 없어(브라우저 제약) 작업지시서를 만들 수 없습니다.</span>
+          </div>
           <div id="wo-page-t" style="font-size:22px;font-weight:800;color:var(--tx);margin-top:3px">작업지시서 QR 삽입</div>
           <div id="wo-page-d" style="font-size:13px;color:var(--tx3);margin-top:6px;line-height:1.6">
             작업지시서 PDF를 올리면 파일명으로 등록된 수주정보를 찾아, 공정 칸에 공정 QR을 자동 삽입합니다.
@@ -1577,7 +1640,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <button onclick="STK.reload()" title="다시 불러오기" style="padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer">↻</button>
     </div>
   </div>
-  <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6"><b>열 경계를 끌어</b> 너비를 바꿀 수 있습니다 (두 번 누르면 그 열만 원래대로). 기초재고 · 비고 칸을 <b>더블클릭</b>하면 바로 고칠 수 있습니다. Enter 저장 · Esc 취소. 기초재고는 이 시스템으로 잡기 전에 이미 있던 수량입니다.</div>
+  <div class="stk-help" style="font-size:11px;color:var(--tx3);margin-bottom:8px;line-height:1.6"><b>열 경계를 끌어</b> 너비를 바꿀 수 있습니다 (두 번 누르면 그 열만 원래대로). 기초재고 · 비고 칸을 <b>더블클릭</b>하면 바로 고칠 수 있습니다. Enter 저장 · Esc 취소. 기초재고는 이 시스템으로 잡기 전에 이미 있던 수량입니다.</div>
 
   <div style="overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white)">
     <table id="stk-table" style="width:100%;border-collapse:collapse;font-size:12px">
@@ -1610,7 +1673,31 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   <button class="mob-nav-btn" id="mn-status" onclick="setPage('status');setSpTab('board')">
     <span class="mn-ic">📊</span>현황
   </button>
+  <button class="mob-nav-btn admin-only" id="mn-issue" onclick="setPage('issue')">
+    <span class="mn-ic">⚠️</span>이슈
+    <span id="mn-issue-badge" class="mn-bd" style="display:none"></span>
+  </button>
+  <button class="mob-nav-btn admin-only" id="mn-more" onclick="MOB.open()">
+    <span class="mn-ic">☰</span>전체
+  </button>
 </nav>
+
+<div id="mob-sheet" class="hidden" onclick="if(event.target===this)MOB.close()">
+  <div class="ms-panel">
+    <div class="ms-hd">
+      <div>
+        <div class="ms-t">하네스 공정관리</div>
+        <div class="ms-u" id="ms-user"></div>
+      </div>
+      <button class="ms-x" onclick="MOB.close()">✕</button>
+    </div>
+    <div class="ms-body" id="ms-body"></div>
+    <div class="ms-ft">
+      <button class="ms-out" onclick="AUTH.signOut()">로그아웃</button>
+      <span class="ms-ver" id="ms-ver"></span>
+    </div>
+  </div>
+</div>
 
 <script>
 // 인터넷이 끊겨 pdf.js 를 못 받아도 여기서 터지지 않게 감싼다.
@@ -3100,7 +3187,7 @@ MAN.PAGES.wo=function(){
         '<b>OCR 폴더</b>를 고르면 도면번호로 맞춰 줍니다.',
         'AXCELIS·EDWARDS는 <b>도면 폴더</b>도 고릅니다.',
         '<b>만들기</b> — 공정 QR을 넣어 저장합니다.'
-      ])+MAN.tip('PO를 먼저 등록해야 합니다. QR 안에 도번·PO·수량·납기가 들어가는데, 파일명만으로는 수량·납기를 알 수 없기 때문입니다.')})
+      ])+MAN.tip('PO를 먼저 등록해야 합니다. QR 안에 도번·PO·수량·납기가 들어가는데, 파일명만으로는 수량·납기를 알 수 없기 때문입니다.')+MAN.tip('<b>이 화면은 사무실 PC에서만 씁니다.</b> 폰은 폴더를 고를 수 없어 메뉴에 나오지 않습니다.','warn')})
   + MAN.card({ic:'📄',t:'고객사별로 뽑히는 모양',
       body:'<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">'
         +'<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
@@ -3332,6 +3419,11 @@ function almCount(kind){
 }
 // 사이드바 빨간 건수 배지
 function almPaintBadge(){
+  // 모바일 하단 탭 배지
+  try{
+    var mb=document.getElementById('mn-issue-badge');
+    if(mb){ var n=almCount('overdue'); if(n>0){mb.textContent=n;mb.style.display='';} else mb.style.display='none'; }
+  }catch(e){}
   var el=document.getElementById('nav-issue-badge'); if(!el)return;
   var urgent=almCount('overdue');
   if(urgent>0){ el.textContent=urgent; el.style.display=''; }
@@ -3391,6 +3483,47 @@ var ALMUI={
       return;
     }
     ALMUI._rows=rows;
+    // 폰에서는 표를 가로로 밀어야 해서 읽기 어렵다. 공정현황처럼 카드로 그린다.
+    if(typeof isMobile!=='undefined'&&isMobile){
+      var wrap=document.getElementById('alm-table');
+      if(wrap&&wrap.parentElement)wrap.parentElement.style.display='none';
+      var mb=document.getElementById('alm-mob');
+      if(!mb){
+        mb=document.createElement('div'); mb.id='alm-mob';
+        var host=(wrap&&wrap.parentElement&&wrap.parentElement.parentElement)||document.getElementById('pg-issue');
+        host.appendChild(mb);
+      }
+      mb.style.display='';
+      mb.innerHTML=rows.length?rows.map(function(x){
+        var o=x.order;
+        var bg=rows.length?ALM_KINDS[x.top.kind]:null;
+        var bd=x.kinds.map(function(k){var c=ALM_KINDS[k.kind];
+          return '<span style="font-size:10.5px;font-weight:700;color:'+c.color+';background:'+c.bg
+            +';border:1px solid '+c.bd+';padding:2px 8px;border-radius:20px;white-space:nowrap">'+c.label+'</span>';
+        }).join(' ');
+        var line=[];
+        if(o.po)line.push(hEsc(o.po)+((o.ord_ln||o.del_ln)?' <span style="color:var(--tx3)">'+hEsc(o.ord_ln||'-')+'/'+hEsc(o.del_ln||'-')+'</span>':''));
+        if(o.unit)line.push(hEsc(o.unit)+'호기');
+        if(o.qty)line.push('수량 '+o.qty);
+        return '<div style="background:#fff;border:1px solid var(--border);border-left:3px solid '+ALM_KINDS[x.top.kind].color
+          +';border-radius:var(--r2);padding:12px 14px;margin-bottom:9px">'
+          +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">'+bd+'</div>'
+          +'<div style="font-family:var(--mono);font-size:14px;font-weight:800;color:var(--tx)">'+hEsc(o.dwg_no||'')
+            +(o.rev?' <span style="font-size:11px;color:var(--purple)">Rev '+hEsc(o.rev)+'</span>':'')+'</div>'
+          +'<div style="font-size:12px;color:var(--tx3);margin-top:2px">'+hEsc([o.customer,o.project].filter(Boolean).join(' · ')||'—')+'</div>'
+          +(line.length?'<div style="font-size:11.5px;color:var(--tx3);margin-top:4px;font-family:var(--mono)">'+line.join(' · ')+'</div>':'')
+          +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'
+            +'<span style="font-size:11.5px;color:var(--tx3)">다음</span>'
+            +'<b style="font-size:12px;color:var(--tx)">'+hEsc(x.step||'—')+'</b>'
+            +'<span style="margin-left:auto;font-size:12px;font-family:var(--mono);color:'+ALM_KINDS[x.top.kind].color+';font-weight:800">'
+              +(x.due?hEsc(x.due):'—')+(x.days?' · '+x.days+'일':'')+'</span>'
+          +'</div>'
+          +'<div style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6">'
+            +hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</div>'
+        +'</div>';
+      }).join(''):'<div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:34px;text-align:center;color:var(--tx3);font-size:13px">해당하는 건이 없습니다</div>';
+      return;
+    }
     body.innerHTML=rows.map(function(x){
       var o=x.order, d=ALM_KINDS[x.top.kind];
       var target=x.due?almShift(x.due,-ALM.leadDays):'';
@@ -3688,6 +3821,79 @@ function openNavGroupFor(id){
     toggleNavGroup(sec.id.replace('grp-',''),false);
   }
 }
+// 모바일 전체 메뉴
+//   PC 사이드바와 같은 항목을 그대로 보여 준다. 관리자는 모든 화면에 들어갈 수 있다.
+var MOB={
+  ITEMS:[
+    {g:'현황'},
+    {k:'status', ic:'\ud83d\udcca', t:'\uacf5\uc815\ud604\ud669', act:"setPage('status');setSpTab('board')"},
+    {k:'log',    ic:'\ud83d\udccb', t:'\uacf5\uc815 \uc774\ub825\uad00\ub9ac', act:"setPage('status');setSpTab('log')"},
+    {k:'issue',  ic:'\u26a0\ufe0f', t:'\uacf5\uc815 \uc774\uc288', act:"setPage('issue')", badge:'issue'},
+    {k:'stock',  ic:'\ud83d\udce6', t:'\uc7ac\uace0 \ud604\ud669', act:"setPage('stock')"},
+    {g:'QR \uad00\ub9ac'},
+    {k:'scan',     ic:'\ud83d\udcf7', t:'QR \uc2a4\uce94', act:"setPage('scan')"},
+    {k:'qrhist',   ic:'\ud83d\udccb', t:'QR \uc774\ub825', act:"setPage('qrhist')"},
+    // 아래 셋은 PC 에서만 쓴다. 폰은 폴더를 고를 수 없어 진행되지 않는다.
+    {k:'workorder',ic:'\ud83d\udcc4', t:'\uc791\uc5c5\uc9c0\uc2dc\uc11c QR', act:"WOC.go('harness')", pcOnly:true},
+    {k:'wo-axcelis',ic:'\ud83d\udcd0', t:'\ub3c4\uba74 \ucd9c\ub3c4 \u2014 AXCELIS', act:"WOC.go('axcelis')", pcOnly:true},
+    {k:'wo-edwards',ic:'\ud83d\udcd0', t:'\ub3c4\uba74 \ucd9c\ub3c4 \u2014 EDWARDS', act:"WOC.go('edwards')", pcOnly:true},
+    {g:'\uad00\ub9ac'},
+    {k:'analytics',ic:'\ud83d\udcc8', t:'\ubd84\uc11d', act:"setPage('analytics')"},
+    {k:'users',    ic:'\ud83d\udc65', t:'\uc0ac\uc6a9\uc790 \uad00\ub9ac', act:"setPage('users')"},
+    {k:'stepset',  ic:'\u2699\ufe0f', t:'\uacf5\uc815 \uc124\uc815', act:"openStepSettings()"},
+    {k:'manual',   ic:'\ud83d\udcd6', t:'\uc0ac\uc6a9 \uc124\uba85\uc11c', act:"setPage('manual')"}
+  ],
+  open:function(){
+    var el=document.getElementById('mob-sheet'); if(!el)return;
+    MOB.paint();
+    el.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+  },
+  close:function(){
+    var el=document.getElementById('mob-sheet'); if(el)el.classList.add('hidden');
+    document.body.style.overflow='';
+  },
+  go:function(i){
+    var it=MOB.ITEMS[i]; if(!it||!it.act)return;
+    MOB.close();
+    try{ (new Function(it.act))(); }catch(e){ console.error(e); }
+  },
+  paint:function(){
+    var body=document.getElementById('ms-body'); if(!body)return;
+    var admin=(typeof AUTH==='undefined')||AUTH.isAdmin();
+    var cur=(document.querySelector('.page:not(.hidden)')||{}).id||'';
+    cur=cur.replace('pg-','');
+    var u=document.getElementById('ms-user');
+    if(u)u.textContent=((AUTH.profile&&AUTH.profile.username)||'')+' \u00b7 '+(admin?'\uad00\ub9ac\uc790':'\uc791\uc5c5\uc790');
+    var v=document.getElementById('ms-ver');
+    if(v)v.textContent=(typeof APP_VER!=='undefined'?APP_VER:'');
+    // 작업자에게는 스캔·현황만 보인다
+    var open4worker=['status','scan'];
+    var html='';
+    MOB.ITEMS.forEach(function(it,i){
+      if(it.g){ html+='<div class="ms-grp">'+hEsc(it.g)+'</div>'; return; }
+      if(!admin&&open4worker.indexOf(it.k)<0)return;
+      if(it.pcOnly&&typeof isMobile!=='undefined'&&isMobile)return;   // 폰에서는 뺀다
+      var on=(cur===it.k)||(it.k==='wo-axcelis'&&cur==='workorder'&&WOC.cust==='axcelis')
+             ||(it.k==='wo-edwards'&&cur==='workorder'&&WOC.cust==='edwards')
+             ||(it.k==='workorder'&&cur==='workorder'&&WOC.cust==='harness');
+      var bd='';
+      if(it.badge==='issue'&&typeof almCount==='function'){
+        var n=almCount('overdue')||almCount();
+        if(n>0)bd='<span class="ms-bd">'+n+'</span>';
+      }
+      html+='<button class="ms-item'+(on?' on':'')+'" onclick="MOB.go('+i+')">'
+        +'<span class="ms-ic">'+it.ic+'</span>'+hEsc(it.t)+bd+'</button>';
+    });
+    // 빈 묶음 이름은 지운다
+    body.innerHTML=html;
+    Array.prototype.slice.call(body.querySelectorAll('.ms-grp')).forEach(function(g){
+      var nx=g.nextElementSibling;
+      if(!nx||nx.classList.contains('ms-grp'))g.style.display='none';
+    });
+  }
+};
+
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
   if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue','manual','stepset'].indexOf(p)>=0){
@@ -3714,7 +3920,13 @@ function setPage(p){
   if(p==='stock') STK.open();
   if(p==='issue') ALMUI.open();
   if(p==='manual') MAN.open();
-  if(p==='workorder') WOC.paint();
+  if(typeof MOB!=='undefined')MOB.close();
+  if(p==='workorder'){
+    WOC.paint();
+    // 폰은 폴더를 고를 수 없으므로 PC 에서 하도록 안내한다
+    var pcn=document.getElementById('wo-pc-only');
+    if(pcn)pcn.style.display=(typeof isMobile!=='undefined'&&isMobile)?'':'none';
+  }
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
     const w=document.getElementById('sc-worker');
@@ -4203,9 +4415,41 @@ function _renderStatusInner(){
   }).join('')+'</tr></thead>';
   // 일괄 처리 바 (부분 갱신용 컨테이너 고정)
   var bulkBar='<div id="sp-bulkbar" style="flex-shrink:0">'+bulkBarHTML(canEditHd)+'</div>';
+  // 행이 많으면 나눠 붙인다. 한 번에 다 붙이면 DOM 작업만으로 몇 초가 걸린다.
+  var CHUNK=200;   // 폰은 위쪽에서 카드로 그리고 끝나므로 여기 오지 않는다
+  var parts=_spRowChunks(rows, CHUNK);
   board.innerHTML=bulkBar
-    +'<div style="flex:1;min-height:0;overflow:auto;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white)">'
-    +'<table class="dwg-table" id="sp-table" style="table-layout:fixed;width:100%">'+colgroup+thead+'<tbody>'+rows+'</tbody></table></div>';
+    +'<div id="sp-scroll" style="flex:1;min-height:0;overflow:auto;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white)">'
+    +'<table class="dwg-table" id="sp-table" style="table-layout:fixed;width:100%">'+colgroup+thead
+    +'<tbody id="sp-tbody">'+parts[0]+'</tbody></table>'
+    +(parts.length>1?'<div id="sp-more" style="padding:11px;text-align:center;font-size:12px;color:var(--tx3)">아래로 내리면 더 보입니다 · 남은 '+(parts.length-1)*CHUNK+'행쯤</div>':'')
+    +'</div>';
+  if(parts.length>1){
+    var rest=parts.slice(1), sc=document.getElementById('sp-scroll');
+    var addMore=function(){
+      if(!rest.length){ var m=document.getElementById('sp-more'); if(m)m.remove(); return; }
+      var tb=document.getElementById('sp-tbody'); if(!tb)return;
+      tb.insertAdjacentHTML('beforeend', rest.shift());
+      var m=document.getElementById('sp-more');
+      if(m)m.textContent=rest.length?('아래로 내리면 더 보입니다 · 남은 '+rest.length*CHUNK+'행쯤'):'';
+      if(!rest.length&&m)m.remove();
+    };
+    if(sc)sc.addEventListener('scroll',function(){
+      if(sc.scrollTop+sc.clientHeight>=sc.scrollHeight-320)addMore();
+    });
+  }
+}
+// 행 문자열을 <tr> 경계에서 나눈다
+function _spRowChunks(html, size){
+  if(!html)return [''];
+  var parts=html.split('<tr'); // 첫 조각은 빈 문자열
+  var out=[], cur=[];
+  for(var i=1;i<parts.length;i++){
+    cur.push('<tr'+parts[i]);
+    if(cur.length>=size){ out.push(cur.join('')); cur=[]; }
+  }
+  if(cur.length)out.push(cur.join(''));
+  return out.length?out:[''];
 }
 
 // ── 작업중단(Alarm) 표시 ──
@@ -5203,8 +5447,12 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.79';
+var APP_VER='v6.83';
 var VER_LOG=[
+  {v:'v6.83',d:'2026-08', t:'[모바일] 작업지시서 QR·도면 출도를 폰 메뉴에서 뺐습니다. 폰은 폴더를 고를 수 없어(브라우저 제약) 어차피 만들 수 없으므로, 눌러 보고 안 되는 일이 없게 했습니다. 다른 길로 그 화면에 들어오면 PC에서 쓰라는 안내가 뜹니다. PC 메뉴는 그대로입니다'},
+  {v:'v6.82',d:'2026-08', t:'[모바일] 공정 이슈와 재고 현황을 폰에서 카드로 보여 줍니다. 가로로 밀어야 읽히던 표를 공정현황처럼 한 건씩 카드로 바꿔, 종류 배지·도면번호·PO·납기가 한눈에 들어옵니다. PC 에서는 표 그대로입니다. 폰에서는 쓸 수 없는 열 너비 조정 단추와 관련 안내문도 감췄습니다'},
+  {v:'v6.81',d:'2026-08', t:'[속도] 공정현황에서 프로젝트 묶기를 끄고 전체를 펼칠 때 느리던 것을 고쳤습니다. 행을 한 번에 다 붙이지 않고 200줄씩 나눠 그리며, 아래로 내리면 이어서 붙습니다. 2000건 기준 2.0초에서 0.25초로 줄었고, 건수가 늘어도 첫 화면이 뜨는 시간은 같습니다'},
+  {v:'v6.80',d:'2026-08', t:'[모바일] 관리자가 폰에서도 모든 화면을 볼 수 있습니다. 하단 탭이 스캔·현황·이슈·전체 네 개가 되었고, [☰ 전체] 를 누르면 아래에서 메뉴판이 올라옵니다. PC 사이드바와 같은 항목·묶음이라 헷갈리지 않습니다. 납기 지난 건이 있으면 이슈 탭에 빨간 숫자가 붙습니다. 공정 이슈·재고 현황의 표는 가로로 밀어 볼 수 있고, 지표 카드는 두 칸으로 접힙니다. 작업지시서 입력칸과 설명서 목차도 폰 폭에 맞게 배치했습니다. 작업자에게는 예전처럼 스캔·현황만 보입니다'},
   {v:'v6.79',d:'2026-08', t:'[수주 등록 한 곳으로] PO 양식 내려받기를 작업지시서·도면 출도 화면으로 옮기고, 공정현황의 Excel 업로드·양식 단추는 없앴습니다. 등록과 출력을 한 화면에서 합니다. 양식에 CCN 열을 넣었고, 불출일·공정구분도 엑셀 값을 그대로 읽습니다. 숫자만 도면번호로 보던 것을 고쳐 NXR206417 같은 EDWARDS 도번도 등록됩니다'},
   {v:'v6.78',d:'2026-08', t:'[머릿말] 작업지시서에만 들어가던 머릿말·꼬리말이 뒤에 붙는 도면에도 함께 찍힙니다. 한 세트(작업지시서 1부 + 도면 2부) 세 장 모두 같은 문구가 나옵니다. 종이가 좁아 왼쪽·가운데·오른쪽 글자가 서로 겹치던 것도 고쳤습니다 — 겹칠 상황이면 글자를 줄이고, 그래도 모자라면 값을 줄임표로 자릅니다'},
   {v:'v6.77',d:'2026-08', t:'[바로잡음] PO 를 한 건만 넣었는데 수십 장이 잡히던 문제. [읽어서 등록] 을 누르지 않고 [먼저 확인만] 만 본 뒤 폴더를 고르면, 등록된 것이 없어 공정현황의 옛 자료 전체로 넘어가고 있었습니다. 이제 이번에 등록한 PO 만 대상으로 합니다. PO 를 등록하기 전에는 폴더를 고를 수 없고, 먼저 등록하라는 안내가 뜹니다'},
@@ -7563,6 +7811,38 @@ var STK={
 
     setTimeout(function(){ makeResizable(document.getElementById('stk-table'),'stock'); },0);
     var mono='font-family:var(--mono);text-align:right;white-space:nowrap';
+    // 폰에서는 표 대신 카드로 그린다
+    if(typeof isMobile!=='undefined'&&isMobile){
+      var tw=document.getElementById('stk-table');
+      if(tw&&tw.parentElement)tw.parentElement.style.display='none';
+      var sm=document.getElementById('stk-mob');
+      if(!sm){ sm=document.createElement('div'); sm.id='stk-mob';
+        var host=(tw&&tw.parentElement&&tw.parentElement.parentElement)||document.getElementById('pg-stock');
+        host.appendChild(sm); }
+      sm.style.display='';
+      sm.innerHTML=rows.length?rows.map(function(r){
+        var col=r.cur<0?'var(--red)':(r.cur>0?'var(--green)':'var(--tx3)');
+        return '<div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;margin-bottom:9px">'
+          +'<div style="display:flex;align-items:flex-start;gap:10px">'
+            +'<div style="flex:1;min-width:0">'
+              +'<div style="font-family:var(--mono);font-size:14px;font-weight:800;color:var(--tx)">'+hEsc(r.dwg||'')
+                +(r.rev?' <span style="font-size:11px;color:var(--purple)">Rev '+hEsc(r.rev)+'</span>':'')+'</div>'
+              +'<div style="font-size:12px;color:var(--tx3);margin-top:2px">'+hEsc([r.cust,r.proj].filter(Boolean).join(' \u00b7 ')||'\u2014')+'</div>'
+            +'</div>'
+            +'<div style="text-align:right;flex-shrink:0">'
+              +'<div style="font-size:11px;color:var(--tx3)">현재고</div>'
+              +'<div style="font-size:21px;font-weight:800;font-family:var(--mono);line-height:1.2;color:'+col+'">'+STK._n(r.cur)+'</div>'
+            +'</div>'
+          +'</div>'
+          +'<div style="display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border);font-size:11.5px">'
+            +'<div style="flex:1;text-align:center"><div style="color:var(--tx3)">기초</div><div style="font-family:var(--mono);font-weight:700;color:var(--tx2)">'+STK._n(r.open)+'</div></div>'
+            +'<div style="flex:1;text-align:center"><div style="color:var(--tx3)">포장입고</div><div style="font-family:var(--mono);font-weight:700;color:var(--tx2)">'+STK._n(r.pack)+'</div></div>'
+            +'<div style="flex:1;text-align:center"><div style="color:var(--tx3)">출하</div><div style="font-family:var(--mono);font-weight:700;color:var(--tx2)">'+STK._n(r.ship)+'</div></div>'
+          +'</div>'
+        +'</div>';
+      }).join(''):'<div style="background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:34px;text-align:center;color:var(--tx3);font-size:13px">해당하는 품목이 없습니다</div>';
+      return;
+    }
     body.innerHTML=rows.map(function(r){
       var neg=(r.cur<0), zero=(r.cur===0);
       var curCol=neg?'color:var(--red);font-weight:800':(zero?'color:var(--tx3)':'color:var(--green);font-weight:800');
