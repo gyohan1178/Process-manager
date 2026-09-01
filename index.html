@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.89</title>
+<title>하네스 공정관리 v6.90</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.89</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.90</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.89 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.90 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2136,6 +2136,19 @@ function getSB(){
   return _sb;
 }
 
+// 고객사 이름 표기 통일
+//   같은 회사인데 대소문자가 달라 두 곳으로 나뉘어 보이는 일을 막는다.
+var CUST_CANON={
+  'axcelis':'Axcelis',
+  'edwards':'Edwards Korea', 'edwardskorea':'Edwards Korea',
+  'vm':'VM'
+};
+function canonCustomer(v){
+  var s=String(v||'').trim();
+  if(!s)return '';
+  var k=s.toLowerCase().replace(/\s+/g,'');
+  return CUST_CANON[k]||s;
+}
 var HS={
   orders:[],logs:[],
   worker:localStorage.getItem('hs_worker')||'',
@@ -2599,7 +2612,7 @@ var WOC={
     // \ubd99\uc5ec\ub123\uc740 \uac83\uc5d0 \ub0a9\uae30\uac00 \uc788\uc73c\uba74 \uadf8\uac78 \uc4f0\uace0, \uc5c6\uc73c\uba74 \ud654\uba74\uc758 \uc81c\uc791\ub0a9\uae30\ub97c \uc4f4\ub2e4.
     var noDue=r.rows.filter(function(x){ return !x.due; }).length;
     if(noDue && !f.due){ toast('\ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc774 \uc788\uc2b5\ub2c8\ub2e4. \uc81c\uc791\ub0a9\uae30\ub97c \ub123\uc73c\uc138\uc694','warn'); return; }
-    var cust=(WOC.cust==='axcelis')?'AXCELIS':(WOC.cust==='edwards'?'Edwards':'');
+    var cust=(WOC.cust==='axcelis')?canonCustomer('Axcelis'):(WOC.cust==='edwards'?canonCustomer('Edwards Korea'):'');
     var withPO=r.rows.filter(function(x){return x.po;}).length;
     var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
     var msg=r.rows.length+'\ud589\uc744 \uc77d\uc5c8\uc2b5\ub2c8\ub2e4. ('+r.mode+')\n\n'
@@ -3812,6 +3825,9 @@ async function hsLoad(){
     const [d1,d2]=await Promise.race([dataP,timeout]);
     HS.orders=d1||[];
     HS.logs=d2||[];
+    // 고객사 표기가 섞여 있으면 화면에서 두 곳으로 나뉜다. 보여줄 때 한 가지로 맞춘다.
+    //   (서버 자료는 PO 를 다시 올릴 때 함께 정리된다)
+    HS.orders.forEach(function(o){ if(o.customer)o.customer=canonCustomer(o.customer); });
     // 아직 서버에 못 보낸 기록을 다시 얹는다.
     //   이걸 안 하면 오프라인에서 찍은 스캔이 서버 자료에 덮여 사라진다.
     outboxMerge();
@@ -5534,8 +5550,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.89';
+var APP_VER='v6.90';
 var VER_LOG=[
+  {v:'v6.90',d:'2026-09', t:'[고객사 이름] AXCELIS 와 Axcelis 가 섞여 화면에서 두 고객사로 나뉘어 보이던 문제. 등록할 때 대소문자를 한 가지로 맞춥니다 — Axcelis · Edwards Korea · VM. 이미 저장된 자료도 화면에 보여줄 때 함께 맞춰지고, PO 를 다시 올리면 서버 자료도 정리됩니다. ※ 이미 저장된 것을 한 번에 정리하려면 SQL 실행(harness_customer_fix)'},
   {v:'v6.89',d:'2026-09', t:'[QR 이력] 누가 언제 무엇을 발행했는지 남깁니다. 발행자·종류(작업지시서/도면 출도)·고객사 탭·Rev·오더라인·납품라인이 함께 기록되며, 서버에 보관되어 다른 PC 에서도 같은 이력이 보입니다. 삭제해도 자료를 지우지 않고 삭제됨 으로만 표시하며, 누가 지웠는지도 남습니다. [삭제된 것도 보기] 를 켜면 지운 이력을 확인하고 되돌릴 수 있습니다. 보관 기간을 2개월에서 6개월로 늘렸습니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_qr_history)'},
   {v:'v6.88',d:'2026-09', t:'[중복 방지] 예전에는 오더라인·납품라인 없이 등록했습니다. 라인이 든 PO 를 올리면 옛 건과 짝이 맞지 않아 같은 물건이 두 건으로 들어갔습니다. 이제 라인이 비어 있는 옛 건은 도면번호·PO 에 더해 수량과 납기까지 같을 때 같은 건으로 보고, 비어 있던 라인을 채웁니다. 수량이나 납기가 다르면 예전처럼 새 건으로 등록하므로 서로 다른 라인이 잘못 합쳐지지 않습니다'},
   {v:'v6.87',d:'2026-09', t:'[자동 새로고침] 보던 화면이 갑자기 바뀌어 흐름이 끊기던 것을 고쳤습니다. 확인 주기를 8초에서 1분으로 늘렸고, 검색칸에 글자를 넣는 중이거나 창이 열려 있으면 갱신을 미룹니다. 방금 화면을 만졌다면 바로 바꾸지 않고 아래에 [새 자료가 있습니다] 단추만 띄웁니다. 눌렀을 때 갱신됩니다'},
@@ -6893,7 +6910,7 @@ var DQ_MAX_COL=39;   // 엑셀에서 읽을 마지막 열 (0부터)
 //   need : 이 이름들이 모두 있어야 그 양식으로 본다
 //   map  : 우리 항목 ← 엑셀 열 이름 후보 (앞에 있는 것부터 찾는다)
 var DQ_PROFILES=[
-  { key:'axcelis', name:'AXCELIS PO', customer:'AXCELIS',
+  { key:'axcelis', name:'AXCELIS PO', customer:'Axcelis',
     need:['item','srev'],
     map:{ dwg:['Item'], rev:['SRev'], rev2:['BRev'], ccn:['CCN'],
           po:['OrderNumber'], ol:['Order Lines'], dl:['Del Line'],
@@ -8910,13 +8927,16 @@ function hsRegisterOrders(list, opt){
       if(n.release_date&&!ex.release_date){ ex.release_date=n.release_date; chg=true; filled++; }
       if(byLine){
         if(n.project&&!ex.project){ ex.project=n.project; chg=true; filled++; }
-        if(n.customer&&!ex.customer){ ex.customer=n.customer; chg=true; }
+        if(n.customer&&!ex.customer){ ex.customer=canonCustomer(n.customer); chg=true; }
+        else if(ex.customer&&canonCustomer(ex.customer)!==ex.customer){
+          ex.customer=canonCustomer(ex.customer); chg=true;   // 표기만 다른 같은 고객사
+        }
       }
       if(chg)touched.push(ex);
       skipped++; out.push(ex);
     }else{
       var o={id:uniqId(), dwg_no:dwg, rev:String(n.rev||'').trim(),
-             customer:String(n.customer||'').trim(), project:String(n.project||'').trim(),
+             customer:canonCustomer(n.customer), project:String(n.project||'').trim(),
              unit:String(n.unit||'').trim(), qty:parseInt(n.qty,10)||1,
              po:String(n.po||'').trim(), ord_ln:String(n.ord_ln||'').trim(),
              del_ln:String(n.del_ln||'').trim(), due:n.due||'',
