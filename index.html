@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.88</title>
+<title>하네스 공정관리 v6.89</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.88</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.89</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.88 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.89 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -1400,10 +1400,15 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
       <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
       <div style="font-size:20px;font-weight:800;color:var(--tx)">📋 QR 이력</div>
       <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">
-        언제 어떤 도면으로 QR을 뽑았는지 남습니다. 이 브라우저에만 보관되며 다른 PC에서는 보이지 않습니다.
+        누가 언제 무엇을 발행했는지 남습니다. 서버에 보관되어 다른 PC에서도 같은 이력이 보입니다.<br>
+        삭제해도 자료는 남고 <b>삭제됨</b> 으로 표시됩니다.
       </div>
     </div>
     <div style="display:flex;gap:6px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);cursor:pointer;margin-right:4px">
+        <input type="checkbox" id="qrh-showdel" onchange="_renderQRHistRows()"> 삭제된 것도 보기
+      </label>
+      <span id="qrh-note" style="font-size:11px;color:var(--tx3);align-self:center;margin-right:4px"></span>
       <button onclick="exportQRHistCSV()" style="padding:6px 12px;border-radius:var(--r);border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:600;cursor:pointer">📥 CSV 추출</button>
       <button onclick="clearQRHistory()" style="padding:6px 12px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg);color:var(--tx3);font-size:11px;cursor:pointer" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--tx3)'">전체 삭제</button>
     </div>
@@ -1412,7 +1417,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <table style="width:100%;border-collapse:collapse;font-size:11px">
       <thead>
         <tr style="background:var(--bg2);border-bottom:2px solid var(--border)">
-          <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">저장일시</th>
+          <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">발행일시</th>
+          <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">발행자</th>
+          <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);white-space:nowrap">종류</th>
           <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">도면번호</th>
           <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">고객사</th>
           <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">프로젝트</th>
@@ -5527,8 +5534,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.88';
+var APP_VER='v6.89';
 var VER_LOG=[
+  {v:'v6.89',d:'2026-09', t:'[QR 이력] 누가 언제 무엇을 발행했는지 남깁니다. 발행자·종류(작업지시서/도면 출도)·고객사 탭·Rev·오더라인·납품라인이 함께 기록되며, 서버에 보관되어 다른 PC 에서도 같은 이력이 보입니다. 삭제해도 자료를 지우지 않고 삭제됨 으로만 표시하며, 누가 지웠는지도 남습니다. [삭제된 것도 보기] 를 켜면 지운 이력을 확인하고 되돌릴 수 있습니다. 보관 기간을 2개월에서 6개월로 늘렸습니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_qr_history)'},
   {v:'v6.88',d:'2026-09', t:'[중복 방지] 예전에는 오더라인·납품라인 없이 등록했습니다. 라인이 든 PO 를 올리면 옛 건과 짝이 맞지 않아 같은 물건이 두 건으로 들어갔습니다. 이제 라인이 비어 있는 옛 건은 도면번호·PO 에 더해 수량과 납기까지 같을 때 같은 건으로 보고, 비어 있던 라인을 채웁니다. 수량이나 납기가 다르면 예전처럼 새 건으로 등록하므로 서로 다른 라인이 잘못 합쳐지지 않습니다'},
   {v:'v6.87',d:'2026-09', t:'[자동 새로고침] 보던 화면이 갑자기 바뀌어 흐름이 끊기던 것을 고쳤습니다. 확인 주기를 8초에서 1분으로 늘렸고, 검색칸에 글자를 넣는 중이거나 창이 열려 있으면 갱신을 미룹니다. 방금 화면을 만졌다면 바로 바꾸지 않고 아래에 [새 자료가 있습니다] 단추만 띄웁니다. 눌렀을 때 갱신됩니다'},
   {v:'v6.86',d:'2026-08', t:'[납기 바로잡기] 이미 2009년으로 잘못 저장된 건은 PO 를 다시 올려도 고쳐지지 않았습니다. 이미 값이 있으면 건드리지 않는 규칙 때문이었습니다. 이제 연도가 말이 안 되는 건(2020년 미만·2100년 초과)만 올린 값으로 바로잡습니다. 그 밖의 납기는 현장에서 손으로 고쳤을 수 있으므로 그대로 둡니다'},
@@ -8599,42 +8607,151 @@ function ssSaveToOrders(entry){
 var QR_HIST_KEY='hs_qr_history';
 function loadQRHistory(){try{var all=JSON.parse(localStorage.getItem(QR_HIST_KEY)||'[]');var cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-2);return all.filter(function(r){return !r.ts||new Date(r.ts)>=cutoff;});}catch(e){return[];}}
 function saveQRHistory(hist){try{localStorage.setItem(QR_HIST_KEY,JSON.stringify(hist));}catch(e){}}
+// QR 발행 기록. 누가 언제 무엇을 뽑았는지 서버에 남긴다.
 async function addQRHistoryEntry(entry,fileName){
-  var order=null;if(entry.orderId){order=HS.orders.find(function(o){return o.id===entry.orderId;});if(!order){var csvL=buildCsvOrderList();order=csvL.find(function(o){return o.id===entry.orderId;});}}
-  var rec={id:'qrh_'+Date.now(),ts:new Date().toISOString(),fileName:fileName||entry.file&&entry.file.name||'',dwg_no:entry.drawingNo||'',customer:entry.customer||order&&order.customer||'',project:entry.project||order&&order.project||'',unit:entry.unit||order&&order.unit||'',qty:entry.qty||1,qr_size:entry.qrSize||30,po:entry.po||order&&order.po||''};
-  var hist=loadQRHistory();hist.unshift(rec);if(hist.length>200)hist=hist.slice(0,200);saveQRHistory(hist);
-  var sb=getSB();if(sb){sb.from('harness_qr_history').insert({id:rec.id,ts:rec.ts,dwg_no:rec.dwg_no,customer:rec.customer,project:rec.project,unit:rec.unit,po:rec.po,qty:rec.qty,qr_size:rec.qr_size,file_name:rec.fileName}).then(function(r){if(r&&r.error)console.warn('qr_hist err',r.error);}).catch(function(){});}
+  var order=null;
+  if(entry.orderId){
+    order=HS.orders.find(function(o){return o.id===entry.orderId;});
+    if(!order){var csvL=buildCsvOrderList();order=csvL.find(function(o){return o.id===entry.orderId;});}
+  }
+  var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
+  var mail=(typeof AUTH!=='undefined'&&AUTH.user&&AUTH.user.email)||'';
+  var kind=entry.kind||((typeof WO_ctx==='function'&&WO_ctx().mode==='dwg')?'도면 QR'
+           :((typeof WOC!=='undefined'&&WOC.cust&&WOC.cust!=='harness')?'도면 출도':'작업지시서'));
+  var tab=entry.tab||((typeof WOC!=='undefined'&&WOC.MODE&&WOC.MODE[WOC.cust])?WOC.MODE[WOC.cust].name:'');
+  var rec={id:'qrh_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    ts:new Date().toISOString(),
+    fileName:fileName||entry.file&&entry.file.name||'',
+    dwg_no:entry.drawingNo||'', customer:entry.customer||order&&order.customer||'',
+    project:entry.project||order&&order.project||'', unit:entry.unit||order&&order.unit||'',
+    qty:entry.qty||1, qr_size:entry.qrSize||30, po:entry.po||order&&order.po||'',
+    ord_ln:entry.ol||order&&order.ord_ln||'', del_ln:entry.dl||order&&order.del_ln||'',
+    rev:entry.rev||order&&order.rev||'', pages:entry.pages||null,
+    issued_by:who, issued_email:mail, kind:kind, customer_tab:tab, deleted:false};
+  var hist=loadQRHistory();hist.unshift(rec);if(hist.length>300)hist=hist.slice(0,300);saveQRHistory(hist);
+  var sb=getSB();
+  if(sb){
+    sb.from('harness_qr_history').insert({
+      id:rec.id, ts:rec.ts, dwg_no:rec.dwg_no, customer:rec.customer, project:rec.project,
+      unit:rec.unit, po:rec.po, qty:rec.qty, qr_size:rec.qr_size, file_name:rec.fileName,
+      ord_ln:rec.ord_ln, del_ln:rec.del_ln, rev:rec.rev, pages:rec.pages,
+      issued_by:rec.issued_by, issued_email:rec.issued_email,
+      kind:rec.kind, customer_tab:rec.customer_tab, deleted:false
+    }).then(function(r){if(r&&r.error)console.warn('qr_hist err',r.error);}).catch(function(){});
+  }
 }
 async function loadQRHistoryRemote(){
-  var sb=getSB();if(!sb)return;var twoMonthsAgo=new Date();twoMonthsAgo.setMonth(twoMonthsAgo.getMonth()-2);
-  try{var r=await sb.from('harness_qr_history').select('*').gte('ts',twoMonthsAgo.toISOString()).order('ts',{ascending:false}).limit(200);
-    if(r.data&&r.data.length){saveQRHistory(r.data.map(function(d){return{id:d.id,ts:d.ts,fileName:d.file_name||'',dwg_no:d.dwg_no||'',customer:d.customer||'',project:d.project||'',unit:d.unit||'',qty:d.qty||1,qr_size:d.qr_size||30,po:d.po||''};}));}}catch(e){console.warn('qr_hist load',e);}
+  var sb=getSB();if(!sb)return;var twoMonthsAgo=new Date();twoMonthsAgo.setMonth(twoMonthsAgo.getMonth()-6);
+  try{var r=await sb.from('harness_qr_history').select('*').gte('ts',twoMonthsAgo.toISOString()).order('ts',{ascending:false}).limit(300);
+    if(r.data&&r.data.length){saveQRHistory(r.data.map(function(d){return{
+      id:d.id, ts:d.ts, fileName:d.file_name||'', dwg_no:d.dwg_no||'',
+      customer:d.customer||'', project:d.project||'', unit:d.unit||'',
+      qty:d.qty||1, qr_size:d.qr_size||30, po:d.po||'',
+      ord_ln:d.ord_ln||'', del_ln:d.del_ln||'', rev:d.rev||'', pages:d.pages||null,
+      issued_by:d.issued_by||'', issued_email:d.issued_email||'',
+      kind:d.kind||'', customer_tab:d.customer_tab||'',
+      deleted:!!d.deleted, deleted_at:d.deleted_at||'', deleted_by:d.deleted_by||''
+    };}));}}catch(e){console.warn('qr_hist load',e);}
 }
 function renderQRHistory(){var el=document.getElementById('qrHistList');if(!el)return;loadQRHistoryRemote().then(function(){_renderQRHistRows();});_renderQRHistRows();}
 function _renderQRHistRows(){
-  var el=document.getElementById('qrHistList');if(!el)return;var hist=loadQRHistory();
-  if(!hist.length){el.innerHTML='<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--tx3)">저장된 이력이 없습니다</td></tr>';return;}
+  var el=document.getElementById('qrHistList'); if(!el)return;
+  var showDel=(document.getElementById('qrh-showdel')||{}).checked;
+  var all=loadQRHistory();
+  var hist=showDel?all:all.filter(function(r){return !r.deleted;});
+  var delCnt=all.filter(function(r){return r.deleted;}).length;
+  var note=document.getElementById('qrh-note');
+  if(note)note.textContent=hist.length+'건'+(delCnt&&!showDel?' · 삭제된 '+delCnt+'건 숨김':'');
+  if(!hist.length){
+    el.innerHTML='<tr><td colspan="11" style="padding:32px;text-align:center;color:var(--tx3)">'
+      +(delCnt&&!showDel?'모두 삭제 표시되었습니다. [삭제된 것도 보기] 를 켜 보세요.':'저장된 이력이 없습니다')+'</td></tr>';
+    return;
+  }
   el.innerHTML=hist.map(function(r,ri){
-    var d=new Date(r.ts);var dt=(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-    return '<tr style="border-bottom:1px solid var(--border);'+(ri%2?'background:var(--bg2)':'')+'">'
-      +'<td style="padding:7px 12px;white-space:nowrap;color:var(--tx3);font-size:10px">'+dt+'</td>'
-      +'<td style="padding:7px 12px;font-family:var(--mono);font-weight:600;font-size:11px">'+(r.dwg_no||'—')+'</td>'
-      +'<td style="padding:7px 12px;font-size:11px">'+(r.customer||'—')+'</td>'
-      +'<td style="padding:7px 12px;font-size:11px;color:var(--tx2)">'+(r.project||'—')+'</td>'
-      +'<td style="padding:7px 12px;font-family:var(--mono);font-size:10px;color:var(--blue)">'+(r.po||'—')+'</td>'
+    var d=new Date(r.ts);
+    var dt=(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')
+      +' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    var del=!!r.deleted;
+    var line=(r.ord_ln||r.del_ln)?(' <span style="color:var(--tx3)">'+hEsc(r.ord_ln||'-')+'/'+hEsc(r.del_ln||'-')+'</span>'):'';
+    var kindTag=r.kind?('<span style="font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--purple-lt);color:var(--purple);border:1px solid #ddd6fe;white-space:nowrap">'
+      +hEsc(r.kind)+'</span>'+(r.customer_tab&&r.customer_tab!==r.kind?' <span style="font-size:9.5px;color:var(--tx3)">'+hEsc(r.customer_tab)+'</span>':'')):'—';
+    var st=del?'opacity:.5;':'';
+    return '<tr style="border-bottom:1px solid var(--border);'+(ri%2?'background:var(--bg2);':'')+st+'">'
+      +'<td style="padding:7px 12px;white-space:nowrap;color:var(--tx3);font-size:10px">'+dt
+        +(del?'<div style="font-size:9px;color:var(--red);font-weight:700">삭제됨</div>':'')+'</td>'
+      +'<td style="padding:7px 12px;font-size:11px;white-space:nowrap">'+hEsc(r.issued_by||'—')
+        +(del&&r.deleted_by?'<div style="font-size:9px;color:var(--tx3)">지움 '+hEsc(r.deleted_by)+'</div>':'')+'</td>'
+      +'<td style="padding:7px 12px">'+kindTag+'</td>'
+      +'<td style="padding:7px 12px;font-family:var(--mono);font-weight:600;font-size:11px'+(del?';text-decoration:line-through':'')+'">'
+        +hEsc(r.dwg_no||'—')+(r.rev?' <span style="color:var(--purple);font-size:10px">'+hEsc(r.rev)+'</span>':'')+'</td>'
+      +'<td style="padding:7px 12px;font-size:11px">'+hEsc(r.customer||'—')+'</td>'
+      +'<td style="padding:7px 12px;font-size:11px;color:var(--tx2)">'+hEsc(r.project||'—')+'</td>'
+      +'<td style="padding:7px 12px;font-family:var(--mono);font-size:10px;color:var(--blue)">'+hEsc(r.po||'—')+line+'</td>'
       +'<td style="padding:7px 12px;text-align:center">'+(r.qty||1)+'</td>'
       +'<td style="padding:7px 12px;text-align:center;color:var(--tx2)">'+(r.qr_size||30)+'mm</td>'
-      +'<td style="padding:7px 12px;font-size:10px;color:var(--tx3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(r.fileName||'')+'">'+(r.fileName||'—')+'</td>'
-      +'<td style="padding:7px 4px;text-align:center"><button onclick="deleteQRHistEntry(\''+r.id+'\')" style="border:1px solid rgba(220,38,38,.35);background:transparent;color:rgba(220,38,38,.7);cursor:pointer;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px">✕</button></td>'
+      +'<td style="padding:7px 12px;font-size:10px;color:var(--tx3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+hEsc(r.fileName||'')+'">'+hEsc(r.fileName||'—')+'</td>'
+      +'<td style="padding:7px 4px;text-align:center">'
+        +(del
+          ? '<button onclick="restoreQRHistEntry(\''+r.id+'\')" title="되돌리기" style="border:1px solid var(--border);background:transparent;color:var(--tx3);cursor:pointer;font-size:11px;padding:1px 5px;border-radius:3px">↩</button>'
+          : '<button onclick="deleteQRHistEntry(\''+r.id+'\')" title="삭제 표시" style="border:1px solid rgba(220,38,38,.35);background:transparent;color:rgba(220,38,38,.7);cursor:pointer;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px">✕</button>')
+      +'</td>'
     +'</tr>';
   }).join('');
 }
-function deleteQRHistEntry(id){saveQRHistory(loadQRHistory().filter(function(r){return r.id!==id;}));_renderQRHistRows();var sb=getSB();if(sb)sb.from('harness_qr_history').delete().eq('id',id).then(function(){}).catch(function(){});}
-function clearQRHistory(){if(!confirm('QR 이력을 전체 삭제할까요?'))return;saveQRHistory([]);_renderQRHistRows();var sb=getSB();if(sb)sb.from('harness_qr_history').delete().neq('id','__none__').then(function(){}).catch(function(){});toast('이력 전체 삭제됨','ok');}
+
+// 이력은 지우지 않고 '삭제됨' 으로만 표시한다.
+//   누가 언제 무엇을 뽑았는지는 남아 있어야 한다.
+function deleteQRHistEntry(id){
+  var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
+  var now=new Date().toISOString();
+  var hist=loadQRHistory();
+  var r0=hist.find(function(r){return r.id===id;});
+  if(r0&&r0.deleted){ toast('이미 삭제 표시된 이력입니다','warn'); return; }
+  if(!confirm('이 이력을 삭제 표시할까요?\n\n자료는 남고 목록에 「삭제됨」 으로 보입니다.'))return;
+  hist.forEach(function(r){ if(r.id===id){ r.deleted=true; r.deleted_at=now; r.deleted_by=who; } });
+  saveQRHistory(hist); _renderQRHistRows();
+  var sb=getSB();
+  if(sb)sb.from('harness_qr_history').update({deleted:true,deleted_at:now,deleted_by:who})
+        .eq('id',id).then(function(){}).catch(function(){});
+}
+// 삭제 표시를 되돌린다
+function restoreQRHistEntry(id){
+  var hist=loadQRHistory();
+  hist.forEach(function(r){ if(r.id===id){ r.deleted=false; r.deleted_at=''; r.deleted_by=''; } });
+  saveQRHistory(hist); _renderQRHistRows();
+  var sb=getSB();
+  if(sb)sb.from('harness_qr_history').update({deleted:false,deleted_at:null,deleted_by:null})
+        .eq('id',id).then(function(){}).catch(function(){});
+  toast('되돌렸습니다','ok');
+}
+function clearQRHistory(){
+  if(!confirm('보이는 이력을 모두 삭제 표시할까요?\n\n자료는 남고 목록에 「삭제됨」 으로 보입니다.'))return;
+  var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
+  var now=new Date().toISOString();
+  var hist=loadQRHistory(); var ids=[];
+  hist.forEach(function(r){ if(!r.deleted){ r.deleted=true; r.deleted_at=now; r.deleted_by=who; ids.push(r.id); } });
+  saveQRHistory(hist); _renderQRHistRows();
+  var sb=getSB();
+  if(sb&&ids.length)sb.from('harness_qr_history').update({deleted:true,deleted_at:now,deleted_by:who})
+        .in('id',ids).then(function(){}).catch(function(){});
+  toast(ids.length+'건을 삭제 표시했습니다','ok');
+}
 function exportQRHistCSV(){
   var hist=loadQRHistory();if(!hist.length){toast('이력이 없습니다','warn');return;}
-  var rows=[['저장일시','도면번호','고객사','프로젝트','PO No','수량','QR크기(mm)','파일명']];
-  hist.forEach(function(r){var d=new Date(r.ts);var dt=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0')+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');rows.push([dt,r.dwg_no||'',r.customer||'',r.project||'',r.po||'',r.qty||1,r.qr_size||30,r.fileName||'']);});
+  var rows=[['발행일시','발행자','종류','고객사탭','도면번호','Rev','고객사','프로젝트','PO No','Order Line','Del Line','수량','QR크기(mm)','파일명','삭제여부','삭제일시','삭제한사람']];
+  hist.forEach(function(r){
+    var d=new Date(r.ts);
+    var dt=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0')
+      +' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    var dd='';
+    if(r.deleted_at){var x=new Date(r.deleted_at);
+      dd=x.getFullYear()+'-'+(x.getMonth()+1).toString().padStart(2,'0')+'-'+x.getDate().toString().padStart(2,'0')
+        +' '+x.getHours().toString().padStart(2,'0')+':'+x.getMinutes().toString().padStart(2,'0');}
+    rows.push([dt, r.issued_by||'', r.kind||'', r.customer_tab||'',
+      r.dwg_no||'', r.rev||'', r.customer||'', r.project||'', r.po||'',
+      r.ord_ln||'', r.del_ln||'', r.qty||1, r.qr_size||30, r.fileName||'',
+      r.deleted?'삭제됨':'', dd, r.deleted_by||'']);
+  });
   var csv='\uFEFF'+rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='QR이력_'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},3000);
