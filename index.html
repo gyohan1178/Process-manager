@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.85</title>
+<title>하네스 공정관리 v6.86</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.85</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.86</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.85 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.86 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -5496,8 +5496,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.85';
+var APP_VER='v6.86';
 var VER_LOG=[
+  {v:'v6.86',d:'2026-08', t:'[납기 바로잡기] 이미 2009년으로 잘못 저장된 건은 PO 를 다시 올려도 고쳐지지 않았습니다. 이미 값이 있으면 건드리지 않는 규칙 때문이었습니다. 이제 연도가 말이 안 되는 건(2020년 미만·2100년 초과)만 올린 값으로 바로잡습니다. 그 밖의 납기는 현장에서 손으로 고쳤을 수 있으므로 그대로 둡니다'},
   {v:'v6.85',d:'2026-08', t:'[바로잡음] ① 납기가 엉뚱한 연도로 나오던 문제. 10/9/2026 처럼 연도가 뒤에 오는 값과 9-Oct-26 같은 영문 달 이름을 잘못 읽고 있었고, 날짜로 볼 수 없는 값은 원본을 그대로 납기에 넣고 있었습니다. 이제 읽지 못하면 비워 두고, 2026-02-30 이나 1999년처럼 말이 안 되는 날짜도 걸러 냅니다. ② CCN 이 머릿말에 안 나오던 문제. 예전에 CCN 없이 등록된 건은 다시 올려도 채워지지 않았습니다. 이제 PO 를 다시 올리면 비어 있는 CCN·품명·불출일만 채웁니다(이미 있는 값은 그대로 둡니다)'},
   {v:'v6.84',d:'2026-08', t:'[회사 로고] 로그인 화면·사이드바·폰 상단·전체 메뉴에 JINSUNTECH 로고를 넣었습니다. 사이드바는 로고 옆에 시스템 이름이 한 줄로 붙습니다. 폰 상단이 남색이던 것을 아래 화면과 같은 밝은 톤으로 바꿔 이어지게 했고, 로그인 화면의 강조색도 보라로 통일했습니다'},
   {v:'v6.83',d:'2026-08', t:'[모바일] 작업지시서 QR·도면 출도를 폰 메뉴에서 뺐습니다. 폰은 폴더를 고를 수 없어(브라우저 제약) 어차피 만들 수 없으므로, 눌러 보고 안 되는 일이 없게 했습니다. 다른 길로 그 화면에 들어오면 PC에서 쓰라는 안내가 뜹니다. PC 메뉴는 그대로입니다'},
@@ -8725,6 +8726,16 @@ function hsRegisterOrders(list, opt){
       // 이미 있는 건은 덮어쓰지 않는다. 비어 있던 값만 채운다.
       var chg=false;
       if(n.due&&!ex.due){ ex.due=n.due; chg=true; }
+      // 옛 코드가 9-Apr-26 같은 날짜를 2009-04-26 으로 잘못 저장한 건이 있다.
+      //   말이 안 되는 연도(2020 미만·2100 초과)는 올린 값으로 바로잡는다.
+      //   그 밖의 납기는 현장에서 손으로 고쳤을 수 있으므로 건드리지 않는다.
+      else if(n.due&&ex.due){
+        var _y=parseInt(String(ex.due).slice(0,4),10);
+        if(_y&&(_y<2020||_y>2100)&&n.due!==ex.due){
+          console.warn('납기를 바로잡습니다:',dwg,ex.due,'->',n.due);
+          ex.due=n.due; chg=true; filled++;
+        }
+      }
       if(n.rev&&!ex.rev){ ex.rev=n.rev; chg=true; }
       // 나중에 생긴 항목들. 비어 있을 때만 채운다 — 기존 값은 건드리지 않는다.
       if(n.ccn&&!ex.ccn){ ex.ccn=n.ccn; chg=true; filled++; }
