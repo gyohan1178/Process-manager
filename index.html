@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.87</title>
+<title>하네스 공정관리 v6.88</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.87</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.88</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.87 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.88 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -5527,8 +5527,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.87';
+var APP_VER='v6.88';
 var VER_LOG=[
+  {v:'v6.88',d:'2026-09', t:'[중복 방지] 예전에는 오더라인·납품라인 없이 등록했습니다. 라인이 든 PO 를 올리면 옛 건과 짝이 맞지 않아 같은 물건이 두 건으로 들어갔습니다. 이제 라인이 비어 있는 옛 건은 도면번호·PO 에 더해 수량과 납기까지 같을 때 같은 건으로 보고, 비어 있던 라인을 채웁니다. 수량이나 납기가 다르면 예전처럼 새 건으로 등록하므로 서로 다른 라인이 잘못 합쳐지지 않습니다'},
   {v:'v6.87',d:'2026-09', t:'[자동 새로고침] 보던 화면이 갑자기 바뀌어 흐름이 끊기던 것을 고쳤습니다. 확인 주기를 8초에서 1분으로 늘렸고, 검색칸에 글자를 넣는 중이거나 창이 열려 있으면 갱신을 미룹니다. 방금 화면을 만졌다면 바로 바꾸지 않고 아래에 [새 자료가 있습니다] 단추만 띄웁니다. 눌렀을 때 갱신됩니다'},
   {v:'v6.86',d:'2026-08', t:'[납기 바로잡기] 이미 2009년으로 잘못 저장된 건은 PO 를 다시 올려도 고쳐지지 않았습니다. 이미 값이 있으면 건드리지 않는 규칙 때문이었습니다. 이제 연도가 말이 안 되는 건(2020년 미만·2100년 초과)만 올린 값으로 바로잡습니다. 그 밖의 납기는 현장에서 손으로 고쳤을 수 있으므로 그대로 둡니다'},
   {v:'v6.85',d:'2026-08', t:'[바로잡음] ① 납기가 엉뚱한 연도로 나오던 문제. 10/9/2026 처럼 연도가 뒤에 오는 값과 9-Oct-26 같은 영문 달 이름을 잘못 읽고 있었고, 날짜로 볼 수 없는 값은 원본을 그대로 납기에 넣고 있었습니다. 이제 읽지 못하면 비워 두고, 2026-02-30 이나 1999년처럼 말이 안 되는 날짜도 걸러 냅니다. ② CCN 이 머릿말에 안 나오던 문제. 예전에 CCN 없이 등록된 건은 다시 올려도 채워지지 않았습니다. 이제 PO 를 다시 올리면 비어 있는 CCN·품명·불출일만 채웁니다(이미 있는 값은 그대로 둡니다)'},
@@ -8749,10 +8750,24 @@ function hsRegisterOrders(list, opt){
               && (o.unit||'')===(n.unit||'');
         })
       : byLine
-      ? HS.orders.find(function(o){
-          return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
-              && (o.ord_ln||'')===(n.ord_ln||'') && (o.del_ln||'')===(n.del_ln||'');
-        })
+      ? (function(){
+          // ① 도번 + PO + 오더라인 + 납품라인 이 모두 같은 것
+          var m=HS.orders.find(function(o){
+            return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
+                && (o.ord_ln||'')===(n.ord_ln||'') && (o.del_ln||'')===(n.del_ln||'');
+          });
+          if(m)return m;
+          // ② 예전에는 라인 없이 등록했다. 그런 옛 건은 라인을 빼고,
+          //    대신 수량과 납기까지 같을 때만 같은 건으로 본다.
+          //    (라인만 빼고 맞추면 서로 다른 라인이 한 건으로 합쳐진다)
+          if(!(n.ord_ln||n.del_ln))return null;
+          return HS.orders.find(function(o){
+            return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
+                && !(o.ord_ln||'') && !(o.del_ln||'')
+                && String(o.qty||'')===String(n.qty||'')
+                && (normDueToISO(o.due)||'')===(normDueToISO(n.due)||'');
+          })||null;
+        })()
       : HS.orders.find(function(o){ return orderMatch(o,ref); });
     if(ex){
       // 이미 있는 건은 덮어쓰지 않는다. 비어 있던 값만 채운다.
@@ -8769,6 +8784,9 @@ function hsRegisterOrders(list, opt){
         }
       }
       if(n.rev&&!ex.rev){ ex.rev=n.rev; chg=true; }
+      // 라인 없이 등록된 옛 건에 라인을 채운다
+      if(n.ord_ln&&!ex.ord_ln){ ex.ord_ln=n.ord_ln; chg=true; filled++; }
+      if(n.del_ln&&!ex.del_ln){ ex.del_ln=n.del_ln; chg=true; filled++; }
       // 나중에 생긴 항목들. 비어 있을 때만 채운다 — 기존 값은 건드리지 않는다.
       if(n.ccn&&!ex.ccn){ ex.ccn=n.ccn; chg=true; filled++; }
       if(n.item_name&&!ex.item_name){ ex.item_name=n.item_name; chg=true; filled++; }
