@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.90</title>
+<title>하네스 공정관리 v6.92</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.90</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.92</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.90 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.92 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2258,7 +2258,8 @@ function hsOrderRow(o){
           alarm_at:o.alarm_at||null,alarm_by:o.alarm_by||null,
           alarm_cleared_at:o.alarm_cleared_at||null,alarm_cleared_by:o.alarm_cleared_by||null,
           field_reg:o.field_reg||false,field_reg_at:o.field_reg_at||null,field_reg_by:o.field_reg_by||null,
-          item_name:o.item_name||null,release_date:o.release_date||null,ccn:o.ccn||null};
+          item_name:o.item_name||null,release_date:o.release_date||null,ccn:o.ccn||null,
+          created_by:o.created_by||null,created_by_email:o.created_by_email||null,created_via:o.created_via||null};
 }
 function hsLogRow(l){
   return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -2546,7 +2547,9 @@ var WOC={
     cols.push({k:'qty',t:'수량',mono:1,al:'right'});
     if(has('due'))cols.push({k:'due',t:'납기',mono:1});
 
-    var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
+    var withPOn=r.rows.filter(function(x){return x.po;}).length;
+    var mb=(withPOn===r.rows.length)?'poline':'projunit';
+    var already=r.rows.filter(function(x){ return WOC._exists(x,mb); }).length;
     var noPO=r.rows.filter(function(x){ return !x.po; }).length;
     // AXCELIS 는 PO 가 있어야 정상이다. 하나도 없으면 다른 고객사 자료일 수 있다.
     var wrongTab=(WOC.cust==='axcelis' && noPO===r.rows.length);
@@ -2598,11 +2601,21 @@ var WOC={
   },
 
 
-  _exists:function(x){
+  // 실제 등록과 같은 규칙으로 본다
+  _exists:function(x, matchBy){
     var f=WOC.form();
-    return HS.orders.some(function(o){
-      return (o.dwg_no||'')===x.dwg_no && (o.project||'')===f.proj && (o.unit||'')===f.unit;
-    });
+    var cust=(WOC.cust==='axcelis')?canonCustomer('Axcelis')
+            :(WOC.cust==='edwards'?canonCustomer('Edwards Korea'):'');
+    var n={dwg_no:x.dwg_no, po:x.po||'', ord_ln:x.ord_ln||'', del_ln:x.dl_raw||'',
+           qty:x.qty, due:x.due||f.due, project:f.proj, unit:f.unit, customer:cust};
+    return !!findExistingOrder(n, x.dwg_no, matchBy||WOC._matchBy(), n);
+  },
+  // 등록할 때 쓸 규칙을 미리 정한다 (PO 가 다 있으면 poline)
+  _matchBy:function(){
+    var r=WOC.parse((document.getElementById('wo-paste')||{}).value);
+    if(!r.rows.length)return 'poline';
+    var withPO=r.rows.filter(function(x){return x.po;}).length;
+    return (withPO===r.rows.length)?'poline':'projunit';
   },
 
   readPaste:function(){
@@ -2614,7 +2627,7 @@ var WOC={
     if(noDue && !f.due){ toast('\ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc774 \uc788\uc2b5\ub2c8\ub2e4. \uc81c\uc791\ub0a9\uae30\ub97c \ub123\uc73c\uc138\uc694','warn'); return; }
     var cust=(WOC.cust==='axcelis')?canonCustomer('Axcelis'):(WOC.cust==='edwards'?canonCustomer('Edwards Korea'):'');
     var withPO=r.rows.filter(function(x){return x.po;}).length;
-    var already=r.rows.filter(function(x){ return WOC._exists(x); }).length;
+    var already=r.rows.filter(function(x){ return WOC._exists(x,(withPO===r.rows.length)?'poline':'projunit'); }).length;
     var msg=r.rows.length+'\ud589\uc744 \uc77d\uc5c8\uc2b5\ub2c8\ub2e4. ('+r.mode+')\n\n'
       +'  \uc2e0\uaddc \ub4f1\ub85d '+(r.rows.length-already)+'\uac74\n'
       +'  \uc774\ubbf8 \uc788\ub294 \uac74 '+already+'\uac74 (\ub36e\uc5b4\uc4f0\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4)\n'
@@ -2637,7 +2650,7 @@ var WOC={
               step_type:'A', item_name:x.name, release_date:f.rel||''};
     });
     // PO \uac00 \uc788\uc73c\uba74 \ub3c4\ubc88+PO+\ub77c\uc778\uc73c\ub85c, \uc5c6\uc73c\uba74 \ub3c4\ubc88+\ud504\ub85c\uc81d\ud2b8+\ud638\uae30\ub85c \uac19\uc740 \uac74\uc744 \ubcf8\ub2e4
-    var res=hsRegisterOrders(list,{matchBy:(withPO===r.rows.length)?'poline':'projunit'});
+    var res=hsRegisterOrders(list,{matchBy:(withPO===r.rows.length)?'poline':'projunit', via:'붙여넣기'});
     WOC.loaded=res.orders||[];
     if(typeof renderStatus==='function')renderStatus();
     if(typeof renderOrderStampList==='function')renderOrderStampList();
@@ -5550,8 +5563,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.90';
+var APP_VER='v6.92';
 var VER_LOG=[
+  {v:'v6.92',d:'2026-09', t:'[바로잡음] 붙여넣기 미리보기에서는 모두 신규라 하고, 등록하면 몇 건이 겹치던 문제. 미리보기는 도면번호·프로젝트·호기로 보고, 실제 등록은 도면번호·PO·라인으로 보아 서로 다른 규칙을 쓰고 있었습니다. 같은 건인지 보는 규칙을 함수 하나로 합쳐 두 곳이 항상 같은 숫자를 냅니다. 프로젝트를 넣지 않아도 결과가 같습니다'},
+  {v:'v6.91',d:'2026-09', t:'[등록자 남기기] 수주를 누가 어떤 방식(엑셀·붙여넣기)으로 등록했는지 남깁니다. 지금까지는 남지 않아 잘못 올린 것을 사람 기준으로 골라낼 수 없었습니다. 앞으로는 등록자로 찾아볼 수 있습니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_created_by)'},
   {v:'v6.90',d:'2026-09', t:'[고객사 이름] AXCELIS 와 Axcelis 가 섞여 화면에서 두 고객사로 나뉘어 보이던 문제. 등록할 때 대소문자를 한 가지로 맞춥니다 — Axcelis · Edwards Korea · VM. 이미 저장된 자료도 화면에 보여줄 때 함께 맞춰지고, PO 를 다시 올리면 서버 자료도 정리됩니다. ※ 이미 저장된 것을 한 번에 정리하려면 SQL 실행(harness_customer_fix)'},
   {v:'v6.89',d:'2026-09', t:'[QR 이력] 누가 언제 무엇을 발행했는지 남깁니다. 발행자·종류(작업지시서/도면 출도)·고객사 탭·Rev·오더라인·납품라인이 함께 기록되며, 서버에 보관되어 다른 PC 에서도 같은 이력이 보입니다. 삭제해도 자료를 지우지 않고 삭제됨 으로만 표시하며, 누가 지웠는지도 남습니다. [삭제된 것도 보기] 를 켜면 지운 이력을 확인하고 되돌릴 수 있습니다. 보관 기간을 2개월에서 6개월로 늘렸습니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_qr_history)'},
   {v:'v6.88',d:'2026-09', t:'[중복 방지] 예전에는 오더라인·납품라인 없이 등록했습니다. 라인이 든 PO 를 올리면 옛 건과 짝이 맞지 않아 같은 물건이 두 건으로 들어갔습니다. 이제 라인이 비어 있는 옛 건은 도면번호·PO 에 더해 수량과 납기까지 같을 때 같은 건으로 보고, 비어 있던 라인을 채웁니다. 수량이나 납기가 다르면 예전처럼 새 건으로 등록하므로 서로 다른 라인이 잘못 합쳐지지 않습니다'},
@@ -7147,7 +7162,7 @@ DQ.readExcel=function(input){
           +(proj.trim()?' · 프로젝트 '+proj.trim():'')+'\n\n등록할까요?';
         if(!confirm(msg))return;
 
-        var res=hsRegisterOrders(list,{matchBy:'poline'});
+        var res=hsRegisterOrders(list,{matchBy:'poline', via:'엑셀'});
         self.xlRows=list.map(function(n,i){
           return {dwg_no:n.dwg_no, rev:n.rev, brev:metas[i].brev, desc:metas[i].desc, order:res.orders[i]};
         }).filter(function(x){ return x.order; });
@@ -8856,6 +8871,36 @@ function downloadOrderTemplate(){
 //   list = [{dwg_no,rev,customer,project,unit,qty,po,ord_ln,del_ln,due,step_type}]
 //   반환 = {added, skipped, orders:[입력 순서에 맞춘 주문 객체]}
 // ════════════════════════════════════════
+// 같은 건인지 보는 규칙. 미리보기와 실제 등록이 이 함수 하나를 같이 쓴다.
+//   두 벌로 두면 "신규 37건" 이라 해놓고 등록에서 5건이 겹치는 일이 생긴다.
+function findExistingOrder(n, dwg, matchBy, ref){
+  dwg=dwg||String(n.dwg_no||'').trim();
+  if(matchBy==='projunit'){
+    return HS.orders.find(function(o){
+      return (o.dwg_no||'')===dwg && (o.project||'')===(n.project||'')
+          && (o.unit||'')===(n.unit||'');
+    })||null;
+  }
+  if(matchBy==='poline'){
+    // ① 도번 + PO + 오더라인 + 납품라인 이 모두 같은 것
+    var m=HS.orders.find(function(o){
+      return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
+          && (o.ord_ln||'')===(n.ord_ln||'') && (o.del_ln||'')===(n.del_ln||'');
+    });
+    if(m)return m;
+    // ② 예전에는 라인 없이 등록했다. 그런 옛 건은 라인을 빼고,
+    //    대신 수량과 납기까지 같을 때만 같은 건으로 본다.
+    if(!(n.ord_ln||n.del_ln))return null;
+    return HS.orders.find(function(o){
+      return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
+          && !(o.ord_ln||'') && !(o.del_ln||'')
+          && String(o.qty||'')===String(n.qty||'')
+          && (normDueToISO(o.due)||'')===(normDueToISO(n.due)||'');
+    })||null;
+  }
+  return HS.orders.find(function(o){ return orderMatch(o, ref||n); })||null;
+}
+
 function hsRegisterOrders(list, opt){
   opt=opt||{};
   // matchBy:'poline' — 도번+PO+오더라인+납품라인 만으로 같은 건인지 본다.
@@ -8878,31 +8923,7 @@ function hsRegisterOrders(list, opt){
     if(!dwg){ out.push(null); return; }
     var ref={dwg_no:dwg, po:n.po||'', ord_ln:n.ord_ln||'', del_ln:n.del_ln||'',
              project:n.project||'', unit:n.unit||''};
-    var ex=byPU
-      ? HS.orders.find(function(o){
-          return (o.dwg_no||'')===dwg && (o.project||'')===(n.project||'')
-              && (o.unit||'')===(n.unit||'');
-        })
-      : byLine
-      ? (function(){
-          // ① 도번 + PO + 오더라인 + 납품라인 이 모두 같은 것
-          var m=HS.orders.find(function(o){
-            return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
-                && (o.ord_ln||'')===(n.ord_ln||'') && (o.del_ln||'')===(n.del_ln||'');
-          });
-          if(m)return m;
-          // ② 예전에는 라인 없이 등록했다. 그런 옛 건은 라인을 빼고,
-          //    대신 수량과 납기까지 같을 때만 같은 건으로 본다.
-          //    (라인만 빼고 맞추면 서로 다른 라인이 한 건으로 합쳐진다)
-          if(!(n.ord_ln||n.del_ln))return null;
-          return HS.orders.find(function(o){
-            return (o.dwg_no||'')===dwg && (o.po||'')===(n.po||'')
-                && !(o.ord_ln||'') && !(o.del_ln||'')
-                && String(o.qty||'')===String(n.qty||'')
-                && (normDueToISO(o.due)||'')===(normDueToISO(n.due)||'');
-          })||null;
-        })()
-      : HS.orders.find(function(o){ return orderMatch(o,ref); });
+    var ex=findExistingOrder(n, dwg, opt.matchBy, ref);
     if(ex){
       // 이미 있는 건은 덮어쓰지 않는다. 비어 있던 값만 채운다.
       var chg=false;
@@ -8942,6 +8963,10 @@ function hsRegisterOrders(list, opt){
              del_ln:String(n.del_ln||'').trim(), due:n.due||'',
              step_type:n.step_type||'A', manually_done:false,
              item_name:n.item_name||null, release_date:n.release_date||null, ccn:n.ccn||null,
+             // 누가 어떻게 등록했는지 남긴다
+             created_by:(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||null,
+             created_by_email:(typeof AUTH!=='undefined'&&AUTH.user&&AUTH.user.email)||null,
+             created_via:opt.via||null,
              created_at:new Date().toISOString()};
       HS.orders.push(o); touched.push(o); added++; out.push(o);
     }
