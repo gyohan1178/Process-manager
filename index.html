@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.92</title>
+<title>하네스 공정관리 v6.93</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.92</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.93</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.92 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.93 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -846,6 +846,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             </div>
           </div>
           <div id="wo-po-info" style="margin-top:12px"></div>
+          <div id="wo-dup-info"></div>
 
           <!-- 붙여넣기 (EDWARDS) -->
           <div id="wo-paste-box" style="margin-top:14px;display:none">
@@ -2346,7 +2347,7 @@ var WOC={
   go:function(k){
     WOC.cust=k||'harness';
     try{ localStorage.setItem('hs_wo_cust',WOC.cust); }catch(e){}
-    WOC.loaded=null; WOC.ocrIndex=null; WOC.dwgIndex=null;
+    WOC.loaded=null; WOC.dupList=null; WOC._dupOpen=false; WOC.ocrIndex=null; WOC.dwgIndex=null;
     var _c=WO_ctx(); if(_c)_c.files=[];
     setPage('workorder');
     WOC.paint();
@@ -2391,6 +2392,7 @@ var WOC={
       : (rec.dwg?'도면마다 <b>작업지시서 1부 + 도면 '+rec.dwg+'부</b> 가 이어집니다.'
                :'<b>작업지시서만</b> 뽑습니다.');
     WOC.paintPO();
+    WOC.paintDup();
     WOC.paintPasteHint();
     WOC.paintPaths();
     WOC.paintFolder();
@@ -2651,11 +2653,13 @@ var WOC={
     });
     // PO \uac00 \uc788\uc73c\uba74 \ub3c4\ubc88+PO+\ub77c\uc778\uc73c\ub85c, \uc5c6\uc73c\uba74 \ub3c4\ubc88+\ud504\ub85c\uc81d\ud2b8+\ud638\uae30\ub85c \uac19\uc740 \uac74\uc744 \ubcf8\ub2e4
     var res=hsRegisterOrders(list,{matchBy:(withPO===r.rows.length)?'poline':'projunit', via:'붙여넣기'});
-    WOC.loaded=res.orders||[];
+    // 출도 대상은 새로 등록된 것만. 이미 있던 건은 아래 목록으로 보여 준다.
+    WOC.loaded=res.newOrders||[];
+    WOC.dupList=res.dupOrders||[];
     if(typeof renderStatus==='function')renderStatus();
     if(typeof renderOrderStampList==='function')renderOrderStampList();
     toast('\uc2e0\uaddc '+res.added+'\uac74 \ub4f1\ub85d \u00b7 \uae30\uc874 '+res.skipped+'\uac74 \uc720\uc9c0','ok');
-    WOC.paintPO(); if(WOC.ocrIndex)WOC.buildTargets();
+    WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets();
     WOC.preview();
   },
 
@@ -2954,6 +2958,43 @@ function ccnDueISO(o){
 // 이번에 올린 PO 만 센다. 공정현황에 이미 있던 건까지 세면
 // 아무것도 안 올렸는데 숫자가 떠 있어 오해를 부른다.
 WOC.loaded=null;
+// 이미 있어서 이번 출도에서 빠진 건
+WOC.paintDup=function(){
+  var el=document.getElementById('wo-dup-info'); if(!el)return;
+  var d=WOC.dupList||[];
+  if(!d.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--r2);overflow:hidden;margin-top:10px">'
+    +'<div onclick="WOC.toggleDup()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px">'
+      +'<b style="font-size:12.5px;color:var(--amber)">\u26a0\ufe0f 이미 있어서 뺀 건 '+d.length+'</b>'
+      +'<span style="font-size:11.5px;color:var(--tx3)">이번 출도 대상에서 빠집니다</span>'
+      +'<span style="margin-left:auto;font-size:11px;color:var(--tx3)">'+(WOC._dupOpen?'접기 \u25b2':'펼치기 \u25bc')+'</span>'
+    +'</div>'
+    +(WOC._dupOpen?('<div style="max-height:220px;overflow-y:auto;background:#fff;border-top:1px solid #fde68a">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="background:var(--bg2)">'
+        +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">도면번호</th>'
+        +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">PO / 라인</th>'
+        +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">프로젝트</th>'
+        +'<th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--tx2);width:60px">수량</th>'
+        +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2);width:96px">납기</th></tr></thead><tbody>'
+      +d.map(function(x){var o=x.o;
+        return '<tr style="border-top:1px solid var(--border)">'
+          +'<td style="padding:6px 10px;font-family:var(--mono);font-weight:700">'+hEsc(o.dwg_no||'')+'</td>'
+          +'<td style="padding:6px 10px;font-family:var(--mono);font-size:11.5px;color:var(--blue)">'+hEsc(o.po||'—')
+            +((o.ord_ln||o.del_ln)?' <span style="color:var(--tx3)">'+hEsc(o.ord_ln||'-')+'/'+hEsc(o.del_ln||'-')+'</span>':'')+'</td>'
+          +'<td style="padding:6px 10px;color:var(--tx2)">'+hEsc(o.project||'—')+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;font-family:var(--mono)">'+(o.qty||1)+'</td>'
+          +'<td style="padding:6px 10px;font-family:var(--mono);font-size:11.5px;color:var(--tx2)">'+hEsc(normDueToISO(o.due)||'—')+'</td></tr>';
+      }).join('')
+      +'</tbody></table></div>'):'')
+    +'<div style="padding:9px 14px;font-size:11.5px;color:var(--tx2);line-height:1.7;border-top:1px solid #fde68a">'
+      +'이 건들은 이미 등록되어 있어 <b>다시 만들지 않습니다</b>. '
+      +'다시 뽑아야 하면 공정현황에서 찾아 출력하세요.</div>'
+  +'</div>';
+};
+WOC._dupOpen=false;
+WOC.toggleDup=function(){ WOC._dupOpen=!WOC._dupOpen; WOC.paintDup(); };
+
 WOC.paintPO=function(){
   var el=document.getElementById('wo-po-info'); if(!el)return;
   var rows=WOC.loaded;
@@ -5563,8 +5604,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.92';
+var APP_VER='v6.93';
 var VER_LOG=[
+  {v:'v6.93',d:'2026-09', t:'[출도 대상] 붙여넣기 37건 중 5건이 이미 있는 건이면, 출도는 새로 등록된 32건만 합니다. 예전에는 붙여넣은 행 전부가 대상이 되어 이미 뽑은 건이 또 나왔습니다. 빠진 건은 [이미 있어서 뺀 건] 목록으로 도면번호·PO·프로젝트·수량·납기까지 확인할 수 있습니다. 겹친 건의 프로젝트명은 예전 값을 그대로 둡니다'},
   {v:'v6.92',d:'2026-09', t:'[바로잡음] 붙여넣기 미리보기에서는 모두 신규라 하고, 등록하면 몇 건이 겹치던 문제. 미리보기는 도면번호·프로젝트·호기로 보고, 실제 등록은 도면번호·PO·라인으로 보아 서로 다른 규칙을 쓰고 있었습니다. 같은 건인지 보는 규칙을 함수 하나로 합쳐 두 곳이 항상 같은 숫자를 냅니다. 프로젝트를 넣지 않아도 결과가 같습니다'},
   {v:'v6.91',d:'2026-09', t:'[등록자 남기기] 수주를 누가 어떤 방식(엑셀·붙여넣기)으로 등록했는지 남깁니다. 지금까지는 남지 않아 잘못 올린 것을 사람 기준으로 골라낼 수 없었습니다. 앞으로는 등록자로 찾아볼 수 있습니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_created_by)'},
   {v:'v6.90',d:'2026-09', t:'[고객사 이름] AXCELIS 와 Axcelis 가 섞여 화면에서 두 고객사로 나뉘어 보이던 문제. 등록할 때 대소문자를 한 가지로 맞춥니다 — Axcelis · Edwards Korea · VM. 이미 저장된 자료도 화면에 보여줄 때 함께 맞춰지고, PO 를 다시 올리면 서버 자료도 정리됩니다. ※ 이미 저장된 것을 한 번에 정리하려면 SQL 실행(harness_customer_fix)'},
@@ -7170,7 +7212,10 @@ DQ.readExcel=function(input){
         if(typeof renderOrderStampList==='function')renderOrderStampList();
         toast('신규 '+res.added+'건 등록 · 기존 '+res.skipped+'건 유지'
               +(res.filled?' · 빈 값 '+res.filled+'건 채움':''),'ok');
-        if(typeof WOC!=='undefined'){ WOC.loaded=res.orders||[]; WOC.paintPO(); if(WOC.ocrIndex)WOC.buildTargets(); }
+        if(typeof WOC!=='undefined'){
+          WOC.loaded=res.newOrders||[]; WOC.dupList=res.dupOrders||[];
+          WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets();
+        }
       }catch(ex){ toast('파일 처리 오류: '+ex.message,'err'); console.error(ex); }
     };
     reader.readAsArrayBuffer(file);
@@ -8910,7 +8955,7 @@ function hsRegisterOrders(list, opt){
   // matchBy:'projunit' — PO 가 없는 붙여넣기 등록(EDWARDS)용.
   //   도번+프로젝트+호기 로 같은 건인지 본다.
   var byPU=(opt.matchBy==='projunit');
-  var added=0, skipped=0, touched=[], out=[], filled=0;
+  var added=0, skipped=0, touched=[], out=[], filled=0, newList=[], dupList=[];
   // 한꺼번에 만들 때 id 가 겹치지 않게 (hsGenId 는 같은 ms 안에서 겹칠 수 있다)
   var used={};
   HS.orders.forEach(function(o){ used[o.id]=1; });
@@ -8954,7 +8999,7 @@ function hsRegisterOrders(list, opt){
         }
       }
       if(chg)touched.push(ex);
-      skipped++; out.push(ex);
+      skipped++; out.push(ex); dupList.push({o:ex, row:n});
     }else{
       var o={id:uniqId(), dwg_no:dwg, rev:String(n.rev||'').trim(),
              customer:canonCustomer(n.customer), project:String(n.project||'').trim(),
@@ -8968,11 +9013,12 @@ function hsRegisterOrders(list, opt){
              created_by_email:(typeof AUTH!=='undefined'&&AUTH.user&&AUTH.user.email)||null,
              created_via:opt.via||null,
              created_at:new Date().toISOString()};
-      HS.orders.push(o); touched.push(o); added++; out.push(o);
+      HS.orders.push(o); touched.push(o); added++; out.push(o); newList.push(o);
     }
   });
   if(touched.length)hsSaveOrders(touched);
-  return {added:added, skipped:skipped, filled:filled, orders:out};
+  return {added:added, skipped:skipped, filled:filled, orders:out,
+          newOrders:newList, dupOrders:dupList};
 }
 
 async function handleOrderExcel(input){
