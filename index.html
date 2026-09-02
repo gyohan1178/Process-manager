@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.93</title>
+<title>하네스 공정관리 v6.94</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.93</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.94</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.93 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.94 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2281,11 +2281,30 @@ async function hsSaveOrders(only){
       console.warn('orders sync err',res.error);
       if(!(res.error.message&&res.error.message.includes('column')))outboxPut('orders',_rows);
       if(res.error.message&&res.error.message.includes('column')){
-        await sb.from('harness_orders').upsert(_rows.map(function(o){
-          return {id:o.id,dwg_no:o.dwg_no,customer:o.customer||null,project:o.project||null,
-                  unit:o.unit||null,qty:o.qty||1,created_at:o.created_at};
+        // 어떤 컬럼이 없는지 오류 문구에서 알아내, 그것만 빼고 다시 보낸다.
+        //   예전에는 기본 7개만 남겨 PO·라인·납기까지 사라졌다.
+        var miss=[];
+        var m=/column ["']?([a-zA-Z0-9_]+)["']? .*does not exist/i.exec(res.error.message||'');
+        if(m)miss.push(m[1]);
+        // 나중에 넣은 것들 — 아직 컬럼이 없을 수 있다
+        var LATE=['created_by','created_by_email','created_via','ccn','item_name','release_date',
+                  'field_reg','field_reg_at','field_reg_by','rework','rework_at','rework_by',
+                  'rework_cleared_at','alarm','alarm_reason','alarm_step','alarm_at','alarm_by',
+                  'alarm_cleared_at','alarm_cleared_by'];
+        var drop={}; miss.concat(LATE).forEach(function(k){drop[k]=1;});
+        var res2=await sb.from('harness_orders').upsert(_rows.map(function(o){
+          var row=hsOrderRow(o), out={};
+          Object.keys(row).forEach(function(k){ if(!drop[k])out[k]=row[k]; });
+          return out;
         }));
-        toast('⚠ DB 컬럼 부족 — 컬럼 추가 SQL 실행 필요 (rework / field_reg)','warn');
+        if(res2.error){
+          console.warn('orders sync err(2)',res2.error);
+          outboxPut('orders',_rows);
+          toast('저장 실패 — 컬럼 추가 SQL 을 실행하세요','err');
+        }else{
+          outboxDrop('orders',_rows);
+          toast('⚠ 일부 항목이 저장되지 않았습니다 ('+Object.keys(drop).slice(0,3).join(', ')+'…). 컬럼 추가 SQL 을 실행하세요','warn');
+        }
       }
     }
     else{ outboxDrop('orders',_rows); }
@@ -2314,6 +2333,28 @@ async function hsSaveLogs(only){
     }
     else{ outboxDrop('logs',_rows); clearSyncWarn(); }
   }catch(e){console.warn('logs sync err',e);outboxPut('logs',_rows);}
+}
+
+// 지우기 전에 내용을 남긴다. 되돌릴 수 없는 작업이라 기록이 있어야 한다.
+async function archiveDeletedOrders(orders, via, reason){
+  var sb=getSB(); if(!sb||!orders||!orders.length)return {ok:false,reason:'no-sb'};
+  var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
+  var rows=orders.map(function(o){
+    var scans=0;
+    try{ scans=logsFor(o.dwg_no).filter(function(l){return logMatch(l,o);}).length; }catch(e){}
+    return {deleted_by:who, deleted_via:via||'', reason:reason||null,
+      id:o.id, dwg_no:o.dwg_no||null, customer:o.customer||null, project:o.project||null,
+      unit:o.unit||null, qty:o.qty||null, po:o.po||null,
+      ord_ln:o.ord_ln||null, del_ln:o.del_ln||null, due:o.due||null, rev:o.rev||null,
+      ccn:o.ccn||null, step_type:o.step_type||null, item_name:o.item_name||null,
+      release_date:o.release_date||null, qr_printed:!!o.qr_printed,
+      manually_done:!!o.manually_done, created_at:o.created_at||null, scan_count:scans};
+  });
+  try{
+    var r=await sb.from('harness_deleted_orders').insert(rows);
+    if(r&&r.error){ console.warn('삭제 이력 저장 실패',r.error); return {ok:false,reason:r.error.message}; }
+    return {ok:true,n:rows.length};
+  }catch(e){ console.warn('삭제 이력 저장 실패',e); return {ok:false,reason:String(e.message||e)}; }
 }
 
 async function hsDeleteOrder(id){
@@ -4104,6 +4145,15 @@ o.step_type=codes[(codes.indexOf(o.step_type||'A')+1)%codes.length];
 hsSaveOrders([o]);renderStatus();toast('공정타입: '+o.step_type+'형','ok');}
 var _spView='due';
 function toggleSpView(){_spView=_spView==='due'?'cust':'due';var b=document.getElementById('sp-cust-btn');if(b)b.classList.toggle('on',_spView==='cust');renderStatus();}
+// 프로젝트 묶음 이름. 비어 있으면 (미지정)
+function _projKey(o){ return (o.project||'').trim()||'(미지정)'; }
+// 프로젝트 묶음 전체 선택
+function toggleProjSel(el){
+  var pk=el.getAttribute('data-pk');
+  var ids=HS.orders.filter(function(o){ return _projKey(o)===pk; }).map(function(o){return o.id;});
+  ids.forEach(function(id){ if(el.checked)_selOrders.add(id); else _selOrders.delete(id); });
+  refreshSpTab();
+}
 function toggleProjGroup(el){var k=el.dataset.pk||''; if(_spExpanded.has(k))_spExpanded.delete(k); else _spExpanded.add(k); renderStatus();}
 var _spSort={key:'due',dir:'asc'};   // 현황판 정렬 상태 (기본: 납기 임박순)
 var _selOrders=new Set();                      // 선택된 주문 id
@@ -4173,14 +4223,52 @@ async function bulkDoneSelected(val){
 }
 async function bulkDeleteSelected(){
   if(!_selOrders.size)return;
-  if(!confirm(_selOrders.size+'건의 도면을 삭제할까요?'))return;
   var ids=[..._selOrders];
+  var targets=HS.orders.filter(function(o){return ids.indexOf(o.id)>=0;});
+  await deleteOrdersWithLog(targets,'일괄 삭제');
+}
+
+// 수주 지우기 — 이력을 남기고, '삭제' 를 입력해야 진행한다.
+async function deleteOrdersWithLog(targets, via){
+  if(!targets||!targets.length)return;
+  // 스캔 기록이 있는 건은 미리 알린다
+  var withScan=targets.filter(function(o){
+    try{ return logsFor(o.dwg_no).some(function(l){return logMatch(l,o);}); }catch(e){ return false; }
+  });
+  var printed=targets.filter(function(o){return o.qr_printed;});
+  var msg=targets.length+'건을 지웁니다.\n\n'
+    +targets.slice(0,6).map(function(o){
+        return '  · '+(o.dwg_no||'')+(o.po?' / '+o.po:'')+(o.ord_ln?' '+o.ord_ln+'/'+(o.del_ln||'-'):'');
+      }).join('\n')
+    +(targets.length>6?'\n  … 외 '+(targets.length-6)+'건':'')
+    +(withScan.length?'\n\n\u26a0 스캔 기록이 있는 건 '+withScan.length+'건이 들어 있습니다.':'')
+    +(printed.length?'\n\u26a0 QR 을 이미 뽑은 건 '+printed.length+'건이 들어 있습니다.':'')
+    +'\n\n되돌릴 수 없습니다. 지우려면 아래에 삭제 라고 입력하세요.';
+  var typed=prompt(msg,'');
+  if(typed===null)return;
+  if(String(typed).trim()!=='삭제'){ toast('삭제 라고 입력해야 지웁니다','warn'); return; }
+
+  // 먼저 이력을 남긴다
+  var arch=await archiveDeletedOrders(targets, via, null);
+  if(!arch.ok){
+    if(!confirm('삭제 이력을 남기지 못했습니다.\n\n'
+      +'(' + (arch.reason||'') + ')\n\n'
+      +'이력 없이 그냥 지울까요? 되돌릴 수 없습니다.'))return;
+  }
+  var ids=targets.map(function(o){return o.id;});
   HS.orders=HS.orders.filter(function(o){return ids.indexOf(o.id)<0;});
   hsSaveOrders();
   var sb=getSB();
   if(sb){for(var i=0;i<ids.length;i++){try{await sb.from('harness_orders').delete().eq('id',ids[i]);}catch(e){}}}
-  _selOrders.clear();renderStatus();
-  toast(ids.length+'건 삭제됨','ok');
+  _selOrders.clear(); renderStatus();
+  toast(ids.length+'건 삭제됨'+(arch.ok?' · 이력 남김':' · 이력 없음'), arch.ok?'ok':'warn');
+}
+
+// 프로젝트 묶음 통째로 지우기
+async function deleteProjectGroup(pk){
+  var targets=HS.orders.filter(function(o){ return _projKey(o)===pk; });
+  if(!targets.length){ toast('그 프로젝트에 건이 없습니다','warn'); return; }
+  await deleteOrdersWithLog(targets, '프로젝트 삭제 · '+pk);
 }
 function setShowMode(m){
   _showMode=m;
@@ -4403,9 +4491,13 @@ function _renderStatusInner(){
       var ps=[],pm={};
       orders.forEach(function(o){var k=(o.project||'').trim()||'(미지정)';if(!pm[k]){pm[k]={key:k,items:[]};ps.push(pm[k]);}pm[k].items.push(o);});
       inner=ps.map(function(g){
-        return '<div style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:7px 11px;border-radius:9px;background:rgba(124,58,237,.1);color:#7c3aed;font-size:13px;font-weight:800">'
-          +'<span>🗂 '+hEsc(g.key)+'</span><span style="font-weight:600;color:var(--tx3);font-size:11px">('+g.items.length+'건)</span></div>'
-          +g.items.map(cardHTML).join('');
+        var exp=_spExpanded.has(g.key);
+        var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
+        return '<div data-pk="'+hEsc(g.key)+'" onclick="toggleProjGroup(this)" style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:11px 13px;border-radius:9px;background:var(--purple-lt);color:var(--purple);font-size:13px;font-weight:800;cursor:pointer">'
+          +'<span style="width:12px">'+(exp?'▼':'▶')+'</span>'
+          +'<span>🗂 '+hEsc(g.key)+'</span>'
+          +'<span style="font-weight:600;color:var(--tx3);font-size:11px">'+g.items.length+'건'+(qsum?' · 수량 '+qsum.toLocaleString():'')+'</span></div>'
+          +(exp?g.items.map(cardHTML).join(''):'');
       }).join('');
     } else {
       inner=orders.map(cardHTML).join('');
@@ -4469,7 +4561,6 @@ function _renderStatusInner(){
       +'<td style="text-align:center">'+alarmDot(o)+'</td>'
       +'</tr>';
   }
-  function _projKey(o){return (o.project||'').trim()||'(미지정)';}
   var rows='';
   if(_spView==='cust'){
     // 고객사별 소제목 구분 (섹션 내부는 현재 정렬 = 납기순 유지)
@@ -4481,15 +4572,31 @@ function _renderStatusInner(){
       g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
     });
   } else if(_spGroup){
+    var COLN=12, canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
     var _gs=[],_gm={};
     orders.forEach(function(o){var k=_projKey(o);if(!_gm[k]){_gm[k]={key:k,items:[]};_gs.push(_gm[k]);}_gm[k].items.push(o);});
     _gs.forEach(function(g){
       var n=g.items.length, main=g.items[0];
       if(n>1){
         var exp=_spExpanded.has(g.key);
-        var toggle='<span data-pk="'+_he(g.key)+'" onclick="toggleProjGroup(this)" style="cursor:pointer;font-weight:700;color:var(--blue);user-select:none;white-space:nowrap">'+(exp?'▼':'▶')+' '+_he(g.key)+' <span style="font-size:10px;color:var(--tx3);font-weight:600">('+n+'건)</span></span>';
-        rows+=rowHTML(main, toggle, false);
-        if(exp){for(var i=1;i<n;i++){rows+=rowHTML(g.items[i],'<span style="color:var(--tx3);padding-left:14px">└ '+_he(g.items[i].project||'')+'</span>',true);}}
+        // 프로젝트 줄 — 품목 내용은 넣지 않는다
+        var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
+        var doneN=g.items.filter(function(x){return isOrderDone(x);}).length;
+        rows+='<tr class="proj-head" data-pk="'+_he(g.key)+'" style="background:var(--purple-lt);cursor:pointer" onclick="toggleProjGroup(this)">'
+          +'<td style="padding:9px 10px;text-align:center">'
+            +(canEdit?'<input type="checkbox" onclick="event.stopPropagation();toggleProjSel(this)" data-pk="'+_he(g.key)+'">':'')
+          +'</td>'
+          +'<td colspan="'+(COLN-1)+'" style="padding:9px 10px;font-weight:800;color:var(--purple)">'
+            +'<span style="display:inline-block;width:14px">'+(exp?'▼':'▶')+'</span>'
+            +'🗂 '+_he(g.key)
+            +' <span style="font-size:11px;color:var(--tx3);font-weight:600">'+n+'건'
+            +(qsum?' · 수량 '+qsum.toLocaleString():'')
+            +(doneN?' · 완료 '+doneN:'')+'</span>'
+            +(canEdit?'<button onclick="event.stopPropagation();deleteProjectGroup(this.getAttribute(\'data-pk\'))" data-pk="'+_he(g.key)+'" '
+              +'style="float:right;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:6px;'
+              +'border:1px solid #fecaca;background:#fef2f2;color:var(--red);cursor:pointer">🗑 프로젝트 삭제</button>':'')
+          +'</td></tr>';
+        if(exp){ for(var i=0;i<n;i++){ rows+=rowHTML(g.items[i],'<span style="color:var(--tx3);padding-left:14px">└ '+_he(g.items[i].project||'')+'</span>',true); } }
       } else {
         rows+=rowHTML(main, _he(main.project||'—'), false);
       }
@@ -5604,8 +5711,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.93';
+var APP_VER='v6.94';
 var VER_LOG=[
+  {v:'v6.94',d:'2026-09', t:'[프로젝트 묶기·삭제] ① 묶은 프로젝트가 접혀 있을 때 첫 품목 내용이 같이 보이던 것을 고쳤습니다. 이제 프로젝트 줄에는 이름·건수·수량만 나오고, 펼치면 아래에 품목이 나열됩니다. ② 프로젝트 줄에 [프로젝트 삭제] 를 넣어 묶음 전체를 한 번에 지울 수 있습니다. ③ 지울 때 삭제 라고 직접 입력해야 진행되며, 스캔 기록이나 QR 을 뽑은 건이 섞여 있으면 미리 알립니다. ④ 지운 내용을 남겨 누가 언제 무엇을 지웠는지 확인하고 되돌릴 수 있습니다. ⑤ DB 컬럼이 없을 때 기본 항목만 저장되어 PO·라인·납기까지 사라지던 문제도 고쳤습니다. ※ 표 추가 SQL 1회 실행 필요(harness_deleted_orders, harness_created_by)'},
   {v:'v6.93',d:'2026-09', t:'[출도 대상] 붙여넣기 37건 중 5건이 이미 있는 건이면, 출도는 새로 등록된 32건만 합니다. 예전에는 붙여넣은 행 전부가 대상이 되어 이미 뽑은 건이 또 나왔습니다. 빠진 건은 [이미 있어서 뺀 건] 목록으로 도면번호·PO·프로젝트·수량·납기까지 확인할 수 있습니다. 겹친 건의 프로젝트명은 예전 값을 그대로 둡니다'},
   {v:'v6.92',d:'2026-09', t:'[바로잡음] 붙여넣기 미리보기에서는 모두 신규라 하고, 등록하면 몇 건이 겹치던 문제. 미리보기는 도면번호·프로젝트·호기로 보고, 실제 등록은 도면번호·PO·라인으로 보아 서로 다른 규칙을 쓰고 있었습니다. 같은 건인지 보는 규칙을 함수 하나로 합쳐 두 곳이 항상 같은 숫자를 냅니다. 프로젝트를 넣지 않아도 결과가 같습니다'},
   {v:'v6.91',d:'2026-09', t:'[등록자 남기기] 수주를 누가 어떤 방식(엑셀·붙여넣기)으로 등록했는지 남깁니다. 지금까지는 남지 않아 잘못 올린 것을 사람 기준으로 골라낼 수 없었습니다. 앞으로는 등록자로 찾아볼 수 있습니다. ※ 컬럼 추가 SQL 1회 실행 필요(harness_created_by)'},
