@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.96</title>
+<title>하네스 공정관리 v6.98</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.96</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.98</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.96 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.98 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -873,6 +873,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             <div id="wo-paste-prev" style="margin-top:10px"></div>
           </div>
 
+          <div id="wo-copies" style="margin-top:14px"></div>
+
           <!-- 작업지시서 폴더 -->
           <div id="wo-wofolder-box" style="margin-top:16px;padding-top:14px;border-top:1px solid #eceff5">
             <div style="font-size:12.5px;font-weight:700;color:var(--tx2)">OCR 폴더 <span style="font-weight:500;color:var(--tx3)">(QR 넣기 전 작업지시서)</span></div>
@@ -984,7 +986,6 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             빈 값은 건너뛰고, 이름이 겹치면 뒤에 번호를 붙입니다. 병합 저장에는 해당되지 않습니다.
           </div>
           <div id="wo-out-desc" style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6"></div>
-          <div id="wo-copies" style="margin-top:10px"></div>
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             출력 순서는 도면번호 기준이며, 버튼으로 오름/내림을 바꿀 수 있습니다.
           </div>
@@ -4679,34 +4680,56 @@ function _renderStatusInner(){
           if(isOrderDone(x))return false;
           var iso=x.due?normDueToISO(x.due):''; return iso&&iso<_todayISO;
         }).length;
+        // 프로젝트 줄도 표의 열에 맞춰 놓는다.
+        //   고객사 / PO / 프로젝트 / 도면번호(건수) / Rev / 호기 / 수량 / 납기 / 현황판 / 상태
+        var custs={}; g.items.forEach(function(x){ if(x.customer)custs[x.customer]=1; });
+        var ck=Object.keys(custs);
+        var dues={}; g.items.forEach(function(x){ var v=normDueToISO(x.due); if(v)dues[v]=1; });
+        var dk=Object.keys(dues).sort();
+        var BG='background:var(--purple-lt);border-top:1px solid #ddd6fe;border-bottom:1px solid #ddd6fe';
+        var TD='padding:11px 10px;'+BG;
         rows+='<tr class="proj-head" data-pk="'+_he(g.key)+'" style="cursor:pointer" onclick="toggleProjGroup(this)">'
-          +'<td style="padding:10px 10px;text-align:center;background:var(--purple-lt);border-top:1px solid #ddd6fe;border-bottom:1px solid #ddd6fe">'
+          // 체크
+          +'<td style="'+TD+';text-align:center">'
             +(canEdit?'<input type="checkbox" onclick="event.stopPropagation();toggleProjSel(this)" data-pk="'+_he(g.key)+'">':'')
           +'</td>'
-          +'<td colspan="'+(COLN-1)+'" style="padding:10px 12px;background:var(--purple-lt);border-top:1px solid #ddd6fe;border-bottom:1px solid #ddd6fe">'
-            +'<span style="display:inline-flex;align-items:center;gap:8px">'
-              +'<span style="color:var(--purple);font-size:11px;width:12px">'+(exp?'▼':'▶')+'</span>'
-              +'<span style="font-size:13.5px;font-weight:800;color:var(--tx)">'+_he(g.key)+'</span>'
-              +'<span style="font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;background:#fff;border:1px solid #ddd6fe;color:var(--purple)">'+n+'건</span>'
-              +(qsum?'<span style="font-size:11.5px;color:var(--tx3)">수량 '+qsum.toLocaleString()+'</span>':'')
-              +(doneN?'<span style="font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;background:var(--green-lt);color:var(--green);border:1px solid #a7f3d0">완료 '+doneN+'</span>':'')
-              +(late?'<span style="font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;background:#fef2f2;color:var(--red);border:1px solid #fecaca">지연 '+late+'</span>':'')
-              +(function(){
-                  // 납기가 하나면 그대로, 여럿이면 가장 빠른 것과 개수
-                  var ds={}; g.items.forEach(function(x){ var v=normDueToISO(x.due); if(v)ds[v]=1; });
-                  var ks=Object.keys(ds).sort();
-                  if(!ks.length)return '';
-                  var one=(ks.length===1);
-                  var od=(ks[0]<_todayISO);
-                  return '<span style="margin-left:2px;font-size:11.5px;font-family:var(--mono);font-weight:700;'
-                    +'padding:2px 9px;border-radius:20px;'
-                    +(od?'background:#fef2f2;color:var(--red);border:1px solid #fecaca'
-                        :'background:#fff;color:var(--tx2);border:1px solid var(--border)')+'">'
-                    +'납기 '+ks[0]+(one?'':' <span style="font-weight:500;opacity:.75">외 '+(ks.length-1)+'</span>')
-                    +'</span>';
-                })()
+          // 고객사
+          +'<td style="'+TD+';font-size:12px;color:var(--tx2)">'
+            +(ck.length===1?_he(ck[0]):(ck.length?_he(ck[0])+' <span style="color:var(--tx3)">외 '+(ck.length-1)+'</span>':'—'))
+          +'</td>'
+          // PO — 묶음이라 비워 둔다
+          +'<td style="'+TD+';color:var(--tx3)">—</td>'
+          // 프로젝트 (펼침 표시 + 이름)
+          +'<td style="'+TD+'">'
+            +'<span style="display:inline-flex;align-items:center;gap:7px">'
+              +'<span style="color:var(--purple);font-size:11px;width:10px">'+(exp?'▼':'▶')+'</span>'
+              +'<span style="font-size:13px;font-weight:800;color:var(--tx)">'+_he(g.key)+'</span>'
             +'</span>'
-          +'</td></tr>';
+          +'</td>'
+          // 도면번호 자리 — 몇 건인지
+          +'<td style="'+TD+'">'
+            +'<span style="font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:20px;background:#fff;border:1px solid #ddd6fe;color:var(--purple)">'+n+'건</span>'
+            +(doneN?' <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-lt);color:var(--green);border:1px solid #a7f3d0">완료 '+doneN+'</span>':'')
+          +'</td>'
+          // Rev · 호기 — 비움
+          +'<td style="'+TD+';text-align:center;color:var(--tx3)">—</td>'
+          +'<td style="'+TD+';text-align:center;color:var(--tx3)">—</td>'
+          // 수량
+          +'<td style="'+TD+';text-align:center;font-family:var(--mono);font-weight:800;color:var(--tx)">'+(qsum?qsum.toLocaleString():'—')+'</td>'
+          // 납기
+          +'<td style="'+TD+'">'
+            +(dk.length
+              ? '<span style="font-family:var(--mono);font-size:11.5px;font-weight:700;color:'+(dk[0]<_todayISO?'var(--red)':'var(--tx2)')+'">'+dk[0]+'</span>'
+                +(dk.length>1?'<div style="font-size:10px;color:var(--tx3)">외 '+(dk.length-1)+'</div>':'')
+              : '<span style="color:var(--tx3)">—</span>')
+          +'</td>'
+          // 현황판 자리 — 지연만 표시
+          +'<td style="'+TD+'">'
+            +(late?'<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#fef2f2;color:var(--red);border:1px solid #fecaca">지연 '+late+'</span>':'')
+          +'</td>'
+          // 상태
+          +'<td style="'+TD+'"></td>'
+        +'</tr>';
         if(exp){ for(var i=0;i<n;i++){ rows+=rowHTML(g.items[i],'<span style="color:var(--tx3);padding-left:14px">└ '+_he(g.items[i].project||'')+'</span>',true); } }
       } else {
         rows+=rowHTML(main, _he(main.project||'—'), false);
@@ -5828,8 +5851,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.96';
+var APP_VER='v6.98';
 var VER_LOG=[
+  {v:'v6.98',d:'2026-09', t:'[부수 설정 위치] 작업지시서·도면 부수를 고르는 칸이 [3. 만들기] 안에 있어 폴더와 머릿말을 지나야 보였습니다. 1번 카드의 폴더 고르기 바로 위로 옮겨 첫 화면에서 바로 보입니다'},
+  {v:'v6.97',d:'2026-09', t:'[프로젝트 줄 정리] 한 칸에 몰려 있던 정보를 표의 열에 맞춰 놓았습니다. 고객사는 고객사 칸에, 프로젝트명은 프로젝트 칸에, 건수는 도면번호 칸에, 수량은 수량 칸에, 납기는 납기 칸에 들어갑니다. 고객사나 납기가 여럿이면 대표값과 개수를 함께 보여 줍니다. 아래 품목 줄과 세로로 맞아 읽기 쉬워졌습니다'},
   {v:'v6.96',d:'2026-09', t:'[공정현황 정리] ① 프로젝트 줄마다 있던 [프로젝트 삭제] 단추를 없앴습니다. 실수로 누르기 쉬웠고 화면도 가로로 밀렸습니다. 이제 프로젝트 왼쪽 네모를 눌러 묶음을 고른 뒤 위 [삭제] 로 지웁니다. ② 프로젝트 줄에 납기가 함께 나옵니다. 납기가 여럿이면 가장 빠른 것과 개수를 보여 줍니다. ③ 건수·수량·완료·지연을 배지로 나눠 한눈에 보이게 했습니다. ④ 등록할 때 프로젝트로 묶을지 건마다 따로 둘지 고를 수 있습니다. 프로젝트 이름을 적기 시작하면 묶기로 바뀌며, 이름 없이 묶기를 고르면 등록되지 않습니다'},
   {v:'v6.95',d:'2026-09', t:'[부수 설정] 작업지시서와 도면을 몇 부씩 뽑을지 화면에서 고릅니다. 예전에는 코드에 도면 2부로 고정되어 있어 바꿀 수 없었습니다. [3. 만들기] 에서 고르며 고객사마다 따로 저장됩니다. AXCELIS·EDWARDS 기본값을 도면 1부로 바꿨습니다'},
   {v:'v6.94',d:'2026-09', t:'[프로젝트 묶기·삭제] ① 묶은 프로젝트가 접혀 있을 때 첫 품목 내용이 같이 보이던 것을 고쳤습니다. 이제 프로젝트 줄에는 이름·건수·수량만 나오고, 펼치면 아래에 품목이 나열됩니다. ② 프로젝트 줄에 [프로젝트 삭제] 를 넣어 묶음 전체를 한 번에 지울 수 있습니다. ③ 지울 때 삭제 라고 직접 입력해야 진행되며, 스캔 기록이나 QR 을 뽑은 건이 섞여 있으면 미리 알립니다. ④ 지운 내용을 남겨 누가 언제 무엇을 지웠는지 확인하고 되돌릴 수 있습니다. ⑤ DB 컬럼이 없을 때 기본 항목만 저장되어 PO·라인·납기까지 사라지던 문제도 고쳤습니다. ※ 표 추가 SQL 1회 실행 필요(harness_deleted_orders, harness_created_by)'},
