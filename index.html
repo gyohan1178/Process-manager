@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.98</title>
+<title>하네스 공정관리 v6.99</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.98</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.99</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.98 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.99 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -4582,8 +4582,14 @@ function _renderStatusInner(){
     } else if(_spGroup){
       // 프로젝트 묶기: 프로젝트 소제목으로 구분
       var ps=[],pm={};
-      orders.forEach(function(o){var k=(o.project||'').trim()||'(미지정)';if(!pm[k]){pm[k]={key:k,items:[]};ps.push(pm[k]);}pm[k].items.push(o);});
+      orders.forEach(function(o){
+        var p=(o.project||'').trim();
+        var k=p||('\u0000solo:'+o.id);
+        if(!pm[k]){pm[k]={key:k, solo:!p, items:[]};ps.push(pm[k]);}
+        pm[k].items.push(o);
+      });
       inner=ps.map(function(g){
+        if(g.solo)return g.items.map(cardHTML).join('');   // 프로젝트 없는 건은 그대로
         var exp=_spExpanded.has(g.key);
         var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
         return '<div data-pk="'+hEsc(g.key)+'" onclick="toggleProjGroup(this)" style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:11px 13px;border-radius:9px;background:var(--purple-lt);color:var(--purple);font-size:13px;font-weight:800;cursor:pointer">'
@@ -4668,10 +4674,16 @@ function _renderStatusInner(){
     var COLN=12, canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
     var _todayISO=new Date().toISOString().slice(0,10);
     var _gs=[],_gm={};
-    orders.forEach(function(o){var k=_projKey(o);if(!_gm[k]){_gm[k]={key:k,items:[]};_gs.push(_gm[k]);}_gm[k].items.push(o);});
+    orders.forEach(function(o){
+      var p=(o.project||'').trim();
+      // 프로젝트가 없으면 묶지 않고 한 줄씩 (개별 등록한 건)
+      var k=p||('\u0000solo:'+o.id);
+      if(!_gm[k]){_gm[k]={key:k, solo:!p, items:[]};_gs.push(_gm[k]);}
+      _gm[k].items.push(o);
+    });
     _gs.forEach(function(g){
       var n=g.items.length, main=g.items[0];
-      if(n>1){
+      if(n>1&&!g.solo){
         var exp=_spExpanded.has(g.key);
         // 프로젝트 줄 — 품목 내용은 넣지 않는다
         var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
@@ -5851,8 +5863,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.98';
+var APP_VER='v6.99';
 var VER_LOG=[
+  {v:'v6.99',d:'2026-09', t:'[개별 등록 건 풀기] 프로젝트 없이 등록한 건들이 (미지정) 이라는 이름으로 한 덩어리가 되던 것을 고쳤습니다. 프로젝트가 비어 있으면 묶지 않고 건마다 한 줄로 보여 줍니다. 프로젝트를 넣은 건만 묶입니다'},
   {v:'v6.98',d:'2026-09', t:'[부수 설정 위치] 작업지시서·도면 부수를 고르는 칸이 [3. 만들기] 안에 있어 폴더와 머릿말을 지나야 보였습니다. 1번 카드의 폴더 고르기 바로 위로 옮겨 첫 화면에서 바로 보입니다'},
   {v:'v6.97',d:'2026-09', t:'[프로젝트 줄 정리] 한 칸에 몰려 있던 정보를 표의 열에 맞춰 놓았습니다. 고객사는 고객사 칸에, 프로젝트명은 프로젝트 칸에, 건수는 도면번호 칸에, 수량은 수량 칸에, 납기는 납기 칸에 들어갑니다. 고객사나 납기가 여럿이면 대표값과 개수를 함께 보여 줍니다. 아래 품목 줄과 세로로 맞아 읽기 쉬워졌습니다'},
   {v:'v6.96',d:'2026-09', t:'[공정현황 정리] ① 프로젝트 줄마다 있던 [프로젝트 삭제] 단추를 없앴습니다. 실수로 누르기 쉬웠고 화면도 가로로 밀렸습니다. 이제 프로젝트 왼쪽 네모를 눌러 묶음을 고른 뒤 위 [삭제] 로 지웁니다. ② 프로젝트 줄에 납기가 함께 나옵니다. 납기가 여럿이면 가장 빠른 것과 개수를 보여 줍니다. ③ 건수·수량·완료·지연을 배지로 나눠 한눈에 보이게 했습니다. ④ 등록할 때 프로젝트로 묶을지 건마다 따로 둘지 고를 수 있습니다. 프로젝트 이름을 적기 시작하면 묶기로 바뀌며, 이름 없이 묶기를 고르면 등록되지 않습니다'},
