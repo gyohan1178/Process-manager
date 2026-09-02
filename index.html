@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v6.99</title>
+<title>하네스 공정관리 v7.00</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v6.99</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.00</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v6.99 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.00 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -4403,19 +4403,12 @@ function populateFilters(orders){
   custEl.innerHTML='<option value="">전체 고객사</option>'+custs.map(function(c){return '<option value="'+c+'"'+(c===curCust?' selected':'')+'>'+c+'</option>';}).join('');
   projEl.innerHTML='<option value="">전체 프로젝트</option>'+projs.map(function(p){return '<option value="'+p+'"'+(p===curProj?' selected':'')+'>'+p+'</option>';}).join('');
 }
-function renderStatus(){
-  var _sc=document.querySelector('#pg-status .sp-content');
-  var _st=_sc?_sc.scrollTop:0;
-  try{ _renderStatusInner(); }finally{ if(_sc)_sc.scrollTop=_st; }
-}
-function _renderStatusInner(){
-  renderOrderStampList();
-  var board=document.getElementById('sp-board'); if(!board) return;
+// 화면에 걸린 조건 그대로 걸러 준다.
+//   CSV 추출도 이 함수를 써야 화면과 같은 것이 나온다.
+function getFilteredOrders(){
   var q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
   var fCust=(document.getElementById('flt-cust')||{}).value||'';
   var fProj=(document.getElementById('flt-proj')||{}).value||'';
-  var clearBtn=document.getElementById('sp-search-clear');
-  if(clearBtn) clearBtn.style.display=q?'block':'none';
   var orders=[...HS.orders];
   if(fCust) orders=orders.filter(function(o){return (o.customer||'')===fCust;});
   if(fProj) orders=orders.filter(function(o){return (o.project||'')===fProj;});
@@ -4424,7 +4417,6 @@ function _renderStatusInner(){
       ||(o.project||'').toLowerCase().includes(q)||(o.unit||'').toLowerCase().includes(q)
       ||(o.po||'').toLowerCase().includes(q)||(o.rev||'').toLowerCase().includes(q);
   });
-  // 지표 카드로 추리기
   if(_spKpi){
     var _t=new Date().toISOString().slice(0,10);
     orders=orders.filter(function(o){
@@ -4440,6 +4432,35 @@ function _renderStatusInner(){
   }
   if(_showMode==='active') orders=orders.filter(function(o){return !isOrderDone(o);});
   else if(_showMode==='done') orders=orders.filter(function(o){return isOrderDone(o);});
+  return orders;
+}
+// 지금 걸린 조건을 사람이 읽을 수 있게
+function currentFilterLabel(){
+  var p=[];
+  var fc=(document.getElementById('flt-cust')||{}).value||'';
+  var fp=(document.getElementById('flt-proj')||{}).value||'';
+  var q=((document.getElementById('sp-search')||{}).value||'').trim();
+  if(fc)p.push(fc);
+  if(fp)p.push(fp);
+  if(q)p.push('검색 '+q);
+  if(_showMode==='active')p.push('진행중'); else if(_showMode==='done')p.push('완료');
+  var K={act:'진행중',today:'오늘납기',late:'지연',rw:'재작업',hold:'재검대기'};
+  if(_spKpi&&K[_spKpi])p.push(K[_spKpi]);
+  return p.join(' · ');
+}
+
+function renderStatus(){
+  var _sc=document.querySelector('#pg-status .sp-content');
+  var _st=_sc?_sc.scrollTop:0;
+  try{ _renderStatusInner(); }finally{ if(_sc)_sc.scrollTop=_st; }
+}
+function _renderStatusInner(){
+  renderOrderStampList();
+  var board=document.getElementById('sp-board'); if(!board) return;
+  var q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
+  var clearBtn=document.getElementById('sp-search-clear');
+  if(clearBtn) clearBtn.style.display=q?'block':'none';
+  var orders=getFilteredOrders();
   populateFilters(HS.orders);
   var cnt=document.getElementById('sp-cnt');
   if(cnt){
@@ -5863,8 +5884,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v6.99';
+var APP_VER='v7.00';
 var VER_LOG=[
+  {v:'v7.00',d:'2026-09', t:'[CSV 추출] 공정현황에서 CSV 를 뽑으면 화면에 걸린 조건 그대로 나옵니다. 예전에는 필터와 상관없이 전체가 나왔습니다. 고객사·프로젝트·검색어·진행중/완료·지표 카드가 모두 반영됩니다. 어떤 조건으로 뽑았는지 파일명에 남고, 몇 건을 내보냈는지 알려 줍니다'},
   {v:'v6.99',d:'2026-09', t:'[개별 등록 건 풀기] 프로젝트 없이 등록한 건들이 (미지정) 이라는 이름으로 한 덩어리가 되던 것을 고쳤습니다. 프로젝트가 비어 있으면 묶지 않고 건마다 한 줄로 보여 줍니다. 프로젝트를 넣은 건만 묶입니다'},
   {v:'v6.98',d:'2026-09', t:'[부수 설정 위치] 작업지시서·도면 부수를 고르는 칸이 [3. 만들기] 안에 있어 폴더와 머릿말을 지나야 보였습니다. 1번 카드의 폴더 고르기 바로 위로 옮겨 첫 화면에서 바로 보입니다'},
   {v:'v6.97',d:'2026-09', t:'[프로젝트 줄 정리] 한 칸에 몰려 있던 정보를 표의 열에 맞춰 놓았습니다. 고객사는 고객사 칸에, 프로젝트명은 프로젝트 칸에, 건수는 도면번호 칸에, 수량은 수량 칸에, 납기는 납기 칸에 들어갑니다. 고객사나 납기가 여럿이면 대표값과 개수를 함께 보여 줍니다. 아래 품목 줄과 세로로 맞아 읽기 쉬워졌습니다'},
@@ -6018,7 +6040,10 @@ function exportCSV(){
 }
 function exportBoardCSV(){
   var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','Rev','호기','수량','납기','등록일','완료여부','재작업','이슈여부','이슈사유','이슈공정','현황'];
-  var rows=HS.orders.map(function(o){
+  // 화면에 걸린 조건 그대로 뽑는다
+  var _src=getFilteredOrders();
+  if(!_src.length){ toast('내보낼 건이 없습니다','warn'); return; }
+  var rows=_src.map(function(o){
     var po=o.po||'', ol=o.ord_ln||'', dl=o.del_ln||'', due=o.due||'';
     var done=isOrderDone(o);
     var prog=getOrderProgress(o);
@@ -6029,7 +6054,10 @@ function exportBoardCSV(){
             o.alarm?'TRUE':'FALSE',o.alarm?(o.alarm_reason||''):'',o.alarm?(o.alarm_step||''):'',
             prog+'/'+getStepsForType(o.step_type).length];
   });
-  downloadCSV(headers,rows,'하네스현황_'+fmtDate(new Date()));
+  // 어떤 조건으로 뽑았는지 파일명에 남긴다
+  var _lb=currentFilterLabel().replace(/[\\/:*?"<>|]/g,'').replace(/\s·\s/g,'_').replace(/\s+/g,'');
+  downloadCSV(headers,rows,'하네스현황_'+fmtDate(new Date())+(_lb?'_'+_lb:''));
+  toast(rows.length+'건 내보냄'+(_lb?' ('+currentFilterLabel()+')':''),'ok');
   toast('현황판 CSV 내보내기 완료 ('+rows.length+'건)','ok');
 }
 function exportLogCSV(){
