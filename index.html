@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.00</title>
+<title>하네스 공정관리 v7.05</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -474,6 +474,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .ms-out{border:1.5px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;
     border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
   .ms-ver{margin-left:auto;font-size:11px;color:var(--tx3);font-family:var(--mono)}
+  .eta-q{border:1px solid var(--border);background:#fff;color:var(--tx2);padding:6px 12px;
+    border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+  .eta-q:active{background:var(--bg2)}
   /* 하단 탭이 4개가 되었으므로 본문 아래 여백을 넉넉히 */
   .app{padding-bottom:62px}
   /* ── 관리 화면을 폰에서도 볼 수 있게 ── */
@@ -593,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.00</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.05</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -698,6 +701,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div class="sn-head" id="nav-issuegrp"><span class="sn-ic">📐</span> 도면 출도</div>
         <button class="sn-item sn-sub" id="nav-wo-axcelis" onclick="WOC.go('axcelis')">AXCELIS</button>
         <button class="sn-item sn-sub" id="nav-wo-edwards" onclick="WOC.go('edwards')">EDWARDS</button>
+        <button class="sn-item sn-sub" id="nav-wo-dwgonly" onclick="WOC.go('dwgonly')">도면만 출력</button>
         <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
       </div>
 
@@ -711,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.00 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.05 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -845,7 +849,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다.
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px;
+          <div id="wo-grp-box" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px;
                       background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px">
             <span style="font-size:12.5px;font-weight:700;color:var(--tx2)">등록 방식</span>
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--tx2)">
@@ -874,6 +878,36 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           </div>
 
           <div id="wo-copies" style="margin-top:14px"></div>
+
+          <!-- 도면만 출력 -->
+          <div id="wo-dwgonly-box" style="display:none">
+            <div style="font-size:12.5px;color:var(--tx3);margin-bottom:9px;line-height:1.6">
+              뽑을 <b>도면번호를 붙여넣고</b> 도면 폴더를 고르면, 그 목록만 찾아서 뽑습니다.
+              PO 를 등록하지 않아도 됩니다.
+            </div>
+
+            <div style="font-size:13px;font-weight:800;color:var(--tx);margin-bottom:5px">① 도면번호 붙여넣기</div>
+            <textarea id="wo-do-paste" rows="5" oninput="clearTimeout(window.__doT);window.__doT=setTimeout(WOC.doPreview,250)"
+              placeholder="엑셀에서 도면번호를 복사해 붙여넣으세요 (REV 가 있으면 함께)&#10;&#10;160021769&#9;D&#10;160021664&#9;B"
+              style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;font-family:var(--mono);line-height:1.7;resize:vertical"></textarea>
+            <div style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6">
+              한 줄에 하나씩. REV 는 있어도 되고 없어도 됩니다. 비워 두면 <b>폴더 전체</b>를 뽑습니다.
+            </div>
+            <div id="wo-do-prev" style="margin-top:10px"></div>
+
+            <div style="font-size:13px;font-weight:800;color:var(--tx);margin:16px 0 5px">② 도면 폴더 고르기</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-pr" onclick="document.getElementById('wo-do-folder').click()">📁 도면 폴더 선택</button>
+              <input type="file" id="wo-do-folder" webkitdirectory directory multiple style="display:none" onchange="WOC.pickDwgOnly(this)">
+            </div>
+            <div id="wo-path-do"></div>
+            <div id="wo-dwgonly-info" style="margin-top:11px"></div>
+
+            <div style="margin-top:12px;background:var(--blue-lt);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:9px 12px;font-size:12px;color:var(--tx2);line-height:1.7">
+              머릿말에 쓸 수 있는 항목은 <b>{도번} · {REV} · {페이지} · {전체}</b> 입니다.
+              PO·수량·납기는 등록된 수주가 없어 비어 있습니다.
+            </div>
+          </div>
 
           <!-- 작업지시서 폴더 -->
           <div id="wo-wofolder-box" style="margin-top:16px;padding-top:14px;border-top:1px solid #eceff5">
@@ -1560,6 +1594,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">납기</th>
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">출하 목표</th>
           <th style="padding:9px 10px;text-align:right;font-weight:700;color:var(--tx2);line-height:1.25">지연</th>
+          <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">완료 예상</th>
           <th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--tx2);line-height:1.25">내용</th>
         </tr>
       </thead>
@@ -1618,6 +1653,35 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 </div>
 
 <!-- 로그인 직후 알람 -->
+<div id="eta-ovl" class="hidden" style="position:fixed;inset:0;z-index:4700;background:rgba(15,28,54,.5);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;max-width:440px;width:100%;box-shadow:var(--sh2);overflow:hidden">
+    <div style="padding:16px 20px 13px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:15px;font-weight:800;color:var(--tx)">제작 완료 예상일</div>
+        <button onclick="ETA.close()" style="margin-left:auto;border:none;background:var(--bg2);color:var(--tx2);width:30px;height:30px;border-radius:50%;font-size:15px;cursor:pointer">✕</button>
+      </div>
+      <div id="eta-sub" style="font-size:12px;color:var(--tx3);margin-top:3px;font-family:var(--mono)"></div>
+    </div>
+    <div style="padding:16px 20px">
+      <div id="eta-now"></div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin:14px 0 6px">새 예상일</div>
+      <input type="date" id="eta-input" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;font-family:var(--sans)">
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="ETA.add(7)"  class="eta-q">+1주</button>
+        <button onclick="ETA.add(14)" class="eta-q">+2주</button>
+        <button onclick="ETA.add(30)" class="eta-q">+1달</button>
+        <button onclick="ETA.today()" class="eta-q">오늘</button>
+      </div>
+      <div id="eta-log" style="margin-top:14px"></div>
+    </div>
+    <div style="display:flex;gap:8px;padding:13px 20px;border-top:1px solid var(--border);background:var(--bg2)">
+      <button onclick="ETA.clear()" id="eta-del" style="border:1px solid #fecaca;background:#fef2f2;color:var(--red);padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">지우기</button>
+      <button onclick="ETA.close()" style="margin-left:auto;border:1px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">취소</button>
+      <button onclick="ETA.save()" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">저장</button>
+    </div>
+  </div>
+</div>
+
 <div id="wo-prog" class="hidden" style="position:fixed;inset:0;z-index:4600;background:rgba(15,28,54,.55);display:flex;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:24px 26px;box-shadow:var(--sh2)">
     <div id="wo-prog-t" style="font-size:15px;font-weight:800;color:var(--tx)">만드는 중</div>
@@ -2273,7 +2337,8 @@ function hsOrderRow(o){
           alarm_cleared_at:o.alarm_cleared_at||null,alarm_cleared_by:o.alarm_cleared_by||null,
           field_reg:o.field_reg||false,field_reg_at:o.field_reg_at||null,field_reg_by:o.field_reg_by||null,
           item_name:o.item_name||null,release_date:o.release_date||null,ccn:o.ccn||null,
-          created_by:o.created_by||null,created_by_email:o.created_by_email||null,created_via:o.created_via||null};
+          created_by:o.created_by||null,created_by_email:o.created_by_email||null,created_via:o.created_via||null,
+          eta:o.eta||null,eta_by:o.eta_by||null,eta_at:o.eta_at||null};
 }
 function hsLogRow(l){
   return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -2396,12 +2461,15 @@ var WOC={
   MODE:{
     harness:{name:'하네스 공통', how:'xls',   desc:'하네스 등록 양식 엑셀로 수주를 등록한 뒤, 작업지시서 폴더를 고르면 파일명으로 맞춰 QR을 넣습니다.'},
     axcelis:{name:'AXCELIS', how:'both',  desc:'AXCELIS PO 를 엑셀로 올리거나 그대로 붙여넣습니다. 머리글을 보고 열을 알아서 잡습니다.'},
-    edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'}
+    edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'},
+    // 단순 도면 출력 — PO 등록도 매칭도 없이 폴더만 고른다
+    dwgonly:{name:'도면만 출력', how:'none', desc:'PO 없이 도면만 뽑습니다. 폴더를 고르면 머릿말·꼬리말만 넣어 A4 로 맞춰 출력합니다. QR 은 넣지 않습니다.'}
   },
   go:function(k){
     WOC.cust=k||'harness';
     try{ localStorage.setItem('hs_wo_cust',WOC.cust); }catch(e){}
     WOC.loaded=null; WOC.dupList=null; WOC._dupOpen=false; WOC.ocrIndex=null; WOC.dwgIndex=null;
+    WOC.dwgOnlyIdx=null; WOC.doMiss=null;
     var _c=WO_ctx(); if(_c)_c.files=[];
     setPage('workorder');
     WOC.paint();
@@ -2419,23 +2487,37 @@ var WOC={
     if(WO.previewHF)WO.previewHF();
     var nm=document.getElementById('wo-cust-name'); if(nm)nm.textContent=m.name;
     var de=document.getElementById('wo-cust-desc'); if(de)de.textContent=m.desc;
-    var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(m.how==='paste'||m.how==='both')?'':'none';
-    var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(m.how==='xls'||m.how==='both')?'':'none';
+    var only=(WOC.cust==='dwgonly');
+    var pb=document.getElementById('wo-paste-box'); if(pb)pb.style.display=(!only&&(m.how==='paste'||m.how==='both'))?'':'none';
+    var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(!only&&(m.how==='xls'||m.how==='both'))?'':'none';
+    // 도면만 출력이면 수주 등록·폴더 맞추기 칸을 감춘다
+    var db=document.getElementById('wo-dwgonly-box'); if(db)db.style.display=only?'':'none';
+    ['wo-po-info','wo-dup-info','wo-copies','wo-wofolder-box','wo-folder-box',
+     'wo-need-po','wo-path-ocr','wo-path-dwg','wo-grp-box']
+      .forEach(function(id){ var e=document.getElementById(id); if(e&&only)e.style.display='none'; });
+    var cf=document.getElementById('wo-c-form'); if(cf)cf.style.display=only?'none':'grid';
+    // 1번 카드의 제목도 바꾼다
+    var ct=document.getElementById('wo-cust-title');
+    if(ct)ct.textContent=only?'1. 도면 고르기':'1. 수주 등록';
+    if(only){ WOC.doPreview(); WOC.paintDwgOnly(); }
     // 하네스는 수주 등록·폴더 없이 작업지시서만 올린다 (예전 방식 그대로)
-    var ff=document.getElementById('wo-c-form'); if(ff)ff.style.display='grid';   // '' 로 두면 인라인 grid 가 지워져 block 이 된다
+    var ff=document.getElementById('wo-c-form'); if(ff)ff.style.display=only?'none':'grid';   // '' 로 두면 인라인 grid 가 지워져 block 이 된다
     var t1=document.getElementById('wo-cust-title');
-    if(t1)t1.textContent='1. 수주 등록';
+    if(t1)t1.textContent=only?'1. 도면 고르기':'1. 수주 등록';
     // 화면 제목도 바꾼다
     var pt=document.getElementById('wo-page-t'), pd=document.getElementById('wo-page-d');
     var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
-    if(pt)pt.textContent=(WOC.cust==='harness')?'작업지시서 QR 삽입':'도면 출도 — '+m.name;
-    if(pd)pd.textContent=rec.dwg
-      ? 'PO를 등록하고 OCR 폴더·도면 폴더를 고르면, 공정 QR을 넣은 작업지시서 1부와 도면 '+rec.dwg+'부를 묶어 뽑습니다.'
-      : 'PO를 등록하고 OCR 폴더를 고르면, 도면번호로 맞춰 공정 QR을 넣어 뽑습니다.';
+    if(pt)pt.textContent=(WOC.cust==='harness')?'작업지시서 QR 삽입'
+        :(WOC.cust==='dwgonly'?'도면만 출력':'도면 출도 — '+m.name);
+    if(pd)pd.textContent=(WOC.cust==='dwgonly')
+      ? 'PO 없이 도면만 뽑습니다. 폴더나 파일을 고르면 머릿말·꼬리말만 넣어 A4 로 맞춰 출력합니다. QR 은 넣지 않습니다.'
+      : (rec.dwg
+        ? 'PO를 등록하고 OCR 폴더·도면 폴더를 고르면, 공정 QR을 넣은 작업지시서 '+rec.wo+'부와 도면 '+rec.dwg+'부를 묶어 뽑습니다.'
+        : 'PO를 등록하고 OCR 폴더를 고르면, 도면번호로 맞춰 공정 QR을 넣어 뽑습니다.');
     // 출력 구성에 따라 도면 폴더 칸을 보인다
     var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
     var fb=document.getElementById('wo-folder-box');
-    if(fb)fb.style.display=rec.dwg?'':'none';
+    if(fb)fb.style.display=(rec.dwg&&!only)?'':'none';
     var fd=document.getElementById('wo-folder-desc');
     if(fd)fd.innerHTML=rec.dwg
       ? '도면번호로 도면을 찾아 <b>작업지시서 1부 + 도면 '+rec.dwg+'부</b> 로 이어서 뽑습니다. QR 은 작업지시서에만 들어갑니다.'
@@ -2752,6 +2834,7 @@ var WOC={
 // ════════════════════════════════════════
 // 기본 부수. 화면에서 바꾸면 고객사별로 저장된다.
 WOC.RECIPE_DEFAULT={
+  dwgonly:{wo:0, dwg:1, cover:false},
   harness:{wo:1, dwg:0, cover:false},
   axcelis:{wo:1, dwg:1, cover:false},
   edwards:{wo:1, dwg:1, cover:true }
@@ -2896,6 +2979,129 @@ WOC.buildTargets=function(){
 };
 WOC.dwgFolder='';
 WOC.dwgCount=0;
+
+// ── 도면만 출력 ──
+//   도면번호 목록을 붙여넣고 폴더를 고르면 그 목록만 찾아 뽑는다.
+//   PO 등록도 QR 도 없다.
+WOC.doList=function(){
+  var txt=((document.getElementById('wo-do-paste')||{}).value||'');
+  var out=[], bad=[];
+  txt.split(/\r?\n/).forEach(function(ln){
+    var s=ln.replace(/\u00a0/g,' ').trim();
+    if(!s)return;
+    var c=(s.indexOf('\t')>=0?s.split('\t'):s.split(/\s+/)).map(function(x){return x.trim();}).filter(Boolean);
+    var d=String(c[0]||'').replace(/\.pdf$/i,'').replace(/\.0$/,'');
+    if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(d)){ bad.push(s.slice(0,40)); return; }
+    // '160021769_D' 처럼 한 칸에 붙어 온 것
+    var rev=String(c[1]||'').trim().toUpperCase();
+    var m=DQ_FNAME.exec(d);
+    if(m){ d=m[1]; if(!rev)rev=m[2].toUpperCase(); }
+    out.push({dwg:d, rev:rev});
+  });
+  return {rows:out, bad:bad};
+};
+WOC.doPreview=function(){
+  var el=document.getElementById('wo-do-prev'); if(!el)return;
+  var r=WOC.doList();
+  if(!r.rows.length){
+    el.innerHTML=r.bad.length
+      ? '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:10px 13px;font-size:12.5px;color:var(--red)">읽을 수 있는 도면번호가 없습니다</div>'
+      : '<div style="font-size:12px;color:var(--tx3)">비워 두면 폴더 안의 PDF 를 모두 뽑습니다.</div>';
+    if(WOC.dwgOnlyIdx)WOC.matchDwgOnly();
+    return;
+  }
+  el.innerHTML='<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--blue-lt);'
+      +'border:1px solid #bfdbfe;border-radius:var(--r);padding:9px 12px">'
+    +'<b style="font-size:12.5px;color:var(--blue)">'+r.rows.length+'장</b>'
+    +'<span style="font-size:11.5px;color:var(--tx3)">'
+      +r.rows.slice(0,6).map(function(x){return hEsc(x.dwg)+(x.rev?' '+hEsc(x.rev):'');}).join(' · ')
+      +(r.rows.length>6?' 외 '+(r.rows.length-6):'')+'</span>'
+    +(r.bad.length?'<span style="font-size:11.5px;color:var(--amber);margin-left:auto">못 읽은 줄 '+r.bad.length+'</span>':'')
+  +'</div>';
+  if(WOC.dwgOnlyIdx)WOC.matchDwgOnly();
+};
+
+WOC.pickDwgOnly=function(input){
+  var all=Array.prototype.slice.call(input.files||[]);
+  input.value='';
+  var pdfs=all.filter(function(f){ return /\.pdf$/i.test(f.name)&&!/^~\$/.test(f.name); });
+  if(!pdfs.length){ toast('폴더에 PDF 가 없습니다','warn'); return; }
+  var idx={};
+  pdfs.forEach(function(f){
+    var stem=f.name.replace(/\.pdf$/i,'').trim();
+    var m=DQ_FNAME.exec(stem);
+    var key=m?m[1]:stem.split('_')[0];
+    (idx[key]=idx[key]||[]).push({file:f, name:f.name, stem:stem,
+      rev:m?m[2].toUpperCase():'', ed:m?parseInt(m[3]||'0',10):0});
+  });
+  WOC.dwgOnlyIdx=idx; WOC.dwgOnlyCount=pdfs.length;
+  WOC.dwgOnlyFolder=(all[0].webkitRelativePath||'').split('/')[0]||'(폴더)';
+  WOC.matchDwgOnly();
+  toast('도면 폴더 읽음 — PDF '+pdfs.length+'개 · 도번 '+Object.keys(idx).length+'종','ok');
+};
+
+// 붙여넣은 목록과 폴더를 맞춘다
+WOC.matchDwgOnly=function(){
+  var self=WO_ctx();
+  var idx=WOC.dwgOnlyIdx; if(!idx)return;
+  var want=WOC.doList().rows;
+  var files=[], miss=[];
+  var pick=function(cands, rev){
+    if(!cands||!cands.length)return null;
+    if(rev){ var same=cands.filter(function(c){return c.rev===rev;});
+      if(same.length)return same.sort(function(a,b){return b.ed-a.ed;})[0]; }
+    // REV 를 안 적었거나 그 REV 가 없으면 가장 최신판
+    return cands.slice().sort(function(a,b){
+      if(a.rev!==b.rev)return revRank(b.rev)-revRank(a.rev);
+      return b.ed-a.ed;
+    })[0];
+  };
+  if(want.length){
+    want.forEach(function(w){
+      var hit=pick(idx[w.dwg], w.rev);
+      if(hit)files.push({name:hit.name, dwg:w.dwg+(hit.rev?' '+hit.rev:''), file:hit.file,
+                         status:'ok', sel:true, order:{dwg_no:w.dwg, rev:hit.rev||w.rev, id:'do_'+hit.stem}});
+      else miss.push(w.dwg+(w.rev?' '+w.rev:''));
+    });
+  }else{
+    // 목록이 비면 폴더 전체
+    Object.keys(idx).sort().forEach(function(k){
+      idx[k].forEach(function(c){
+        files.push({name:c.name, dwg:k+(c.rev?' '+c.rev:''), file:c.file,
+                    status:'ok', sel:true, order:{dwg_no:k, rev:c.rev, id:'do_'+c.stem}});
+      });
+    });
+  }
+  self.files=files; WOC.doMiss=miss;
+  self.render(); WOC.paintDwgOnly();
+};
+
+WOC.paintDwgOnly=function(){
+  var el=document.getElementById('wo-dwgonly-info'); if(!el)return;
+  if(!WOC.dwgOnlyIdx){ el.innerHTML='<div style="font-size:12px;color:var(--tx3)">아직 폴더를 고르지 않았습니다.</div>'; return; }
+  var n=(WO_ctx().files||[]).length, ms=(WOC.doMiss||[]).length;
+  var card=function(lab,val,note,tone){
+    var c={blue:['var(--blue-lt)','#bfdbfe','var(--blue)'],red:['#fef2f2','#fecaca','var(--red)']}[tone]
+          ||['var(--bg2)','var(--border)','var(--tx)'];
+    return '<div style="flex:1;min-width:110px;background:'+c[0]+';border:1px solid '+c[1]+';border-radius:10px;padding:11px 13px">'
+      +'<div style="font-size:11.5px;color:var(--tx3)">'+lab+'</div>'
+      +'<div style="font-size:21px;font-weight:800;margin-top:1px;color:'+c[2]+'">'+val+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3);margin-top:1px">'+note+'</div></div>';
+  };
+  el.innerHTML='<div style="display:flex;gap:9px;flex-wrap:wrap">'
+    +card('폴더 PDF',WOC.dwgOnlyCount,hEsc(WOC.dwgOnlyFolder||''),'')
+    +card('뽑을 장수',n,'','blue')
+    +(ms?card('없는 도면',ms,'폴더에 없습니다','red'):'')
+  +'</div>'
+  +(ms?'<div style="margin-top:9px;border:1px solid #fecaca;border-radius:var(--r);overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:9px;padding:9px 13px;background:#fef2f2">'
+        +'<b style="font-size:12.5px;color:var(--red)">폴더에 없는 도면 '+ms+'</b>'
+        +'<button onclick="navigator.clipboard.writeText((WOC.doMiss||[]).join(String.fromCharCode(10)));toast(\'목록을 복사했습니다\',\'ok\')" '
+        +'style="margin-left:auto;padding:5px 11px;border-radius:7px;border:1.5px solid var(--purple);background:var(--purple-lt);color:var(--purple);font-size:11.5px;font-weight:700;cursor:pointer">📋 목록 복사</button></div>'
+      +'<div style="max-height:150px;overflow-y:auto;background:#fff">'
+      +(WOC.doMiss||[]).map(function(x){return '<div style="padding:6px 13px;border-top:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--tx2)">'+hEsc(x)+'</div>';}).join('')
+      +'</div></div>':'');
+};
 
 // 도면 폴더 고르기 — 도면 QR 에서 쓰던 것을 그대로 쓴다
 WOC.pickFolder=function(input){
@@ -3157,9 +3363,22 @@ WOC.buildOneSet=async function(t, pgFrom, pgTotal){
   var self=WO_ctx();
   var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
   var out=[];
+  // 도면만 출력 — 고른 파일 그대로 머릿말만 넣는다
+  if(WOC.cust==='dwgonly'){
+    var _h=DQ.header, _f=DQ.footer;
+    DQ.header=self.header; DQ.footer=self.footer;
+    try{
+      var one=await DQ.buildOne({file:t.file, order:t.order||{}},
+              {noQr:true, pgFrom:pgFrom, pgTotal:pgTotal});
+      for(var d0=0;d0<(rec.dwg||1);d0++)out.push(one);
+    } finally { DQ.header=_h; DQ.footer=_f; }
+    return out;
+  }
   // ① 작업지시서 — QR 을 넣는다
-  var woPdf=await self.buildOne(t,{pgFrom:pgFrom, pgTotal:pgTotal});
-  for(var w=0;w<(rec.wo||1);w++)out.push(woPdf);
+  if(rec.wo>0){
+    var woPdf=await self.buildOne(t,{pgFrom:pgFrom, pgTotal:pgTotal});
+    for(var w=0;w<rec.wo;w++)out.push(woPdf);
+  }
   // ② 도면 — QR 을 넣지 않는다. A4 로 맞추고 회전만 바로 세운다.
   if(rec.dwg&&t.order){
     var hit=WOC.findDwg(t.order);
@@ -3592,6 +3811,7 @@ function almBizBetween(fromISO,toISO){           // from 다음날부터 to 까�
 //   한 건이 여러 이슈에 걸릴 수 있다. 가장 급한 것부터 보여 준다.
 var ALM_KINDS={
   overdue:{label:'납기 지남', color:'#dc2626', bg:'#fef2f2', bd:'#fecaca', rank:1},
+  etaover:{label:'예상일도 지남', color:'#9f1239', bg:'#fff1f2', bd:'#fecdd3', rank:2},
   target :{label:'출하준비 늦음', color:'#b45309', bg:'#fffbeb', bd:'#fde68a', rank:2},
   stuck  :{label:'공정 정체', color:'#7c3aed', bg:'#f5f3ff', bd:'#ddd6fe', rank:3},
   stopped:{label:'작업중단', color:'#be123c', bg:'#fff1f2', bd:'#fecdd3', rank:4},
@@ -3614,6 +3834,13 @@ function almIssues(){
       if(due<today){
         kinds.push({kind:'overdue', days:almBizBetween(due,today),
                     msg:'납기 '+fmtYYMMDD(due)+' 에서 '+almBizBetween(due,today)+'영업일 지남'});
+        // 예상 완료일까지 지난 건 (납기 지남은 그대로 둔다)
+        var _e=normDueToISO(o.eta);
+        if(_e&&_e<today){
+          kinds.push({kind:'etaover', days:almBizBetween(_e,today),
+                      msg:'예상 '+fmtYYMMDD(_e)+' 도 '+almBizBetween(_e,today)+'영업일 지남'
+                          +(o.eta_by?' ('+o.eta_by+')':'')});
+        }
       }else{
         var target=almShift(due,-ALM.leadDays);
         if(target&&target<=today){
@@ -3725,7 +3952,7 @@ var ALMUI={
     setTimeout(function(){ makeResizable(document.getElementById('alm-table'),'issue'); },0);
 
     if(!rows.length){
-      body.innerHTML='<tr><td colspan="10" style="padding:36px;text-align:center;color:var(--tx3)">'
+      body.innerHTML='<tr><td colspan="11" style="padding:36px;text-align:center;color:var(--tx3)">'
         +(all.length?'이 종류의 이슈는 없습니다':'<span style="font-size:30px">✅</span><br><br>이슈가 없습니다')+'</td></tr>';
       return;
     }
@@ -3798,6 +4025,23 @@ var ALMUI={
         +'<td style="padding:9px 12px;font-family:var(--mono);color:var(--tx3);white-space:nowrap">'+(target||'—')+'</td>'
         +'<td style="padding:9px 12px;font-family:var(--mono);text-align:right;white-space:nowrap;color:'+d.color+';font-weight:800">'
           +(x.top.days?x.top.days+'일':'—')+'</td>'
+        // 제작 완료 예상일 — 지연 건이 모인 곳이라 여기서 적는다
+        +'<td style="padding:9px 10px;white-space:nowrap">'+(function(){
+            var _can=(typeof AUTH==='undefined'||AUTH.isAdmin());
+            var e=normDueToISO(o.eta);
+            var today=new Date().toISOString().slice(0,10);
+            if(!e)return _can
+              ? '<button onclick="editETA(\''+o.id+'\')" style="border:1px dashed var(--border);background:transparent;'
+                +'color:var(--tx3);padding:3px 10px;border-radius:7px;font-size:11px;cursor:pointer;font-family:var(--sans)">적기</button>'
+              : '<span style="color:var(--tx3)">—</span>';
+            var late=e<today;
+            return '<span '+(_can?'onclick="editETA(\''+o.id+'\')" style="cursor:pointer;':'style="')
+              +'display:inline-block;font-family:var(--mono);font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:7px;'
+              +(late?'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3'
+                    :'background:var(--bg2);color:var(--tx2);border:1px solid var(--border)')+'">'
+              +e+'</span>'
+              +(o.eta_by?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">'+hEsc(o.eta_by)+'</div>':'');
+          })()+'</td>'
         +'<td style="padding:9px 10px;color:var(--tx3);line-height:1.6;font-size:11.5px">'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</td>'
       +'</tr>';
     }).join('');
@@ -3808,12 +4052,13 @@ var ALMUI={
     if(!rows.length){ toast('내보낼 이슈가 없습니다','warn'); return; }
     if(!needLib('XLSX'))return;
     loadXLSX(function(){
-      var aoa=[['종류','도면번호','Rev','PO','오더라인','납품라인','고객사','프로젝트','호기','다음 공정','납기','출하 목표','지연(영업일)','내용']];
+      var aoa=[['종류','도면번호','Rev','PO','오더라인','납품라인','고객사','프로젝트','호기','다음 공정','납기','출하 목표','지연(영업일)','완료 예상','예상 적은이','내용']];
       rows.forEach(function(x){
         var o=x.order;
         aoa.push([x.kinds.map(function(k){return ALM_KINDS[k.kind].label;}).join(','),
           o.dwg_no||'',o.rev||'',o.po||'',o.ord_ln||'',o.del_ln||'',o.customer||'',o.project||'',o.unit||'',x.step||'',
           x.due||'',x.due?almShift(x.due,-ALM.leadDays):'',x.top.days||0,
+          normDueToISO(o.eta)||'', o.eta_by||'',
           x.kinds.map(function(k){return k.msg;}).join(' · ')]);
       });
       var ws=XLSX.utils.aoa_to_sheet(aoa);
@@ -4087,6 +4332,7 @@ var MOB={
     {k:'workorder',ic:'\ud83d\udcc4', t:'\uc791\uc5c5\uc9c0\uc2dc\uc11c QR', act:"WOC.go('harness')", pcOnly:true},
     {k:'wo-axcelis',ic:'\ud83d\udcd0', t:'\ub3c4\uba74 \ucd9c\ub3c4 \u2014 AXCELIS', act:"WOC.go('axcelis')", pcOnly:true},
     {k:'wo-edwards',ic:'\ud83d\udcd0', t:'\ub3c4\uba74 \ucd9c\ub3c4 \u2014 EDWARDS', act:"WOC.go('edwards')", pcOnly:true},
+    {k:'wo-dwgonly',ic:'\ud83d\udcc4', t:'\ub3c4\uba74\ub9cc \ucd9c\ub825', act:"WOC.go('dwgonly')", pcOnly:true},
     {g:'\uad00\ub9ac'},
     {k:'analytics',ic:'\ud83d\udcc8', t:'\ubd84\uc11d', act:"setPage('analytics')"},
     {k:'users',    ic:'\ud83d\udc65', t:'\uc0ac\uc6a9\uc790 \uad00\ub9ac', act:"setPage('users')"},
@@ -4240,6 +4486,109 @@ var _spView='due';
 function toggleSpView(){_spView=_spView==='due'?'cust':'due';var b=document.getElementById('sp-cust-btn');if(b)b.classList.toggle('on',_spView==='cust');renderStatus();}
 // 프로젝트 묶음 이름. 비어 있으면 (미지정)
 function _projKey(o){ return (o.project||'').trim()||'(미지정)'; }
+
+// ── 제작 완료 예상일 ──
+//   납기는 고객과 약속한 날이라 고치지 않는다. 언제쯤 될지를 따로 적는다.
+//   바꾼 내역을 모두 남겨 어디서 밀렸는지 볼 수 있게 한다.
+var ETA={
+  id:null, o:null,
+  open:async function(id){
+    if(typeof AUTH!=='undefined'&&!AUTH.isAdmin()){ toast('관리자만 적을 수 있습니다','warn'); return; }
+    var o=HS.orders.find(function(x){return x.id===id;});
+    if(!o){ toast('건을 찾을 수 없습니다','warn'); return; }
+    ETA.id=id; ETA.o=o;
+    var due=normDueToISO(o.due)||'', cur=normDueToISO(o.eta)||'';
+    var g=function(k){return document.getElementById(k);};
+    g('eta-sub').textContent=(o.dwg_no||'')+(o.rev?' '+o.rev:'')
+      +(o.po?'  ·  '+o.po:'')+((o.ord_ln||o.del_ln)?'  '+(o.ord_ln||'-')+'/'+(o.del_ln||'-'):'');
+    var today=new Date().toISOString().slice(0,10);
+    var late=due&&due<today&&!isOrderDone(o);
+    var dd=due?Math.floor((new Date(today)-new Date(due))/86400000):0;
+    g('eta-now').innerHTML=
+      '<div style="display:flex;gap:9px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:130px;background:'+(late?'#fef2f2':'var(--bg2)')+';border:1px solid '+(late?'#fecaca':'var(--border)')+';border-radius:9px;padding:10px 13px">'
+        +'<div style="font-size:11px;color:var(--tx3)">납기 (고객 약속)</div>'
+        +'<div style="font-size:15px;font-weight:800;font-family:var(--mono);margin-top:2px;color:'+(late?'var(--red)':'var(--tx)')+'">'+(due||'—')+'</div>'
+        +(late?'<div style="font-size:10.5px;color:var(--red);font-weight:700">'+dd+'일 지남</div>':'')
+      +'</div>'
+      +(cur?'<div style="flex:1;min-width:130px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px 13px">'
+        +'<div style="font-size:11px;color:var(--tx3)">지금 예상</div>'
+        +'<div style="font-size:15px;font-weight:800;font-family:var(--mono);margin-top:2px;color:var(--tx)">'+cur+'</div>'
+        +(o.eta_by?'<div style="font-size:10.5px;color:var(--tx3)">'+hEsc(o.eta_by)+'</div>':'')
+      +'</div>':'')
+      +'</div>';
+    g('eta-input').value=cur||due||'';
+    g('eta-del').style.display=cur?'':'none';
+    g('eta-log').innerHTML='<div style="font-size:11.5px;color:var(--tx3)">지난 기록을 불러오는 중…</div>';
+    g('eta-ovl').classList.remove('hidden');
+    // 지난 기록
+    var sb=getSB();
+    if(!sb){ g('eta-log').innerHTML=''; return; }
+    try{
+      var r=await sb.from('harness_eta_log').select('*').eq('order_id',id)
+              .order('changed_at',{ascending:false}).limit(10);
+      var L=(r&&r.data)||[];
+      g('eta-log').innerHTML=L.length
+        ? '<div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-bottom:6px">지난 기록 '+L.length+'</div>'
+          +'<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;max-height:150px;overflow-y:auto">'
+          +L.map(function(x,k){
+            var d=new Date(x.changed_at);
+            var dt=('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+            return '<div style="display:flex;align-items:center;gap:8px;padding:7px 11px;font-size:11.5px;'
+              +(k?'border-top:1px solid var(--border);':'')+'">'
+              +'<span style="color:var(--tx3);font-family:var(--mono)">'+dt+'</span>'
+              +'<span style="color:var(--tx2)">'+hEsc(x.changed_by||'')+'</span>'
+              +'<span style="margin-left:auto;font-family:var(--mono);color:var(--tx3)">'+(x.eta_before||'—')+'</span>'
+              +'<span style="color:var(--tx3)">→</span>'
+              +'<span style="font-family:var(--mono);font-weight:700;color:var(--tx)">'+(x.eta_after||'지움')+'</span>'
+            +'</div>';
+          }).join('')+'</div>'
+        : '<div style="font-size:11.5px;color:var(--tx3)">아직 바꾼 기록이 없습니다.</div>';
+    }catch(e){ g('eta-log').innerHTML=''; }
+  },
+  close:function(){ var e=document.getElementById('eta-ovl'); if(e)e.classList.add('hidden'); ETA.id=null; },
+  add:function(n){
+    var el=document.getElementById('eta-input');
+    var base=el.value||new Date().toISOString().slice(0,10);
+    var d=new Date(base+'T00:00:00'); if(isNaN(d))d=new Date();
+    d.setDate(d.getDate()+n);
+    el.value=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  },
+  today:function(){ document.getElementById('eta-input').value=new Date().toISOString().slice(0,10); },
+  clear:function(){ document.getElementById('eta-input').value=''; ETA.save(); },
+  save:async function(){
+    var o=ETA.o; if(!o)return;
+    var iso=(document.getElementById('eta-input')||{}).value||'';
+    var cur=normDueToISO(o.eta)||'';
+    if(iso&&!/^\d{4}-\d{2}-\d{2}$/.test(iso)){ toast('날짜를 골라 주세요','err'); return; }
+    if(iso===cur){ ETA.close(); return; }
+    var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
+    var now=new Date().toISOString();
+    var sb=getSB();
+    if(sb){
+      try{
+        var r=await sb.from('harness_eta_log').insert({
+          order_id:o.id, dwg_no:o.dwg_no||null, po:o.po||null,
+          ord_ln:o.ord_ln||null, del_ln:o.del_ln||null, due:normDueToISO(o.due)||null,
+          eta_before:cur||null, eta_after:iso||null, changed_by:who});
+        if(r&&r.error)console.warn('eta log',r.error);
+      }catch(e){ console.warn('eta log',e); }
+    }
+    o.eta=iso||null; o.eta_by=iso?who:null; o.eta_at=iso?now:null;
+    hsSaveOrders([o]);
+    ETA.close();
+    _almCache=null; renderStatus();
+    toast(iso?('예상 완료일 '+iso):'예상 완료일을 지웠습니다','ok');
+  }
+};
+function editETA(id){ ETA.open(id); }
+
+// 예상일이 지났는지
+function etaLate(o){
+  var e=normDueToISO(o&&o.eta); if(!e)return false;
+  if(isOrderDone(o))return false;
+  return e < new Date().toISOString().slice(0,10);
+}
 // 프로젝트 묶음 전체 선택
 function toggleProjSel(el){
   var pk=el.getAttribute('data-pk');
@@ -4564,6 +4913,21 @@ function _renderStatusInner(){
           else dueBadge='<span style="font-size:11px;color:var(--tx2);font-weight:600">납기 '+lbl+'</span>';
         } else dueBadge='<span style="font-size:11px;color:var(--tx2);font-weight:600">납기 '+lbl+'</span>';
       }
+      // 제작 완료 예상일 — 납기 아래에 작게. 눌러서 적는다.
+      var _canEta=(typeof AUTH==='undefined'||AUTH.isAdmin());
+      var _eta=normDueToISO(o.eta);
+      if(!done){
+        var _lateE=_eta&&_eta<new Date().toISOString().slice(0,10);
+        dueBadge+='<div style="margin-top:3px">'
+          +(_eta
+            ? '<span '+(_canEta?'onclick="event.stopPropagation();editETA(\''+o.id+'\')" style="cursor:pointer;':'style="')
+              +'font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:20px;'
+              +(_lateE?'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3'
+                      :'background:var(--bg2);color:var(--tx2);border:1px solid var(--border)')+'" '
+              +'title="'+(o.eta_by?hEsc(o.eta_by)+' 적음':'')+'">예상 '+fmtYYMMDD(_eta)+'</span>'
+            : '')
+        +'</div>';
+      }
       var meta=[];
       if(!isWk&&o.po)meta.push(o.po);
       if(o.unit)meta.push(o.unit+'호기');
@@ -4672,6 +5036,20 @@ function _renderStatusInner(){
             if(dd<=3)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:var(--amber-lt);border:1px solid #fde68a;color:var(--amber);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">D-'+dd+'</span></span>';
           }
           return '<span style="color:var(--tx2)">'+lbl+'</span>';
+        })()
+        // 제작 완료 예상일 — 납기 아래. 눌러서 적는다.
+        +(function(){
+          if(done)return '';
+          var _can=(typeof AUTH==='undefined'||AUTH.isAdmin());
+          var e=normDueToISO(o.eta);
+          if(!e)return '';   // 적힌 것만 보여 준다. 없는 행까지 나오면 목록이 지저분해진다
+          var lateE=e<new Date().toISOString().slice(0,10);
+          return '<div style="margin-top:3px"><span '
+            +(_can?'onclick="event.stopPropagation();editETA(\''+o.id+'\')" style="cursor:pointer;':'style="')
+            +'font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;'
+            +(lateE?'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3'
+                   :'background:var(--bg2);color:var(--tx2);border:1px solid var(--border)')+'" '
+            +'title="'+(o.eta_by?hEsc(o.eta_by)+' 적음':'')+'">예상 '+fmtYYMMDD(e)+'</span></div>';
         })()
       +'</td>'
       +'<td><div style="display:flex;align-items:center;gap:7px">'+typeBadge
@@ -5884,8 +6262,13 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.00';
+var APP_VER='v7.05';
 var VER_LOG=[
+  {v:'v7.05',d:'2026-09', t:'[예상일 자리 정리] 공정현황에는 적혀 있는 건만 보여 줍니다. 모든 행에 [예상일] 이 붙어 목록이 지저분하던 것을 없앴습니다. 적는 것은 공정 이슈의 [완료 예상] 칸에서 합니다 — 지연 건이 모여 있는 곳이라 거기서 한 번에 처리할 수 있습니다. 엑셀 내보내기에도 완료 예상과 적은 사람이 들어갑니다'},
+  {v:'v7.04',d:'2026-09', t:'[예상일 입력창] 브라우저 기본 입력창 대신 제대로 된 창을 만들었습니다. 달력에서 고르고 [+1주] [+2주] [+1달] [오늘] 단추로 빠르게 잡을 수 있습니다. 납기와 지금 예상일을 나란히 보여 주고, 그동안 바꾼 기록도 그 자리에서 확인합니다'},
+  {v:'v7.03',d:'2026-09', t:'[제작 완료 예상일] 납기를 넘긴 건에 언제쯤 될지를 적을 수 있습니다. 납기는 고객과 약속한 날이라 그대로 두고 예상일만 따로 적습니다. 누가 언제 적었는지 남고, 또 밀려 다시 적으면 그 내역이 모두 쌓여 어디서 밀렸는지 볼 수 있습니다. 공정현황 납기 아래에 표시되며 눌러서 적습니다(관리자만). 예상일까지 지나면 공정 이슈에 [예상일도 지남] 으로 따로 나옵니다 — 납기 지남은 그대로 남습니다. ※ 컬럼·표 추가 SQL 1회 실행 필요(harness_eta)'},
+  {v:'v7.02',d:'2026-09', t:'[도면만 출력] 다른 탭과 같은 흐름으로 맞췄습니다. ① 뽑을 도면번호를 붙여넣고 ② 도면 폴더를 고르면 그 목록만 찾아서 뽑습니다. REV 는 적어도 되고 안 적으면 최신판을 씁니다. 목록을 비우면 폴더 전체를 뽑습니다. 폴더에 없는 도면은 목록으로 보여 주고 복사할 수 있습니다'},
+  {v:'v7.01',d:'2026-09', t:'[도면만 출력] 도면 출도 아래에 [도면만 출력] 을 넣었습니다. PO 를 등록하지 않고 폴더나 파일만 고르면 머릿말·꼬리말만 넣어 A4 로 맞춰 뽑습니다. QR 은 넣지 않고, 누운 도면은 바로 세웁니다. 머릿말에는 파일명에서 알아낸 도번·REV 와 페이지 번호를 쓸 수 있습니다'},
   {v:'v7.00',d:'2026-09', t:'[CSV 추출] 공정현황에서 CSV 를 뽑으면 화면에 걸린 조건 그대로 나옵니다. 예전에는 필터와 상관없이 전체가 나왔습니다. 고객사·프로젝트·검색어·진행중/완료·지표 카드가 모두 반영됩니다. 어떤 조건으로 뽑았는지 파일명에 남고, 몇 건을 내보냈는지 알려 줍니다'},
   {v:'v6.99',d:'2026-09', t:'[개별 등록 건 풀기] 프로젝트 없이 등록한 건들이 (미지정) 이라는 이름으로 한 덩어리가 되던 것을 고쳤습니다. 프로젝트가 비어 있으면 묶지 않고 건마다 한 줄로 보여 줍니다. 프로젝트를 넣은 건만 묶입니다'},
   {v:'v6.98',d:'2026-09', t:'[부수 설정 위치] 작업지시서·도면 부수를 고르는 칸이 [3. 만들기] 안에 있어 폴더와 머릿말을 지나야 보였습니다. 1번 카드의 폴더 고르기 바로 위로 옮겨 첫 화면에서 바로 보입니다'},
