@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.09</title>
+<title>하네스 공정관리 v7.10</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.09</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.10</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.09 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.10 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2845,8 +2845,9 @@ var WOC={
     if(typeof renderStatus==='function')renderStatus();
     if(typeof renderOrderStampList==='function')renderOrderStampList();
     toast('\uc2e0\uaddc '+res.added+'\uac74 \ub4f1\ub85d \u00b7 \uae30\uc874 '+res.skipped+'\uac74 \uc720\uc9c0','ok');
-    WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets();
+    WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets(); else WOC.paintFolder();
     WOC.preview();
+    WOC.offerDup();
   },
 
 
@@ -2953,7 +2954,10 @@ WOC.pickWoFolder=function(input){
   var all=Array.prototype.slice.call(input.files||[]);
   input.value='';
   if(!WOC.loaded||!WOC.loaded.length){
-    toast('PO 를 먼저 등록하세요. [읽어서 등록] 또는 [PO 엑셀 올리기]','warn');
+    if(WOC.dupList&&WOC.dupList.length)
+      toast('새로 등록된 건이 없습니다. 위 [이미 등록된 건] 에서 출도할 건을 넣으세요','warn');
+    else
+      toast('PO 를 먼저 등록하세요. [읽어서 등록] 또는 [PO 엑셀 올리기]','warn');
     return;
   }
   var pdfs=all.filter(function(f){ return /\.pdf$/i.test(f.name)&&!/^~\$/.test(f.name); });
@@ -3274,7 +3278,12 @@ WOC.copyMiss=function(k){
 WOC.paintFolder=function(){
   var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
   var need=document.getElementById('wo-need-po');
-  if(need)need.style.display=(WOC.loaded&&WOC.loaded.length)?'none':'';
+  if(need){
+    need.style.display=(WOC.loaded&&WOC.loaded.length)?'none':'';
+    need.innerHTML=(WOC.dupList&&WOC.dupList.length)
+      ? '⚠️ <b>올린 PO 가 모두 이미 등록된 건입니다.</b> 위 [이미 등록된 건] 에서 <b>출도에 넣기</b> 를 누르면 그 건으로 작업지시서를 찾습니다.'
+      : '⚠️ <b>PO 를 먼저 등록하세요.</b> 등록한 PO 를 기준으로 폴더에서 작업지시서를 찾습니다.';
+  }
   function card(k,lab,val,note,tone,click){
     var c={red:['#fef2f2','#fecaca','var(--red)'],green:['var(--green-lt)','#a7f3d0','var(--green)'],
            blue:['var(--blue-lt)','#bfdbfe','var(--blue)']}[tone]||['var(--bg2)','var(--border)','var(--tx)'];
@@ -3342,22 +3351,41 @@ WOC.paintDup=function(){
   var el=document.getElementById('wo-dup-info'); if(!el)return;
   var d=WOC.dupList||[];
   if(!d.length){ el.innerHTML=''; return; }
+  var can=d.filter(function(x){ return !isOrderDone(x.o); });
+  var picked=d.filter(function(x){ return x.pick; }).length;
+  var allOn=(can.length>0 && picked===can.length);
+  var btn=function(label,act,pr){
+    return '<button onclick="event.stopPropagation();'+act+'" style="padding:5px 11px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;'
+      +(pr?'border:1.5px solid var(--purple);background:var(--purple);color:#fff'
+          :'border:1.5px solid var(--border);background:#fff;color:var(--tx2)')+'">'+label+'</button>';
+  };
   el.innerHTML='<div style="background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--r2);overflow:hidden;margin-top:10px">'
-    +'<div onclick="WOC.toggleDup()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px">'
-      +'<b style="font-size:12.5px;color:var(--amber)">\u26a0\ufe0f 이미 있어서 뺀 건 '+d.length+'</b>'
-      +'<span style="font-size:11.5px;color:var(--tx3)">이번 출도 대상에서 빠집니다</span>'
-      +'<span style="margin-left:auto;font-size:11px;color:var(--tx3)">'+(WOC._dupOpen?'접기 \u25b2':'펼치기 \u25bc')+'</span>'
+    +'<div onclick="WOC.toggleDup()" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 14px;flex-wrap:wrap">'
+      +'<b style="font-size:12.5px;color:var(--amber)">⚠️ 이미 등록된 건 '+d.length+'</b>'
+      +(picked
+        ? '<span style="font-size:11.5px;font-weight:700;color:var(--purple)">'+picked+'건 출도에 넣음</span>'
+        : '<span style="font-size:11.5px;color:var(--tx3)">지금은 출도 대상에서 빠져 있습니다</span>')
+      +'<span style="margin-left:auto;display:flex;gap:6px;align-items:center">'
+        +(can.length?(allOn?btn('모두 빼기','WOC.dupPickAll(false)')
+                           :btn('↩ 전부 출도에 넣기','WOC.dupPickAll(true)',true)):'')
+        +'<span style="font-size:11px;color:var(--tx3)">'+(WOC._dupOpen?'접기 ▲':'펼치기 ▼')+'</span>'
+      +'</span>'
     +'</div>'
     +(WOC._dupOpen?('<div style="max-height:220px;overflow-y:auto;background:#fff;border-top:1px solid #fde68a">'
       +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="background:var(--bg2)">'
+        +'<th style="padding:7px 6px 7px 12px;width:28px"><input type="checkbox" '+(allOn?'checked ':'')+(can.length?'':'disabled ')
+          +'onclick="WOC.dupPickAll(this.checked)" title="전체"></th>'
         +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">도면번호</th>'
         +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">PO / 라인</th>'
         +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2)">프로젝트</th>'
         +'<th style="padding:7px 10px;text-align:right;font-weight:700;color:var(--tx2);width:60px">수량</th>'
         +'<th style="padding:7px 10px;text-align:left;font-weight:700;color:var(--tx2);width:96px">납기</th></tr></thead><tbody>'
-      +d.map(function(x){var o=x.o;
-        return '<tr style="border-top:1px solid var(--border)">'
+      +d.map(function(x,i){var o=x.o, done=isOrderDone(o);
+        return '<tr style="border-top:1px solid var(--border)'+(x.pick?';background:var(--purple-lt)':'')+'">'
+          +'<td style="padding:6px 6px 6px 12px">'
+            +(done?'<span style="font-size:10.5px;color:var(--tx3)" title="출하까지 끝난 건은 넣지 않습니다">완료</span>'
+                  :'<input type="checkbox" '+(x.pick?'checked ':'')+'onclick="WOC.dupPick('+i+',this.checked)">')+'</td>'
           +'<td style="padding:6px 10px;font-family:var(--mono);font-weight:700">'+hEsc(o.dwg_no||'')+'</td>'
           +'<td style="padding:6px 10px;font-family:var(--mono);font-size:11.5px;color:var(--blue)">'+hEsc(o.po||'—')
             +((o.ord_ln||o.del_ln)?' <span style="color:var(--tx3)">'+hEsc(o.ord_ln||'-')+'/'+hEsc(o.del_ln||'-')+'</span>':'')+'</td>'
@@ -3367,9 +3395,40 @@ WOC.paintDup=function(){
       }).join('')
       +'</tbody></table></div>'):'')
     +'<div style="padding:9px 14px;font-size:11.5px;color:var(--tx2);line-height:1.7;border-top:1px solid #fde68a">'
-      +'이 건들은 이미 등록되어 있어 <b>다시 만들지 않습니다</b>. '
-      +'다시 뽑아야 하면 공정현황에서 찾아 출력하세요.</div>'
+      +'이미 등록된 건은 <b>새로 만들지 않습니다</b>. OCR 이 늦게 와서 다시 뽑아야 하면 '
+      +'<b>체크해서 출도에 넣으세요</b> — 새 건을 만들지 않고 <b>등록된 그 건</b>으로 QR 을 넣습니다.</div>'
   +'</div>';
+};
+// 이미 등록된 건을 출도 대상에 넣고 뺀다
+WOC.dupPick=function(i,on){
+  var x=(WOC.dupList||[])[i]; if(!x)return;
+  x.pick=!!on && !isOrderDone(x.o);
+  WOC._syncPick();
+};
+WOC.dupPickAll=function(on){
+  (WOC.dupList||[]).forEach(function(x){ x.pick=!!on && !isOrderDone(x.o); });
+  WOC._syncPick();
+};
+WOC._syncPick=function(){
+  var d=WOC.dupList||[];
+  var isDup=function(o){ return d.some(function(x){ return x.o===o; }); };
+  var base=(WOC.loaded||[]).filter(function(o){ return !isDup(o); });
+  WOC.loaded=base.concat(d.filter(function(x){ return x.pick; }).map(function(x){ return x.o; }));
+  WOC.paintPO(); WOC.paintDup();
+  if(WOC.ocrIndex)WOC.buildTargets(); else WOC.paintFolder();
+};
+// 올린 것이 전부 이미 등록된 건이면 바로 물어본다 (OCR 이 늦게 와서 다시 올리는 경우)
+WOC.offerDup=function(){
+  var d=WOC.dupList||[];
+  if((WOC.loaded&&WOC.loaded.length)||!d.length)return;
+  var can=d.filter(function(x){ return !isOrderDone(x.o); }).length;
+  if(!can)return;
+  setTimeout(function(){
+    if(confirm('올린 '+d.length+'건이 모두 이미 등록되어 있습니다.\n\n'
+      +'이 건들로 다시 출도할까요? ('+can+'건)\n'
+      +'새로 만들지 않고, 등록된 그 건으로 OCR 폴더에서 찾아 QR 을 넣습니다.'))
+      WOC.dupPickAll(true);
+  },60);
 };
 WOC._dupOpen=false;
 WOC.toggleDup=function(){ WOC._dupOpen=!WOC._dupOpen; WOC.paintDup(); };
@@ -6312,8 +6371,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.09';
+var APP_VER='v7.10';
 var VER_LOG=[
+  {v:'v7.10',d:'2026-09', t:'[이미 등록된 PO 로 다시 출도] PO 는 등록했는데 OCR 이 늦게 와서 나중에 다시 뽑을 때, 같은 PO 를 다시 올리면 「이미 등록된 건」 으로 빠져 OCR 폴더를 고를 수 없던 문제를 고쳤습니다. 올린 것이 전부 등록된 건이면 바로 「다시 출도할까요?」 를 묻고, 일부만 겹치면 [이미 등록된 건] 목록에서 체크해 출도에 넣습니다. 새 건을 만들지 않고 등록된 그 건으로 QR 을 넣으므로 공정 기록이 둘로 나뉘지 않습니다. 출하까지 끝난 건은 넣지 않습니다'},
   {v:'v7.09',d:'2026-09', t:'[도면 출도 화면 고침] 「도면만 출력」 을 한 번 열면 AXCELIS·EDWARDS 로 돌아가도 OCR 폴더 · 부수 · 등록 방식 칸이 사라져 있던 문제를 고쳤습니다. 이제 탭을 어떤 순서로 오가도 각 화면이 제자리로 돌아옵니다. 사이드바에서 「도면만 출력」 도 지금 보는 화면으로 진하게 표시됩니다'},
   {v:'v7.08',d:'2026-09', t:'[공정현황에서 QR] 작업지시서를 잃어버렸을 때 공정현황에서 바로 찾아 QR 을 볼 수 있습니다. 도면번호로 검색한 뒤 오른쪽 [QR] 을 누르면 그 건의 공정 QR 이 화면에 뜹니다. 폰으로 찍으면 공정 등록이 되고, 종이가 필요하면 [인쇄] 로 뽑습니다. 폰 화면에서도 카드마다 [QR] 이 있습니다'},
   {v:'v7.07',d:'2026-09', t:'[목록에서 QR 보기] 작업지시서 QR·도면 출도 화면의 목록에서 건마다 [QR] 을 누르면 그 건의 공정 QR 이 화면에 바로 뜹니다. 만들기를 누르지 않아도 되고, 폰으로 찍으면 공정 등록이 됩니다. 종이가 필요하면 [인쇄] 로 뽑습니다'},
@@ -7947,7 +8007,8 @@ DQ.readExcel=function(input){
               +(res.filled?' · 빈 값 '+res.filled+'건 채움':''),'ok');
         if(typeof WOC!=='undefined'){
           WOC.loaded=res.newOrders||[]; WOC.dupList=res.dupOrders||[];
-          WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets();
+          WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets(); else WOC.paintFolder();
+          WOC.offerDup();
         }
       }catch(ex){ toast('파일 처리 오류: '+ex.message,'err'); console.error(ex); }
     };
