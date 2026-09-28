@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.08</title>
+<title>하네스 공정관리 v7.09</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.08</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.09</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.08 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.09 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2529,9 +2529,12 @@ var WOC={
     var xb=document.getElementById('wo-xls-box');   if(xb)xb.style.display=(!only&&(m.how==='xls'||m.how==='both'))?'':'none';
     // 도면만 출력이면 수주 등록·폴더 맞추기 칸을 감춘다
     var db=document.getElementById('wo-dwgonly-box'); if(db)db.style.display=only?'':'none';
-    ['wo-po-info','wo-dup-info','wo-copies','wo-wofolder-box','wo-folder-box',
-     'wo-need-po','wo-path-ocr','wo-path-dwg','wo-grp-box']
-      .forEach(function(id){ var e=document.getElementById(id); if(e&&only)e.style.display='none'; });
+    // only 일 때만 감추고, 아닐 때는 반드시 되돌린다 (안 되돌리면 탭을 옮겨도 숨은 채로 남는다)
+    ['wo-po-info','wo-dup-info','wo-copies','wo-wofolder-box'].forEach(function(id){
+      var e=document.getElementById(id); if(e)e.style.display=only?'none':'';
+    });
+    var gb=document.getElementById('wo-grp-box'); if(gb)gb.style.display=only?'none':'flex';
+    // wo-folder-box / wo-need-po / wo-path-* 는 각자 paint 함수가 아래에서 정한다
     var cf=document.getElementById('wo-c-form'); if(cf)cf.style.display=only?'none':'grid';
     // 1번 카드의 제목도 바꾼다
     var ct=document.getElementById('wo-cust-title');
@@ -2575,7 +2578,7 @@ var WOC={
     WOC.paintPaths();
     WOC.paintFolder();
     // 사이드바에서 지금 고른 고객사만 진하게
-    ['axcelis','edwards'].forEach(function(k){
+    ['axcelis','edwards','dwgonly'].forEach(function(k){
       var b=document.getElementById('nav-wo-'+k);
       if(b)b.classList.toggle('on',WOC.cust===k);
     });
@@ -6309,8 +6312,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.08';
+var APP_VER='v7.09';
 var VER_LOG=[
+  {v:'v7.09',d:'2026-09', t:'[도면 출도 화면 고침] 「도면만 출력」 을 한 번 열면 AXCELIS·EDWARDS 로 돌아가도 OCR 폴더 · 부수 · 등록 방식 칸이 사라져 있던 문제를 고쳤습니다. 이제 탭을 어떤 순서로 오가도 각 화면이 제자리로 돌아옵니다. 사이드바에서 「도면만 출력」 도 지금 보는 화면으로 진하게 표시됩니다'},
   {v:'v7.08',d:'2026-09', t:'[공정현황에서 QR] 작업지시서를 잃어버렸을 때 공정현황에서 바로 찾아 QR 을 볼 수 있습니다. 도면번호로 검색한 뒤 오른쪽 [QR] 을 누르면 그 건의 공정 QR 이 화면에 뜹니다. 폰으로 찍으면 공정 등록이 되고, 종이가 필요하면 [인쇄] 로 뽑습니다. 폰 화면에서도 카드마다 [QR] 이 있습니다'},
   {v:'v7.07',d:'2026-09', t:'[목록에서 QR 보기] 작업지시서 QR·도면 출도 화면의 목록에서 건마다 [QR] 을 누르면 그 건의 공정 QR 이 화면에 바로 뜹니다. 만들기를 누르지 않아도 되고, 폰으로 찍으면 공정 등록이 됩니다. 종이가 필요하면 [인쇄] 로 뽑습니다'},
   {v:'v7.06',d:'2026-09', t:'[작업지시서 조회] 생산기술팀 요청 반영. QR 이력에서 도면번호·PO·프로젝트·발행자로 찾고, 발행일 기간으로도 추릴 수 있습니다([최근 1주][1달][전체]). 행마다 [QR] 을 누르면 그때 넣었던 공정 QR 을 화면에 다시 띄웁니다 — 작업지시서를 잃어버려도 폰으로 바로 찍어 공정 등록이 됩니다. 종이가 필요하면 [인쇄] 로 뽑습니다. [출도] 를 누르면 그 도면번호로 도면 출도 화면이 열립니다. 공정현황 오른쪽 위에 [새로고침] 을 넣었습니다'},
