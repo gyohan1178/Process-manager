@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.12</title>
+<title>하네스 공정관리 v7.13</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.12</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.13</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.12 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.13 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -6568,8 +6568,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.12';
+var APP_VER='v7.13';
 var VER_LOG=[
+  {v:'v7.13',d:'2026-09', t:'[공정 이력관리] PO 옆에 Order / Del Line 열을 넣었습니다. 같은 도면이 PO 라인별로 여러 건일 때 어느 건의 기록인지 구분됩니다. 머리를 누르면 라인 순으로 정렬되고, 검색창에 「818052 1/2」 처럼 넣어도 찾습니다. CSV 내보내기에도 Order Line · Del Line 열이 붙습니다. CSV 의 PO 가 같은 도면의 다른 수주 PO 로 찍힐 수 있던 문제도 고쳐, 이제 기록에 남은 PO 를 그대로 씁니다. 라인 없이 찍힌 옛 기록은 — 로 보입니다'},
   {v:'v7.12',d:'2026-09', t:'[납기 일괄 변경] 공정현황에서 건을 체크하면 위 일괄 처리 줄에 [📅 납기 변경] 이 생깁니다. 프로젝트 묶음 줄을 체크하면 그 프로젝트 건이 한꺼번에 잡힙니다. 「날짜로 맞추기」 는 모두 같은 날짜로, 「며칠 미루기」 는 건마다 지금 납기에서 +1주·+2주처럼 옮깁니다 (− 로 넣으면 앞당김). 바뀌기 전·후 납기를 목록으로 보여 주고, 출하까지 끝난 건은 건드리지 않습니다. 바꾼 뒤에는 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
   {v:'v7.11',d:'2026-09', t:'[REV 대조] 도면 출도 때 PO · 작업지시서(OCR) · 도면 세 가지의 REV 가 맞는지 확인합니다. 예전에는 OCR 은 REV 를 보지 않고 도면번호만으로 골랐고, 도면은 맞는 REV 가 없으면 다른 REV 로 조용히 대신했습니다. 이제 PO 의 REV 와 같은 파일을 먼저 고르고, 하나라도 다르면 「REV 다름」 으로 표시해 출력에서 빼 둡니다. 빨간 [REV 다름] 카드를 누르면 어느 건이 어떻게 다른지 목록이 나오고 복사할 수 있습니다. 확인하고 그대로 뽑을 거면 목록에서 체크하면 됩니다. 파일 이름에 REV 가 없으면 「REV 확인 못 함」 으로 알려 줍니다. 목록에서 체크를 풀면 줄이 사라지던 문제도 함께 고쳤습니다'},
   {v:'v7.10',d:'2026-09', t:'[이미 등록된 PO 로 다시 출도] PO 는 등록했는데 OCR 이 늦게 와서 나중에 다시 뽑을 때, 같은 PO 를 다시 올리면 「이미 등록된 건」 으로 빠져 OCR 폴더를 고를 수 없던 문제를 고쳤습니다. 올린 것이 전부 등록된 건이면 바로 「다시 출도할까요?」 를 묻고, 일부만 겹치면 [이미 등록된 건] 목록에서 체크해 출도에 넣습니다. 새 건을 만들지 않고 등록된 그 건으로 QR 을 넣으므로 공정 기록이 둘로 나뉘지 않습니다. 출하까지 끝난 건은 넣지 않습니다'},
@@ -6757,10 +6758,10 @@ function exportBoardCSV(){
   toast('현황판 CSV 내보내기 완료 ('+rows.length+'건)','ok');
 }
 function exportLogCSV(){
-  var headers=['고객사','PO No','프로젝트','도면번호','호기','수량','공정','합불','작업자','시작시간','완료시간','소요(분)'];
+  var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','공정','합불','작업자','시작시간','완료시간','소요(분)'];
   var rows=HS.logs.map(function(l){
     var order=HS.orders.find(function(o){return o.dwg_no===l.dwg_no;})||{};
-    return [l.customer||order.customer||'',order.po||'',l.project||order.project||'',l.dwg_no||'',
+    return [l.customer||order.customer||'',l.po||order.po||'',l.ord_ln||'',l.del_ln||'',l.project||order.project||'',l.dwg_no||'',
       l.unit||order.unit||'',l.qty||order.qty||'',l.process||'',l.result||'',l.worker||'',
       l.started_at?new Date(l.started_at).toLocaleString('ko-KR'):'',
       l.ended_at?new Date(l.ended_at).toLocaleString('ko-KR'):'',
@@ -6793,11 +6794,12 @@ function renderLogMgmt(){
   const board=document.getElementById('sp-log');if(!board)return;
   const q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
   let logs=[...HS.logs];
-  if(q)logs=logs.filter(function(l){return (l.dwg_no||'').toLowerCase().includes(q)||(l.worker||'').toLowerCase().includes(q)||(l.process||'').toLowerCase().includes(q)||(l.customer||'').toLowerCase().includes(q)||(l.po||'').toLowerCase().includes(q)||(l.project||'').toLowerCase().includes(q);});
+  if(q)logs=logs.filter(function(l){return (l.dwg_no||'').toLowerCase().includes(q)||(l.worker||'').toLowerCase().includes(q)||(l.process||'').toLowerCase().includes(q)||(l.customer||'').toLowerCase().includes(q)||(l.po||'').toLowerCase().includes(q)||(l.project||'').toLowerCase().includes(q)||(l.po&&((l.po+' '+(l.ord_ln||'')+'/'+(l.del_ln||'')).toLowerCase().includes(q)));});
   logs.sort(function(a,b){
     var k=_lgSort.key,va,vb;
     if(k==='started_at'||k==='ended_at'){va=a[k]?new Date(a[k]).getTime():0;vb=b[k]?new Date(b[k]).getTime():0;}
     else if(k==='duration_min'){va=a.duration_min||0;vb=b.duration_min||0;}
+    else if(k==='ord_ln'){va=(parseInt(a.ord_ln,10)||0)*10000+(parseInt(a.del_ln,10)||0);vb=(parseInt(b.ord_ln,10)||0)*10000+(parseInt(b.del_ln,10)||0);}
     else{va=(a[k]||'').toString().toLowerCase();vb=(b[k]||'').toString().toLowerCase();}
     var ea=!a[k],eb=!b[k];
     if(ea&&!eb)return 1;if(eb&&!ea)return -1;
@@ -6818,6 +6820,8 @@ function renderLogMgmt(){
       +'<td><input type="checkbox" class="log-chk" data-lid="'+l.id+'" '+chk+' onchange="toggleLogSel(this.dataset.lid,this.checked)"></td>'
       +'<td style="font-family:var(--mono);font-weight:600;font-size:12px">'+(l.dwg_no||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2)">'+hEsc(l.po||'—')+'</td>'
+      +'<td style="font-family:var(--mono);font-size:11px;color:var(--tx2);white-space:nowrap">'
+        +((l.ord_ln||l.del_ln)?hEsc(l.ord_ln||'-')+' / '+hEsc(l.del_ln||'-'):'<span style="color:var(--tx3)">—</span>')+'</td>'
       +'<td><span style="background:'+step.color+'18;color:'+step.color+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">'+step.icon+' '+l.process+'</span>'+resBadge+'</td>'
       +'<td>'+(l.worker||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11px;white-space:nowrap">'+fmt(l.started_at)+'</td>'
@@ -6837,7 +6841,7 @@ function renderLogMgmt(){
     +'</div>'
     +'<div style="flex:1;min-height:0;overflow:auto;border:1px solid var(--border);border-radius:var(--r2);background:var(--white)"><table class="log-table" style="width:100%">'
     +(function(){
-      var hs=[['dwg_no','도면번호'],['po','PO No'],['process','공정'],['worker','작업자'],['started_at','시작'],['ended_at','완료'],['duration_min','소요']];
+      var hs=[['dwg_no','도면번호'],['po','PO No'],['ord_ln','Order / Del Line'],['process','공정'],['worker','작업자'],['started_at','시작'],['ended_at','완료'],['duration_min','소요']];
       var cells=hs.map(function(hh){
         var arr=_lgSort.key===hh[0]?(_lgSort.dir==='asc'?' ▲':' ▼'):'';
         return '<th style="cursor:pointer;user-select:none" onclick="setLgSort(\''+hh[0]+'\')">'+hh[1]+'<span style="color:'+(_lgSort.key===hh[0]?'var(--blue)':'var(--tx3)')+'">'+arr+'</span></th>';
