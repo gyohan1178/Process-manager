@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.11</title>
+<title>하네스 공정관리 v7.12</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.11</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.12</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.11 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.12 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -1719,6 +1719,49 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   </div>
 </div>
 
+<div id="dueb-ovl" class="hidden" style="position:fixed;inset:0;z-index:4700;background:rgba(15,28,54,.5);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;box-shadow:var(--sh2);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 40px)">
+    <div style="padding:16px 20px 13px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:15px;font-weight:800;color:var(--tx)">납기 일괄 변경</div>
+        <button onclick="DUEB.close()" style="margin-left:auto;border:none;background:var(--bg2);color:var(--tx2);width:30px;height:30px;border-radius:50%;font-size:15px;cursor:pointer">✕</button>
+      </div>
+      <div id="dueb-sub" style="font-size:12px;color:var(--tx3);margin-top:3px"></div>
+    </div>
+    <div style="padding:16px 20px;overflow-y:auto">
+      <div style="display:flex;gap:6px;background:var(--bg2);border-radius:9px;padding:4px">
+        <button id="dueb-m-set"   onclick="DUEB.setMode('set')"   class="dueb-tab">날짜로 맞추기</button>
+        <button id="dueb-m-shift" onclick="DUEB.setMode('shift')" class="dueb-tab">며칠 미루기</button>
+      </div>
+      <div id="dueb-set" style="margin-top:12px">
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:6px">고른 건의 납기를 모두 이 날짜로 바꿉니다.</div>
+        <input type="date" id="dueb-date" oninput="DUEB.paint()" style="width:100%;height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;font-family:var(--sans)">
+      </div>
+      <div id="dueb-shift" style="margin-top:12px;display:none">
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:6px">건마다 지금 납기에서 며칠씩 옮깁니다. 앞당기려면 − 로 넣으세요.</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input type="number" id="dueb-days" value="7" oninput="DUEB.paint()" style="width:90px;height:38px;border:1.5px solid var(--border);border-radius:8px;padding:0 10px;font-size:14px;font-family:var(--mono);text-align:right">
+          <span style="font-size:12.5px;color:var(--tx2)">일</span>
+          <button onclick="DUEB.days(7)"  class="eta-q">+1주</button>
+          <button onclick="DUEB.days(14)" class="eta-q">+2주</button>
+          <button onclick="DUEB.days(30)" class="eta-q">+1달</button>
+          <button onclick="DUEB.days(-7)" class="eta-q">−1주</button>
+        </div>
+      </div>
+      <div id="dueb-prev" style="margin-top:14px"></div>
+    </div>
+    <div style="display:flex;gap:8px;padding:13px 20px;border-top:1px solid var(--border);background:var(--bg2)">
+      <span id="dueb-cnt" style="font-size:12px;color:var(--tx3);align-self:center"></span>
+      <button onclick="DUEB.close()" style="margin-left:auto;border:1px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">취소</button>
+      <button id="dueb-save" onclick="DUEB.save()" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">바꾸기</button>
+    </div>
+  </div>
+</div>
+<style>
+.dueb-tab{flex:1;border:none;background:transparent;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--tx3);cursor:pointer;font-family:var(--sans)}
+.dueb-tab.on{background:#fff;color:var(--purple);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+</style>
+
 <div id="wo-prog" class="hidden" style="position:fixed;inset:0;z-index:4600;background:rgba(15,28,54,.55);display:flex;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:24px 26px;box-shadow:var(--sh2)">
     <div id="wo-prog-t" style="font-size:15px;font-weight:800;color:var(--tx)">만드는 중</div>
@@ -2091,6 +2134,7 @@ function openManualOld(){
     '<li><b>도면 여러 개 등록</b>: 현황 화면 → [📤 Excel 업로드] (양식은 [⬇ 양식] 버튼)</li>',
     '<li><b>납기 고치기</b>: 표에서 납기 칸을 클릭 → 날짜 입력 → Enter (6/30처럼 써도 알아서 2026-06-30으로)</li>',
     '<li><b>여러 건 완료/삭제</b>: 맨 앞 체크박스로 선택 → 위에 뜨는 버튼으로 일괄 처리</li>',
+    '<li><b>납기 일괄 변경</b>: 체크(프로젝트 줄을 체크하면 그 프로젝트 전부) → [📅 납기 변경] → 날짜로 맞추기 / 며칠 미루기. 바꾼 뒤 [되돌리기] 가능</li>',
     '<li><b>같은 프로젝트 묶어 보기</b>: [🗂 프로젝트 묶기] 버튼 (▶를 누르면 펼쳐짐)</li>',
     '<li><b>이력 관리</b>: 기록 확인·정렬(제목 클릭)·삭제. 삭제는 되돌릴 수 없으니 주의</li>',
     '<li>같은 도면번호라도 PO가 다르면 <b>서로 다른 건</b>으로 관리됩니다</li>',
@@ -4807,6 +4851,113 @@ async function bulkDeleteSelected(){
   await deleteOrdersWithLog(targets,'일괄 삭제');
 }
 
+// ── 납기 일괄 변경 ──
+//   체크한 건(프로젝트 묶음을 체크하면 그 안의 건 전부)의 납기를 한꺼번에 바꾼다.
+//   출하까지 끝난 건은 건드리지 않는다. 바로 전 상태로 되돌릴 수 있다.
+var DUEB={
+  mode:'set', list:[], last:null,
+  _ymd:function(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); },
+  _shift:function(iso,n){
+    if(!iso)return '';
+    var d=new Date(iso+'T00:00:00'); if(isNaN(d))return '';
+    d.setDate(d.getDate()+n); return DUEB._ymd(d);
+  },
+  open:function(){
+    if(!_selOrders.size){ toast('납기를 바꿀 건을 체크하세요','warn'); return; }
+    var sel=HS.orders.filter(function(o){ return _selOrders.has(o.id); });
+    DUEB.list=sel.filter(function(o){ return !isOrderDone(o); });
+    DUEB.doneN=sel.length-DUEB.list.length;
+    if(!DUEB.list.length){ toast('고른 건이 모두 완료된 건입니다','warn'); return; }
+    // 고른 건의 납기가 모두 같으면 그 날짜를 미리 채워 둔다 (프로젝트 묶음은 보통 같다)
+    var ds={}; DUEB.list.forEach(function(o){ ds[normDueToISO(o.due)||'']=1; });
+    var k=Object.keys(ds);
+    document.getElementById('dueb-date').value=(k.length===1&&k[0])?k[0]:'';
+    document.getElementById('dueb-days').value=7;
+    var pj={}; DUEB.list.forEach(function(o){ if(o.project)pj[o.project]=1; });
+    var pk=Object.keys(pj);
+    document.getElementById('dueb-sub').textContent=DUEB.list.length+'건'
+      +(pk.length?' · 프로젝트 '+(pk.length<=2?pk.join(', '):pk.slice(0,2).join(', ')+' 외 '+(pk.length-2)):'')
+      +(DUEB.doneN?' · 완료된 '+DUEB.doneN+'건은 빼고':'');
+    DUEB.setMode(k.length===1&&k[0]?'set':'shift');
+    document.getElementById('dueb-ovl').classList.remove('hidden');
+  },
+  close:function(){ document.getElementById('dueb-ovl').classList.add('hidden'); },
+  setMode:function(m){
+    DUEB.mode=m;
+    document.getElementById('dueb-m-set').classList.toggle('on',m==='set');
+    document.getElementById('dueb-m-shift').classList.toggle('on',m==='shift');
+    document.getElementById('dueb-set').style.display=(m==='set')?'':'none';
+    document.getElementById('dueb-shift').style.display=(m==='shift')?'':'none';
+    DUEB.paint();
+  },
+  days:function(n){ document.getElementById('dueb-days').value=n; DUEB.paint(); },
+  // 건마다 새 납기를 계산한다. 못 바꾸는 건은 to 가 비어 있다.
+  plan:function(){
+    var dt=document.getElementById('dueb-date').value||'';
+    var n=parseInt(document.getElementById('dueb-days').value,10)||0;
+    return DUEB.list.map(function(o){
+      var cur=normDueToISO(o.due)||'';
+      var to=(DUEB.mode==='set')?dt:(n?DUEB._shift(cur,n):'');
+      return {o:o, from:cur, to:to, same:(to&&to===cur)};
+    });
+  },
+  paint:function(){
+    var pl=DUEB.plan();
+    var chg=pl.filter(function(x){ return x.to&&!x.same; });
+    var noDue=(DUEB.mode==='shift')?pl.filter(function(x){ return !x.from; }).length:0;
+    var el=document.getElementById('dueb-prev');
+    var rows=pl.slice(0,200).map(function(x){
+      var o=x.o;
+      return '<tr style="border-top:1px solid var(--border)">'
+        +'<td style="padding:6px 10px;font-family:var(--mono);font-weight:700">'+hEsc(o.dwg_no||'')+'</td>'
+        +'<td style="padding:6px 10px;font-size:11.5px;color:var(--tx3)">'+hEsc(o.project||o.po||'—')+'</td>'
+        +'<td style="padding:6px 10px;font-family:var(--mono);font-size:11.5px;color:var(--tx3)">'+hEsc(x.from||'—')+'</td>'
+        +'<td style="padding:6px 4px;color:var(--tx3)">→</td>'
+        +'<td style="padding:6px 10px;font-family:var(--mono);font-size:11.5px;font-weight:700;color:'
+          +(x.to&&!x.same?'var(--purple)':'var(--tx3)')+'">'
+          +(x.to?(x.same?'그대로':hEsc(x.to)):(DUEB.mode==='shift'&&!x.from?'납기 없음':'—'))+'</td></tr>';
+    }).join('');
+    el.innerHTML='<div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">'
+      +'<div style="max-height:260px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="background:var(--bg2)">'
+        +'<th style="padding:7px 10px;text-align:left;color:var(--tx2)">도면번호</th>'
+        +'<th style="padding:7px 10px;text-align:left;color:var(--tx2)">프로젝트/PO</th>'
+        +'<th style="padding:7px 10px;text-align:left;color:var(--tx2)">지금</th><th></th>'
+        +'<th style="padding:7px 10px;text-align:left;color:var(--tx2)">바뀔 납기</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div>'
+      +(pl.length>200?'<div style="padding:7px 10px;font-size:11.5px;color:var(--tx3);border-top:1px solid var(--border)">… 외 '+(pl.length-200)+'건</div>':'')
+      +'</div>'
+      +(noDue?'<div style="font-size:11.5px;color:var(--amber);margin-top:7px">납기가 비어 있는 '+noDue+'건은 미룰 기준이 없어 그대로 둡니다. [날짜로 맞추기] 로 넣으세요.</div>':'');
+    document.getElementById('dueb-cnt').textContent=chg.length?chg.length+'건이 바뀝니다':'바뀌는 건이 없습니다';
+    var sv=document.getElementById('dueb-save'); sv.disabled=!chg.length; sv.style.opacity=chg.length?'1':'.45';
+  },
+  save:async function(){
+    var chg=DUEB.plan().filter(function(x){ return x.to&&!x.same; });
+    if(!chg.length)return;
+    if(!confirm(chg.length+'건의 납기를 바꿉니다.\n\n바로 뒤에 [되돌리기] 로 원래대로 돌릴 수 있습니다.'))return;
+    DUEB.last={at:new Date(), items:chg.map(function(x){ return {id:x.o.id, due:x.o.due||''}; })};
+    var touched=chg.map(function(x){ x.o.due=x.to; return x.o; });
+    await hsSaveOrders(touched);
+    DUEB.close();
+    _selOrders.clear();
+    renderStatus();
+    toast('납기 '+touched.length+'건 변경','ok');
+  },
+  undo:async function(){
+    if(!DUEB.last)return;
+    var back=[];
+    DUEB.last.items.forEach(function(it){
+      var o=HS.orders.find(function(x){ return x.id===it.id; });
+      if(o){ o.due=it.due; back.push(o); }
+    });
+    DUEB.last=null;
+    if(back.length)await hsSaveOrders(back);
+    renderStatus();
+    toast('납기 '+back.length+'건을 원래대로 되돌렸습니다','ok');
+  },
+  dismiss:function(){ DUEB.last=null; renderBulkBar(); }
+};
+
 // 수주 지우기 — 이력을 남기고, '삭제' 를 입력해야 진행한다.
 async function deleteOrdersWithLog(targets, via){
   if(!targets||!targets.length)return;
@@ -5417,6 +5568,13 @@ function clearAlarm(o,by){
 }
 function bulkBarHTML(canEdit){
   var selCnt=_selOrders.size;
+  if(canEdit&&!selCnt&&typeof DUEB!=='undefined'&&DUEB.last){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--r2);margin-bottom:10px">'
+      +'<span style="font-size:12.5px;color:var(--tx2)">방금 <b>납기 '+DUEB.last.items.length+'건</b>을 바꿨습니다</span>'
+      +'<button onclick="DUEB.undo()" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--amber);background:#fff;color:var(--amber);font-family:var(--sans)">되돌리기</button>'
+      +'<button onclick="DUEB.dismiss()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:var(--sans)">닫기</button>'
+    +'</div>';
+  }
   if(!(canEdit&&selCnt>0))return '';
   // 고른 건의 수량 합
   var qs=0, sel=HS.orders.filter(function(o){return _selOrders.has(o.id);});
@@ -5428,6 +5586,7 @@ function bulkBarHTML(canEdit){
     +'<span style="width:1px;height:18px;background:#ddd6fe"></span>'
     +'<button onclick="bulkDoneSelected(true)"  style="'+B+';border:1px solid #a7f3d0;background:var(--green-lt);color:var(--green)">완료 처리</button>'
     +'<button onclick="bulkDoneSelected(false)" style="'+B+';border:1px solid var(--border);background:#fff;color:var(--tx2)">완료 취소</button>'
+    +'<button onclick="DUEB.open()"             style="'+B+';border:1px solid #ddd6fe;background:#fff;color:var(--purple)">📅 납기 변경</button>'
     +'<button onclick="bulkChangeType()"        style="'+B+';border:1px solid var(--border);background:#fff;color:var(--tx2)">공정구분 변경</button>'
     +'<button onclick="_selOrders.clear();renderStatus()" style="'+B+';border:1px solid var(--border);background:transparent;color:var(--tx3);margin-left:auto">선택 해제</button>'
     +'<button onclick="bulkDeleteSelected()"    style="'+B+';border:1px solid #fecaca;background:#fef2f2;color:var(--red)" title="삭제 라고 입력해야 지워집니다">🗑 삭제</button>'
@@ -6409,8 +6568,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.11';
+var APP_VER='v7.12';
 var VER_LOG=[
+  {v:'v7.12',d:'2026-09', t:'[납기 일괄 변경] 공정현황에서 건을 체크하면 위 일괄 처리 줄에 [📅 납기 변경] 이 생깁니다. 프로젝트 묶음 줄을 체크하면 그 프로젝트 건이 한꺼번에 잡힙니다. 「날짜로 맞추기」 는 모두 같은 날짜로, 「며칠 미루기」 는 건마다 지금 납기에서 +1주·+2주처럼 옮깁니다 (− 로 넣으면 앞당김). 바뀌기 전·후 납기를 목록으로 보여 주고, 출하까지 끝난 건은 건드리지 않습니다. 바꾼 뒤에는 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
   {v:'v7.11',d:'2026-09', t:'[REV 대조] 도면 출도 때 PO · 작업지시서(OCR) · 도면 세 가지의 REV 가 맞는지 확인합니다. 예전에는 OCR 은 REV 를 보지 않고 도면번호만으로 골랐고, 도면은 맞는 REV 가 없으면 다른 REV 로 조용히 대신했습니다. 이제 PO 의 REV 와 같은 파일을 먼저 고르고, 하나라도 다르면 「REV 다름」 으로 표시해 출력에서 빼 둡니다. 빨간 [REV 다름] 카드를 누르면 어느 건이 어떻게 다른지 목록이 나오고 복사할 수 있습니다. 확인하고 그대로 뽑을 거면 목록에서 체크하면 됩니다. 파일 이름에 REV 가 없으면 「REV 확인 못 함」 으로 알려 줍니다. 목록에서 체크를 풀면 줄이 사라지던 문제도 함께 고쳤습니다'},
   {v:'v7.10',d:'2026-09', t:'[이미 등록된 PO 로 다시 출도] PO 는 등록했는데 OCR 이 늦게 와서 나중에 다시 뽑을 때, 같은 PO 를 다시 올리면 「이미 등록된 건」 으로 빠져 OCR 폴더를 고를 수 없던 문제를 고쳤습니다. 올린 것이 전부 등록된 건이면 바로 「다시 출도할까요?」 를 묻고, 일부만 겹치면 [이미 등록된 건] 목록에서 체크해 출도에 넣습니다. 새 건을 만들지 않고 등록된 그 건으로 QR 을 넣으므로 공정 기록이 둘로 나뉘지 않습니다. 출하까지 끝난 건은 넣지 않습니다'},
   {v:'v7.09',d:'2026-09', t:'[도면 출도 화면 고침] 「도면만 출력」 을 한 번 열면 AXCELIS·EDWARDS 로 돌아가도 OCR 폴더 · 부수 · 등록 방식 칸이 사라져 있던 문제를 고쳤습니다. 이제 탭을 어떤 순서로 오가도 각 화면이 제자리로 돌아옵니다. 사이드바에서 「도면만 출력」 도 지금 보는 화면으로 진하게 표시됩니다'},
