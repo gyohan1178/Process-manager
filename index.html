@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.17</title>
+<title>하네스 공정관리 v7.18</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.17</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.18</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -701,6 +701,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         <div class="sn-head" id="nav-issuegrp"><span class="sn-ic">📐</span> 도면 출도</div>
         <button class="sn-item sn-sub" id="nav-wo-axcelis" onclick="WOC.go('axcelis')">AXCELIS</button>
         <button class="sn-item sn-sub" id="nav-wo-edwards" onclick="WOC.go('edwards')">EDWARDS</button>
+        <button class="sn-item sn-sub" id="nav-wo-semes" onclick="WOC.go('semes')">SEMES용 하네스</button>
         <button class="sn-item sn-sub" id="nav-wo-dwgonly" onclick="WOC.go('dwgonly')">도면만 출력</button>
         <button class="sn-item" id="nav-scan" onclick="setPage('scan')"><span class="sn-ic">📷</span> QR 스캔</button>
       </div>
@@ -715,7 +716,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.17 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.18 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -852,7 +853,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             <input type="file" id="wo-c-file" accept=".xlsx,.xls" style="display:none" onchange="WOC.readExcel(this)">
             <button class="btn btn-outline" onclick="downloadOrderTemplate()" style="margin-left:8px">⬇ 양식 내려받기</button>
             <div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.6">
-              열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다.
+              열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다. 파일을 이 칸에 <b>끌어다 놓아도</b> 됩니다.
             </div>
           </div>
           <div id="wo-grp-box" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px;
@@ -925,7 +926,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">
               <button class="btn btn-outline" onclick="document.getElementById('wo-wofolder').click()">📁 OCR 폴더 선택</button>
               <input type="file" id="wo-wofolder" webkitdirectory directory multiple style="display:none" onchange="WOC.pickWoFolder(this)">
-              <span style="font-size:11.5px;color:var(--tx3)">새로고침하면 다시 골라야 합니다</span>
+              <span style="font-size:11.5px;color:var(--tx3)">탐색기에서 폴더를 이 칸에 끌어다 놓아도 됩니다 · 새로고침하면 다시 골라야 합니다</span>
             </div>
             <div id="wo-need-po" style="display:none;background:var(--amber-lt);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;padding:9px 12px;margin-top:8px;font-size:12px;color:var(--tx2);line-height:1.7">
               ⚠️ <b>PO 를 먼저 등록하세요.</b> 등록한 PO 를 기준으로 폴더에서 작업지시서를 찾습니다.
@@ -995,6 +996,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
                 <button class="wo-tok" onclick="WO.tok('{호기}')">호기</button>
                 <button class="wo-tok" onclick="WO.tok('{수량}')">수량</button>
                 <button class="wo-tok" onclick="WO.tok('{납기}')">납기</button>
+                <button class="wo-tok" onclick="WO.tok('{불출일}')">불출일</button>
                 <button class="wo-tok" onclick="WO.tok('{페이지}')">페이지</button>
                 <button class="wo-tok" onclick="WO.tok('{전체}')">전체쪽</button>
               </span>
@@ -2568,6 +2570,7 @@ var WOC={
     harness:{name:'하네스 공통', how:'xls',   desc:'하네스 등록 양식 엑셀로 수주를 등록한 뒤, 작업지시서 폴더를 고르면 파일명으로 맞춰 QR을 넣습니다.'},
     axcelis:{name:'AXCELIS', how:'both',  desc:'AXCELIS PO 를 엑셀로 올리거나 그대로 붙여넣습니다. 머리글을 보고 열을 알아서 잡습니다.'},
     edwards:{name:'EDWARDS', how:'paste', desc:'PO 목록을 엑셀에서 복사해 그대로 붙여넣습니다. 도면번호·품명·수량 세 열입니다.'},
+    semes:{name:'SEMES용 하네스', how:'both', desc:'PO 등록 양식(고객사·프로젝트·도면번호·Rev·호기·수량·불출일·납기)을 엑셀로 올리거나, 머리글째 복사해 붙여넣습니다. PO 가 없어도 됩니다.'},
     // 단순 도면 출력 — PO 등록도 매칭도 없이 폴더만 고른다
     dwgonly:{name:'도면만 출력', how:'none', desc:'PO 없이 도면만 뽑습니다. 폴더를 고르면 머릿말·꼬리말만 넣어 A4 로 맞춰 출력합니다. QR 은 넣지 않습니다.'}
   },
@@ -2586,6 +2589,11 @@ var WOC={
     try{
       var raw=localStorage.getItem('hs_wo_hf_'+WOC.cust);
       if(raw){ var o=JSON.parse(raw); if(o.h)WO.header=hfUp(o.h); if(o.f)WO.footer=hfUp(o.f); }
+      else if(WOC.cust==='semes'){
+        // 현장관리 요청(2026-09-30): 위 = 납기 · 업체 프로젝트 수량 · 쪽번호 / 아래 = 불출일
+        WO.header={on:true,l:'{납기}',c:'{업체} {프로젝트} {수량}',r:'{페이지} / {전체}'};
+        WO.footer={on:true,l:'{불출일}',c:'',r:''};
+      }
       else { WO.header={on:true,l:'',c:'{프로젝트} {도번} {REV}',r:''};
              WO.footer={on:true,l:'',c:'{페이지} / {전체}',r:'{수량} {납기}'}; }
     }catch(e){}
@@ -2647,7 +2655,7 @@ var WOC={
     WOC.paintPaths();
     WOC.paintFolder();
     // 사이드바에서 지금 고른 고객사만 진하게
-    ['axcelis','edwards','dwgonly'].forEach(function(k){
+    ['axcelis','edwards','semes','dwgonly'].forEach(function(k){
       var b=document.getElementById('nav-wo-'+k);
       if(b)b.classList.toggle('on',WOC.cust===k);
     });
@@ -2666,7 +2674,9 @@ var WOC={
         po:['ordernumber','pono','po','\ubc1c\uc8fc\ubc88\ud638'],
         ol:['orderlines','orderline','\uc624\ub354\ub77c\uc778'], dl:['delline','\ub0a9\ud488\ub77c\uc778'],
         qty:['quantity','qty','\uc218\ub7c9'], due:['promisedate','\ub0a9\uae30','duedate','requireddate'],
-        name:['itemdesc','\ud488\uba85','description'] },
+        name:['itemdesc','\ud488\uba85','description'],
+        proj:['프로젝트','project'], unit:['호기','unit'], cust:['고객사','customer','업체'],
+        rel:['불출일','releasedate'], stype:['공정구분','공정타입'] },
   parse:function(txt){
     var self=WOC;
     var lines=String(txt||'').split(/\r?\n/).map(function(s){return s.replace(/\u00a0/g,' ').replace(/\s+$/,'');}).filter(function(s){return s.trim()!=='';});
@@ -2708,7 +2718,9 @@ var WOC={
                   rev:(g('rev')||g('rev2')||revInline).toUpperCase(),
                   ccn:g('ccn').toUpperCase(),
                   po:g('po'), ord_ln:g('ol').replace(/\.0$/,''), dl_raw:g('dl').replace(/\.0$/,''),
-                  due:asDate(g('due'))||normDueToISO(g('due'))});
+                  due:asDate(g('due'))||normDueToISO(g('due')),
+                  project:g('proj'), unit:g('unit'), cust:g('cust'),
+                  rel:normDueToISO(g('rel')), stype:g('stype').toUpperCase()});
       }else{
         // 머리글 없이 자료만 붙여넣은 경우.
         //   AXCELIS 는 첫 칸이 CCN(B/K) 이라 도면번호가 두 번째다.
@@ -2861,8 +2873,8 @@ var WOC={
     var cust=(WOC.cust==='axcelis')?canonCustomer('Axcelis')
             :(WOC.cust==='edwards'?canonCustomer('Edwards Korea'):'');
     var n={dwg_no:x.dwg_no, po:x.po||'', ord_ln:x.ord_ln||'', del_ln:x.dl_raw||'',
-           qty:x.qty, due:x.due||f.due, project:f.proj, unit:f.unit, customer:cust};
-    return !!findExistingOrder(n, x.dwg_no, matchBy||WOC._matchBy(), n);
+           qty:x.qty, due:x.due||f.due, project:x.project||f.proj, unit:x.unit||f.unit, customer:cust};
+    return !!findExistingOrder(n, x.dwg_no, matchBy||'auto', n);
   },
   // 등록할 때 쓸 규칙을 미리 정한다 (PO 가 다 있으면 poline)
   _matchBy:function(){
@@ -2880,20 +2892,24 @@ var WOC={
     var noDue=r.rows.filter(function(x){ return !x.due; }).length;
     if(noDue && !f.due){ toast('\ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc774 \uc788\uc2b5\ub2c8\ub2e4. \uc81c\uc791\ub0a9\uae30\ub97c \ub123\uc73c\uc138\uc694','warn'); return; }
     var cust=(WOC.cust==='axcelis')?canonCustomer('Axcelis'):(WOC.cust==='edwards'?canonCustomer('Edwards Korea'):'');
+    // 등록 양식을 머리글째 붙여넣으면 줄마다 프로젝트·호기·고객사가 있다 (SEMES용 하네스)
+    var rowProj=r.rows.some(function(x){ return x.project; });
     var withPO=r.rows.filter(function(x){return x.po;}).length;
-    var already=r.rows.filter(function(x){ return WOC._exists(x,(withPO===r.rows.length)?'poline':'projunit'); }).length;
+    var already=r.rows.filter(function(x){ return WOC._exists(x,'auto'); }).length;
     var msg=r.rows.length+'\ud589\uc744 \uc77d\uc5c8\uc2b5\ub2c8\ub2e4. ('+r.mode+')\n\n'
       +'  \uc2e0\uaddc \ub4f1\ub85d '+(r.rows.length-already)+'\uac74\n'
       +'  \uc774\ubbf8 \uc788\ub294 \uac74 '+already+'\uac74 (\ub36e\uc5b4\uc4f0\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4)\n'
       +(withPO?'  PO \uac00 \ub4e4\uc5b4 \uc788\ub294 \ud589 '+withPO+'\uac74\n':'')
-      +'\n\uace0\uac1d\uc0ac '+(cust||'(\ube44\uc6c0)')
+      +(rowProj?(function(){ var ps={},cs={}; r.rows.forEach(function(x){ if(x.project)ps[x.project]=1; if(x.cust)cs[x.cust]=1; });
+          return '\n\uace0\uac1d\uc0ac '+(Object.keys(cs).join(', ')||cust||'(\ube44\uc6c0)')+' \u00b7 \ud504\ub85c\uc81d\ud2b8 '+Object.keys(ps).join(', ')+' (\uc904\ub9c8\ub2e4)'; })()
+               :'\n\uace0\uac1d\uc0ac '+(cust||'(\ube44\uc6c0)'))
       +(f.proj?' \u00b7 \ud504\ub85c\uc81d\ud2b8 '+f.proj:'')
       +(f.unit?' \u00b7 \ud638\uae30 '+f.unit:'')
       +(f.due?'\n  \uc81c\uc791\ub0a9\uae30 '+f.due+' (\ubd99\uc5ec\ub123\uae30\uc5d0 \ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc5d0\ub9cc)':'')
       +(f.rel?'\n  \ubd88\ucd9c\uc77c '+f.rel:'')
       +(r.bad.length?'\n\n\u203b \ubabb \uc77d\uc740 \uc904 '+r.bad.length+'\uac1c\ub294 \uac74\ub108\ub701\ub2c8\ub2e4.':'')
       +'\n\n\ub4f1\ub85d\ud560\uae4c\uc694?';
-    if(WOC.grpMode==='proj' && !f.proj){
+    if(WOC.grpMode==='proj' && !f.proj && !rowProj){
       toast('프로젝트로 묶으려면 프로젝트 이름을 넣으세요','warn'); return;
     }
     if(WOC.cust==='axcelis' && !withPO){
@@ -2901,13 +2917,15 @@ var WOC={
     }
     if(!confirm(msg))return;
     var list=r.rows.map(function(x){
-      return {dwg_no:x.dwg_no, rev:x.rev||'', customer:cust, project:f.proj, unit:f.unit,
+      return {dwg_no:x.dwg_no, rev:x.rev||'', customer:(x.cust?canonCustomer(x.cust):cust),
+              project:x.project||f.proj, unit:x.unit||f.unit,
               qty:x.qty, po:x.po||'', ord_ln:x.ord_ln||'', del_ln:x.dl_raw||'',
               due:x.due||f.due, ccn:x.ccn||'',
-              step_type:'A', item_name:x.name, release_date:f.rel||''};
+              step_type:(/^[A-Z]$/.test(x.stype||'')?x.stype:'A'), item_name:x.name, release_date:x.rel||f.rel||''};
     });
     // PO \uac00 \uc788\uc73c\uba74 \ub3c4\ubc88+PO+\ub77c\uc778\uc73c\ub85c, \uc5c6\uc73c\uba74 \ub3c4\ubc88+\ud504\ub85c\uc81d\ud2b8+\ud638\uae30\ub85c \uac19\uc740 \uac74\uc744 \ubcf8\ub2e4
-    var res=hsRegisterOrders(list,{matchBy:(withPO===r.rows.length)?'poline':'projunit', via:'붙여넣기'});
+    // 줄마다: PO 있으면 도번+PO+라인, 없으면 도번+프로젝트+호기 (예전에는 PO 없는 줄이 하나라도 있으면 전부 PO 를 무시했다)
+    var res=hsRegisterOrders(list,{matchBy:'auto', via:'붙여넣기'});
     // 출도 대상은 새로 등록된 것만. 이미 있던 건은 아래 목록으로 보여 준다.
     WOC.loaded=res.newOrders||[];
     WOC.dupList=res.dupOrders||[];
@@ -2947,7 +2965,8 @@ WOC.RECIPE_DEFAULT={
   dwgonly:{wo:0, dwg:1, cover:false},
   harness:{wo:1, dwg:0, cover:false},
   axcelis:{wo:1, dwg:1, cover:false},
-  edwards:{wo:1, dwg:1, cover:true }
+  edwards:{wo:1, dwg:1, cover:true },
+  semes:  {wo:1, dwg:1, cover:false}
 };
 WOC.RECIPE={};
 Object.keys(WOC.RECIPE_DEFAULT).forEach(function(k){
@@ -3034,14 +3053,14 @@ WOC.pickWoFolder=function(input){
   var byDwg={};
   pdfs.forEach(function(f){
     var stem=f.name.replace(/\.pdf$/i,'').trim();
-    var base=stem.split('_')[0];
-    // REV — 160021769_D.pdf / 160021769_D_1.pdf. 도번만 있으면 REV 를 모른다.
-    var m=DQ_FNAME.exec(stem), seg=stem.split('_');
-    var rev=m?m[2].toUpperCase():((seg.length>=2&&/^[A-Za-z]{1,2}$/.test(seg[1]))?seg[1].toUpperCase():'');
-    (byDwg[base]=byDwg[base]||[]).push({file:f,name:f.name,stem:stem,rev:rev});
+    // 도번_REV.pdf — 숫자 도번(160021769_D) · SEMES(D202-30380A_003) · 이름 전체가 도번(NXR206404_5) 모두 받는다
+    var ks=dwgKeysOf(stem), seen={};
+    if(!ks.length)ks=[{dwg:stem.split('_')[0], rev:''}];
+    ks.forEach(function(k){ if(seen[k.dwg])return; seen[k.dwg]=1;
+      (byDwg[k.dwg]=byDwg[k.dwg]||[]).push({file:f,name:f.name,stem:stem,rev:k.rev}); });
   });
   WOC.ocrIndex=byDwg; WOC.ocrCount=pdfs.length;
-  WOC.ocrFolder=(all[0].webkitRelativePath||'').split('/')[0]||'(\ud3f4\ub354)';
+  WOC.ocrFolder=input._dirName||(all[0].webkitRelativePath||'').split('/')[0]||'(\ud3f4\ub354)';
   WOC.buildTargets();
 };
 
@@ -3070,7 +3089,7 @@ WOC.buildTargets=function(){
     var hit=null;
     if(cands.length){
       // PO 의 REV 와 같은 OCR 을 먼저 고른다. 없으면 있는 것 중 하나 (아래에서 REV 다름으로 표시)
-      var pool=pr?cands.filter(function(c){ return c.rev===pr; }):[];
+      var pool=pr?cands.filter(function(c){ return revKey(c.rev)===revKey(pr); }):[];
       if(!pool.length)pool=cands;
       hit=pool.filter(function(c){
         var seg=c.stem.split('_');
@@ -3086,9 +3105,9 @@ WOC.buildTargets=function(){
     var bad=false, parts=[];
     if(hit){
       if(pr){
-        if(wr&&wr!==pr)bad=true;
-        if(dr&&dr!==pr)bad=true;
-      }else if(wr&&dr&&wr!==dr)bad=true;     // PO 에 REV 가 없으면 작업지시서와 도면끼리라도 맞춘다
+        if(wr&&revKey(wr)!==revKey(pr))bad=true;
+        if(dr&&revKey(dr)!==revKey(pr))bad=true;
+      }else if(wr&&dr&&revKey(wr)!==revKey(dr))bad=true;     // PO 에 REV 가 없으면 작업지시서와 도면끼리라도 맞춘다
       parts.push('PO '+(pr||'?'));
       parts.push('작업지시서 '+(wr||'?'));
       if(useDwg)parts.push('도면 '+(dh?(dr||'?'):'없음'));
@@ -3180,7 +3199,7 @@ WOC.pickDwgOnly=function(input){
       rev:m?m[2].toUpperCase():'', ed:m?parseInt(m[3]||'0',10):0});
   });
   WOC.dwgOnlyIdx=idx; WOC.dwgOnlyCount=pdfs.length;
-  WOC.dwgOnlyFolder=(all[0].webkitRelativePath||'').split('/')[0]||'(폴더)';
+  WOC.dwgOnlyFolder=input._dirName||(all[0].webkitRelativePath||'').split('/')[0]||'(폴더)';
   WOC.matchDwgOnly();
   toast('도면 폴더 읽음 — PDF '+pdfs.length+'개 · 도번 '+Object.keys(idx).length+'종','ok');
 };
@@ -3249,6 +3268,22 @@ WOC.paintDwgOnly=function(){
 };
 
 // 도면 폴더 고르기 — 도면 QR 에서 쓰던 것을 그대로 쓴다
+// 파일 이름에서 도번·REV 후보를 뽑는다.
+//   160021769_D_1 / 160021769_D  → 숫자 도번 규칙
+//   D202-30380A_003 (SEMES)       → 끝의 _REV(영숫자 1~3자)를 떼어 본다
+//   NXR206404_5 (EDWARDS)         → 이름 전체가 도번일 수도 있으므로 전체 이름으로도 등록한다
+function dwgKeysOf(stem){
+  var out=[], m=DQ_FNAME.exec(stem);
+  if(m){ out.push({dwg:m[1], rev:m[2].toUpperCase(), ed:parseInt(m[3]||'0',10)}); return out; }
+  if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(stem))return out;
+  out.push({dwg:stem, rev:'', ed:0});
+  var g=/^(.+?)[_]([A-Za-z0-9]{1,3})(?:[_-](\d{1,2}))?$/.exec(stem);
+  if(g&&g[1].length>=4)out.push({dwg:g[1], rev:g[2].toUpperCase(), ed:parseInt(g[3]||'0',10)});
+  return out;
+}
+// REV 비교용 — 숫자 REV 는 앞의 0 을 뗀다 (003 = 3)
+function revKey(r){ r=String(r||'').trim().toUpperCase(); return /^\d+$/.test(r)?String(parseInt(r,10)):r; }
+
 WOC.pickFolder=function(input){
   var all=Array.prototype.slice.call(input.files||[]);
   input.value='';
@@ -3261,19 +3296,12 @@ WOC.pickFolder=function(input){
   var idx={}, bad=[];
   pdfs.forEach(function(f){
     var stem=f.name.replace(/\.pdf$/i,'').trim();
-    var m=DQ_FNAME.exec(stem);
-    if(!m){
-      // 도번만으로 된 이름도 받는다 (NXR206417.pdf)
-      if(/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(stem)){
-        (idx[stem]=idx[stem]||[]).push({file:f,rev:'',ed:0,name:f.name});
-      }else bad.push(f.name);
-      return;
-    }
-    var dwg=m[1], rev=m[2].toUpperCase(), ed=parseInt(m[3]||'0',10);
-    (idx[dwg]=idx[dwg]||[]).push({file:f,rev:rev,ed:ed,name:f.name});
+    var ks=dwgKeysOf(stem);
+    if(!ks.length){ bad.push(f.name); return; }
+    ks.forEach(function(k){ (idx[k.dwg]=idx[k.dwg]||[]).push({file:f,rev:k.rev,ed:k.ed,name:f.name}); });
   });
   WOC.dwgIndex=idx; WOC.dwgCount=pdfs.length; WOC.badNames=bad;
-  WOC.dwgFolder=(all[0].webkitRelativePath||'').split('/')[0]||'(폴더)';
+  WOC.dwgFolder=input._dirName||(all[0].webkitRelativePath||'').split('/')[0]||'(폴더)';
   toast('도면 폴더 읽음 — PDF '+pdfs.length+'개 · 도번 '+Object.keys(idx).length+'종','ok');
   // 도면 폴더를 고르면 매칭을 다시 계산해야 한다.
   //   예전에는 그리기만 해서 도면 맞음이 0 으로 남아 있었다.
@@ -3288,7 +3316,7 @@ WOC.findDwg=function(order){
   if(!c||!c.length)return null;
   var rv=String(order.rev||'').toUpperCase();
   if(rv){
-    var same=c.filter(function(x){ return x.rev===rv; });
+    var same=c.filter(function(x){ return revKey(x.rev)===revKey(rv); });
     if(same.length)return same.reduce(function(a,x){ return x.ed>a.ed?x:a; });
   }
   return c.reduce(function(a,x){
@@ -3307,7 +3335,12 @@ var WO_PATHS={
     dwg:'\\\\jinsuntech-nas\\1. 공용폴더\\1. 업체별 프로젝트\\3. AXCELIS\\1. 도면\\3. 하네스 도면\\2. Conversion 도면'
   },
   harness:{ ocr:'', dwg:'' },
-  edwards:{ ocr:'', dwg:'' }
+  edwards:{ ocr:'', dwg:'' },
+  // DSI · 코엠에스,다다 등 업체별 하위 폴더에 지시서(QR 적용/미적용)·분출 도면 통합 파일·PO 등록 양식이 있다
+  semes:{
+    ocr:'\\\\jinsuntech-nas\\1. 공용폴더\\♠ QR ♠\\4. 하네스_QR',
+    dwg:'\\\\jinsuntech-nas\\1. 공용폴더\\♠ QR ♠\\4. 하네스_QR'
+  }
 };
 WOC.copyPath=function(kind){
   var p=(WO_PATHS[WOC.cust]||{})[kind]||'';
@@ -3341,6 +3374,12 @@ WOC.PASTE_HINT={
     ph:'EDWARDS PO 목록을 엑셀에서 복사해 그대로 붙여넣으세요\n\n'
       +'NXR206417\tCABLE PUMP FEEDBACK IXH\t4',
     help:'도면번호 · 품명 · 수량 을 읽습니다. 수량이 없으면 1로 봅니다. 납기는 위 <b>제작납기</b> 값을 씁니다.'
+  },
+  semes:{
+    ph:'PO 등록 양식을 머리글째 복사해 붙여넣으세요\n\n고객사\t프로젝트\t도면번호\tRev\t호기\t수량\tPO No\t…\t불출일\t납기\n'
+      +'DSI\tIRIS(SEMES)-PIM2615_BRW\tD202-30380A\t003\tPIM2615_BRW (26종)\t6\t\t…\t2026-09-29\t2026-10-30',
+    help:'<b>머리글 줄을 함께</b> 붙여넣으면 고객사 · 프로젝트 · 도면번호 · Rev · 호기 · 수량 · PO · 불출일 · 납기 를 줄마다 읽습니다. '
+      +'PO 가 없으면 <b>도면번호 + 프로젝트 + 호기</b> 로 같은 건을 가립니다 — 다른 프로젝트에 같은 도면이 있어도 따로 등록됩니다.'
   },
   harness:{
     ph:'도면번호 · 품명 · 수량 을 복사해 붙여넣으세요\n\n1600791\t케이블 어셈블리\t5',
@@ -4579,6 +4618,7 @@ var MOB={
     {k:'workorder',ic:'\ud83d\udcc4', t:'\uc791\uc5c5\uc9c0\uc2dc\uc11c QR', act:"WOC.go('harness')", pcOnly:true},
     {k:'wo-axcelis',ic:'\ud83d\udcd0', t:'\ub3c4\uba74 \ucd9c\ub3c4 \u2014 AXCELIS', act:"WOC.go('axcelis')", pcOnly:true},
     {k:'wo-edwards',ic:'\ud83d\udcd0', t:'\ub3c4\uba74 \ucd9c\ub3c4 \u2014 EDWARDS', act:"WOC.go('edwards')", pcOnly:true},
+    {k:'wo-semes',ic:'\ud83d\udcd0', t:'도면 출도 — SEMES용 하네스', act:"WOC.go('semes')", pcOnly:true},
     {k:'wo-dwgonly',ic:'\ud83d\udcc4', t:'\ub3c4\uba74\ub9cc \ucd9c\ub825', act:"WOC.go('dwgonly')", pcOnly:true},
     {g:'\uad00\ub9ac'},
     {k:'analytics',ic:'\ud83d\udcc8', t:'\ubd84\uc11d', act:"setPage('analytics')"},
@@ -5080,6 +5120,46 @@ var DUEB={
   },
   dismiss:function(){ DUEB.last=null; renderBulkBar(); }
 };
+
+// ── 끌어다 놓기 ──
+//   탐색기에서 엑셀 파일이나 폴더를 [PO 엑셀 올리기]·[OCR 폴더]·[도면 폴더] 칸에 바로 끌어다 놓는다.
+//   폴더를 놓으면 안의 파일을 하위 폴더까지 모두 읽어 [폴더 선택] 과 똑같이 넘긴다.
+var DND={
+  collect:async function(dt){
+    var out=[], dir='';
+    var items=dt.items?[].slice.call(dt.items):[];
+    var entries=items.map(function(it){ return it.webkitGetAsEntry?it.webkitGetAsEntry():null; }).filter(Boolean);
+    if(!entries.length) return {files:[].slice.call(dt.files||[]), dir:''};
+    function readAll(reader){ return new Promise(function(res){ var acc=[];
+      (function next(){ reader.readEntries(function(b){ if(!b.length)return res(acc); acc=acc.concat([].slice.call(b)); next(); }, function(){ res(acc); }); })(); }); }
+    async function walk(en){
+      if(en.isFile){ await new Promise(function(res){ en.file(function(f){ out.push(f); res(); }, function(){ res(); }); }); }
+      else if(en.isDirectory){ var list=await readAll(en.createReader()); for(var i=0;i<list.length;i++)await walk(list[i]); }
+    }
+    for(var i=0;i<entries.length;i++){ if(entries[i].isDirectory&&!dir)dir=entries[i].name; await walk(entries[i]); }
+    return {files:out, dir:dir};
+  },
+  bind:function(id, fn){
+    var el=document.getElementById(id); if(!el||el._dnd)return; el._dnd=1;
+    var on=function(e){ e.preventDefault(); e.stopPropagation(); el.style.outline='2px dashed var(--purple)'; el.style.outlineOffset='4px'; };
+    var off=function(e){ if(e){e.preventDefault(); e.stopPropagation();} el.style.outline=''; };
+    el.addEventListener('dragenter',on); el.addEventListener('dragover',on);
+    el.addEventListener('dragleave',function(e){ if(!el.contains(e.relatedTarget))off(e); });
+    el.addEventListener('drop',async function(e){
+      off(e);
+      var r=await DND.collect(e.dataTransfer);
+      if(!r.files.length){ toast('놓은 것에서 파일을 찾지 못했습니다','warn'); return; }
+      fn({files:r.files, value:'', _dirName:r.dir});
+    });
+  },
+  init:function(){
+    DND.bind('wo-xls-box',      function(inp){ WOC.readExcel(inp); });
+    DND.bind('wo-wofolder-box', function(inp){ WOC.pickWoFolder(inp); });
+    DND.bind('wo-folder-box',   function(inp){ WOC.pickFolder(inp); });
+    DND.bind('wo-dwgonly-box',  function(inp){ WOC.pickDwgOnly(inp); });
+  }
+};
+setTimeout(function(){ try{ DND.init(); }catch(e){ console.warn('dnd',e); } },0);
 
 // ── 납품 반영 (AXCELIS Received 시트) ──
 //   현장에서 출하를 찍지 않아도, Axcelis 가 받은 라인(Received)으로 완료 처리한다.
@@ -5957,7 +6037,19 @@ function normDueToISO(v){
       if(p0>12&&p1<=12){ d=parts[0]; m=parts[1]; }
       else { m=parts[0]; d=parts[1]; }
     }
-    else { y='20'+('0'+parts[0]).slice(-2); m=parts[1]; d=parts[2]; }     // 26-10-09
+    else {
+      // 세 칸 모두 두 자리 — 26-10-09(연-월-일) 인지 10-30-26(엑셀 mm-dd-yy)·30.09.26(일.월.연) 인지
+      //   두 가지로 읽어 보고 올해와 가까운 연도 쪽을 고른다 (예전에는 늘 앞을 연도로 봐 10-30-26 이 비었다)
+      var a0=parseInt(parts[0],10), a1=parseInt(parts[1],10), a2=parseInt(parts[2],10);
+      var cy=new Date().getFullYear()%100;
+      var okA=(a1>=1&&a1<=12), okB=((a0>=1&&a0<=12)||(a1>=1&&a1<=12));
+      var dA=okA?Math.abs(a0-cy):999, dB=okB?Math.abs(a2-cy):999;
+      if(dA<=dB){ y='20'+('0'+parts[0]).slice(-2); m=parts[1]; d=parts[2]; }
+      else{
+        y='20'+('0'+parts[2]).slice(-2);
+        if(a0>12&&a1<=12){ d=parts[0]; m=parts[1]; } else { m=parts[0]; d=parts[1]; }
+      }
+    }
   }else if(parts.length===2){ y=String(new Date().getFullYear()); m=parts[0]; d=parts[1]; }
   else if(parts.length===1){
     var s=parts[0];
@@ -6881,8 +6973,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.17';
+var APP_VER='v7.18';
 var VER_LOG=[
+  {v:'v7.18',d:'2026-09', t:'[SEMES용 하네스 · 현장관리 요청] ① 도면 출도에 「SEMES용 하네스」 탭 추가 — PO 등록 양식을 엑셀로 올리거나 머리글째 붙여넣으면 줄마다 고객사·프로젝트·호기·불출일·납기를 읽습니다. 머릿말 기본값: 위 {납기} · {업체} {프로젝트} {수량} · {페이지}/{전체}, 아래 {불출일} (고쳐서 저장 가능). 새 항목 {업체}·{불출일} 추가. 기본 위치 \\\\jinsuntech-nas\\…\\4. 하네스_QR. ② [PO 엑셀 올리기]·OCR 폴더·도면 폴더 칸에 탐색기에서 파일/폴더를 끌어다 놓을 수 있습니다. ③ [고침] PO 가 없는 하네스는 같은 도면이 다른 프로젝트에 있으면 「이미 있는 건」 으로 빠지던 문제 — 이제 PO 가 없으면 도면번호+프로젝트+호기로 가립니다 (DSI 26→24, 85→84 로 줄던 원인). ④ [고침] 엑셀 날짜 서식(mm-dd-yy)이면 납기·불출일이 비어 저장되던 문제. ⑤ [고침] 「D200-91447A (KMEL-370155)」 처럼 도번 뒤에 번호가 붙은 줄이 말없이 빠지던 문제 — 앞 도번으로 등록하고 뒤 번호는 품명에 남기며, 못 읽은 줄은 확인창에 알려 줍니다. ⑥ 붙여넣기에 PO 없는 줄이 섞여도 PO 있는 줄은 PO 로 가립니다. ⑦ 도면·OCR 파일 이름 D202-30380A_003 · NXR206404_5 도 인식, REV 003 과 3 을 같게 봅니다'},
   {v:'v7.17',d:'2026-09', t:'[📦 납품 반영] 공정현황 위 [📦 납품 반영] 으로 AXCELIS PO 관리 엑셀(Axcelis_PO_management.xlsm)을 고르면 Received 시트를 읽어, 현장에서 출하를 찍지 않은 건도 한꺼번에 완료 처리합니다. 도번 + PO + 오더라인 + 델라인으로 맞추고(라인 없이 등록된 옛 건은 도번 + PO), 현황이 「납품 완료」·「발송 완료」 이고 받은 수량이 주문 이상이면 완료 후보로 보여 줍니다. 받은 수량이 적은 건과 「발주 취소」 라인은 따로 보여 주고 기본으로 빼 두며, 체크하면 함께 정리합니다. 엑셀에 필터가 걸려 있어도 숨은 줄까지 모두 읽습니다. 완료 처리 뒤 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
   {v:'v7.16',d:'2026-09', t:'[공정현황 보기 정리] ① 프로젝트 이름이 「단품」 으로 시작하는 건(단품, 단품 (9월 납기 7품목) 등)도 납기월 묶음에 합쳐, 단품이 두 군데로 나뉘지 않습니다. ② [프로젝트 묶기] + [고객사별] 을 같이 켜면 고객사 머리 아래에 묶음이 납기순(8월 → 9월 → …)으로 나옵니다. 고객사 머리를 누르면 그 고객사만 보이고, 다시 누르면 전체로 돌아갑니다. ③ 납기월 머리의 달력 아이콘을 뺐습니다. ④ 긴 프로젝트 이름·고객사가 두 줄로 꺾이거나 옆 칸을 덮지 않게 한 줄로 줄이고(…), 마우스를 올리면 전체가 보입니다. PO 열 제목을 「PO / 라인」 으로 줄이고 프로젝트 칸을 넓혔습니다'},
   {v:'v7.15',d:'2026-09', t:'[검토 후속 · 화면 쪽 수정] ① 도면 출도 목록의 체크박스·전체선택·선택해제·✕ 가 먹지 않던 문제 수정 — 「REV 다름」 건도 체크하면 출력에 들어갑니다. ② [새로고침] 후에도 다른 폰이 끝낸 공정이 옛 상태로 보이던 문제 수정, 공정 이슈 숫자도 바로 다시 계산. ③ 병합 PDF 쪽번호 {페이지}/{전체} 가 지시서·도면 부수까지 이어서 매겨짐 (머릿말에 {전체} 를 써도 됨). ④ [개별 PDF 일괄 받기] 도 고객사 구성(지시서 + 도면 N부)대로, 「도면만 출력」 에서는 QR 없이. ⑤ 도면만 출력에서 한 도번에 REV 가 여러 개면 멈추던 문제 수정, REV 가 없을 때 최신판을 AA>Z · 10>9 로 바르게 고름. ⑥ 「오늘」 을 한국시간으로 통일 (아침 9시 전 지연·오늘납기·D-day·예상일 [오늘]). ⑦ 납기 칸에 날짜가 아닌 글자를 치면 지우지 않고 그대로 둠. ⑧ 서버가 저장·삭제를 거부하면 성공이라 하지 않고 알림. ⑨ 출력·삭제·공정구분 변경·방금 기록 취소·이력 수정 때 전체를 서버에 덮어쓰던 것을 바꾼 건만 보내도록 — 다른 PC 가 바꾼 값이 되돌아가지 않음. ⑩ 오프라인 대기열에 최신 기록이 남도록, 이력 수정에서 완료가 시작보다 빠르면 막음'},
@@ -7563,13 +7656,15 @@ var WO={
       .replace(/\{도번\}/g,o.dwg_no||'')
       .replace(/\{REV\}/gi,o.rev||'')
       .replace(/\{고객사\}/g,o.customer||'')
+      .replace(/\{업체\}/g,o.customer||'')
+      .replace(/\{불출일\}/g,normDueToISO(o.release_date)||'')
       .replace(/\{PO\}/gi,o.po||'')
       .replace(/\{오더라인\}/g,o.ord_ln||'')
       .replace(/\{납품라인\}/g,o.del_ln||'')
       .replace(/\{호기\}/g,o.unit||'')
       .replace(/\{수량\}/g,(o.qty!=null?o.qty:''))
       .replace(/\{CCN\}/gi,o.ccn||'')
-      .replace(/\{납기\}/g,ccnDueISO(o)||'')
+      .replace(/\{납기일?\}/g,ccnDueISO(o)||'')
       .replace(/\{페이지\}/g,pg==null?'':pg)
       .replace(/\{전체\}/g,total==null?'':total)
       .replace(/\s+/g,' ').trim();
@@ -7993,6 +8088,7 @@ DQ.setHFOpt=function(){
 var DQ_LABEL={'{프로젝트}':'프로젝트','{도번}':'도번','{REV}':'REV','{고객사}':'고객사',
               '{PO}':'PO','{오더라인}':'Order Line','{납품라인}':'Del Line',
               '{CCN}':'CCN','{호기}':'호기','{수량}':'수량','{납기}':'납기',
+              '{업체}':'업체','{납기일}':'납기','{불출일}':'불출일',
               '{페이지}':'','{전체}':''};
 
 // 머릿말 문구를 [{lab,val}] 덩어리로 나눈다.
@@ -8489,13 +8585,18 @@ DQ.readExcel=function(input){
 
         var proj=(document.getElementById('dq-xl-proj')||{}).value||'';
         var typeSel=(document.getElementById('dq-xl-type')||{}).value||'A';
-        var list=[], metas=[];
+        var list=[], metas=[], skipped=[];
         for(var i=1;i<grid.length;i++){
           var r=grid[i]||[];
           var dwg=String(r[c.item]||'').replace(/\.0$/,'').trim();
-          // 숫자만 받으면 Edwards 도번(NXR206417)이 걸러진다.
-          if(!dwg||!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(dwg))continue;
+          if(!dwg)continue;
           if(/^(고객사|도면번호|Item|\(옵션\))$/i.test(dwg))continue;
+          // 'D200-91447A (KMEL-370155)' 처럼 도번 뒤에 다른 번호가 붙어 오면 앞 도번만 쓰고, 뒤는 품명 메모로
+          var extra='';
+          var sp2=/^([A-Za-z0-9][A-Za-z0-9._-]{3,})[\s(（]+(.*?)[)）]?\s*$/.exec(dwg);
+          if(sp2&&!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(dwg)){ extra=sp2[2].trim(); dwg=sp2[1]; }
+          // 숫자만 받으면 Edwards 도번(NXR206417)이 걸러진다.
+          if(!/^[A-Za-z0-9][A-Za-z0-9._-]{3,}$/.test(dwg)){ skipped.push((i+1)+'행 '+dwg); continue; }
           var due=c.due>=0?normDueToISO(r[c.due]):'';
           if(due&&!/^\d{4}-\d{2}-\d{2}$/.test(due))due='';
           var srev=c.srev>=0?String(r[c.srev]||'').trim().toUpperCase():'';
@@ -8517,26 +8618,26 @@ DQ.readExcel=function(input){
                        var v=c.stype>=0?String(r[c.stype]||'').trim().toUpperCase():'';
                        return /^[A-Z]$/.test(v)?v:typeSel;   // 엑셀 값이 있으면 그것을 쓴다
                      })()});
-          metas.push({brev:brev, desc:c.desc>=0?String(r[c.desc]||'').trim():''});
+          var _desc=c.desc>=0?String(r[c.desc]||'').trim():'';
+          if(extra)list[list.length-1].item_name=(_desc?_desc+' ':'')+'('+extra+')';
+          else if(_desc)list[list.length-1].item_name=_desc;
+          metas.push({brev:brev, desc:_desc});
         }
         if(!list.length){ toast('읽을 수 있는 행이 없습니다 (Item 열 확인)','err'); return; }
 
-        // 같은 건 판정은 도번+PO+오더라인+납품라인 (프로젝트는 뺀다)
-        var already=list.filter(function(n){
-          return HS.orders.some(function(o){
-            return (o.dwg_no||'')===n.dwg_no&&(o.po||'')===(n.po||'')
-                &&(o.ord_ln||'')===(n.ord_ln||'')&&(o.del_ln||'')===(n.del_ln||'');
-          });
-        }).length;
+        // 같은 건 판정: PO 가 있으면 도번+PO+라인, 없으면 도번+프로젝트+호기 (등록과 같은 규칙)
+        var already=list.filter(function(n){ return !!findExistingOrder(n, n.dwg_no, 'auto'); }).length;
         var custName=list[0].customer||'(엑셀 값)';
         var msg=prof.name+' 양식으로 '+list.length+'행을 읽었습니다.\n\n'
           +'  신규 등록 '+(list.length-already)+'건\n'
           +'  이미 있는 건 '+already+'건 (덮어쓰지 않습니다)\n\n'
           +'고객사 '+custName+' · 공정타입 '+typeSel+'형'
-          +(proj.trim()?' · 프로젝트 '+proj.trim():'')+'\n\n등록할까요?';
+          +(proj.trim()?' · 프로젝트 '+proj.trim():'')
+          +(skipped.length?'\n\n※ 도면번호로 읽을 수 없어 뺀 줄 '+skipped.length+'개:\n  '+skipped.slice(0,5).join('\n  ')+(skipped.length>5?'\n  …':''):'')
+          +'\n\n등록할까요?';
         if(!confirm(msg))return;
 
-        var res=hsRegisterOrders(list,{matchBy:'poline', via:'엑셀'});
+        var res=hsRegisterOrders(list,{matchBy:'auto', via:'엑셀'});
         self.xlRows=list.map(function(n,i){
           return {dwg_no:n.dwg_no, rev:n.rev, brev:metas[i].brev, desc:metas[i].desc, order:res.orders[i]};
         }).filter(function(x){ return x.order; });
@@ -10360,6 +10461,10 @@ function downloadOrderTemplate(){
 //   두 벌로 두면 "신규 37건" 이라 해놓고 등록에서 5건이 겹치는 일이 생긴다.
 function findExistingOrder(n, dwg, matchBy, ref){
   dwg=dwg||String(n.dwg_no||'').trim();
+  // auto — 줄마다 고른다. PO 가 있으면 도번+PO+라인, 없으면 도번+프로젝트+호기.
+  //   (하네스는 PO 가 없는 경우가 많다. 도번+PO 로만 보면 PO 빈 칸끼리 같아서
+  //    다른 프로젝트에 같은 도면이 있으면 「이미 있는 건」 으로 빠졌다)
+  if(matchBy==='auto')matchBy=String(n.po||'').trim()?'poline':'projunit';
   if(matchBy==='projunit'){
     return HS.orders.find(function(o){
       return (o.dwg_no||'')===dwg && (o.project||'')===(n.project||'')
