@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.16</title>
+<title>하네스 공정관리 v7.17</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.16</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.17</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.16 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.17 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -755,6 +755,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         </div>
         <button class="sp-show-btn on admin-only" id="sp-group-btn" onclick="toggleSpGroup()" title="같은 프로젝트끼리 묶어 대표 1건만 표시 (▶ 클릭 시 세부 펼침)" style="margin-left:6px">🗂 프로젝트 묶기</button>
         <button class="sp-show-btn admin-only" id="sp-cust-btn" onclick="toggleSpView()" title="고객사별 소제목으로 구분해 보기" style="margin-left:4px">🏢 고객사별</button>
+        <button class="sp-show-btn admin-only" onclick="RCV.pick()" title="AXCELIS PO 관리 엑셀의 Received 시트로 납품된 건을 한꺼번에 완료 처리" style="margin-left:4px">📦 납품 반영</button>
+        <input type="file" id="rcv-file" accept=".xlsx,.xlsm,.xls" style="display:none" onchange="RCV.read(this)">
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <button class="btn btn-outline btn-sm admin-only" onclick="exportCSV()">📥 CSV</button>
@@ -1762,6 +1764,24 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .dueb-tab.on{background:#fff;color:var(--purple);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 </style>
 
+<div id="rcv-ovl" class="hidden" style="position:fixed;inset:0;z-index:4700;background:rgba(15,28,54,.5);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;max-width:760px;width:100%;box-shadow:var(--sh2);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 40px)">
+    <div style="padding:16px 20px 13px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:15px;font-weight:800;color:var(--tx)">납품 반영 — AXCELIS Received</div>
+        <button onclick="RCV.close()" style="margin-left:auto;border:none;background:var(--bg2);color:var(--tx2);width:30px;height:30px;border-radius:50%;font-size:15px;cursor:pointer">✕</button>
+      </div>
+      <div id="rcv-sub" style="font-size:12px;color:var(--tx3);margin-top:3px"></div>
+    </div>
+    <div id="rcv-body" style="padding:14px 20px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;padding:13px 20px;border-top:1px solid var(--border);background:var(--bg2)">
+      <span id="rcv-cnt" style="font-size:12px;color:var(--tx3);align-self:center"></span>
+      <button onclick="RCV.close()" style="margin-left:auto;border:1px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">취소</button>
+      <button id="rcv-save" onclick="RCV.apply()" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">완료 처리</button>
+    </div>
+  </div>
+</div>
+
 <div id="wo-prog" class="hidden" style="position:fixed;inset:0;z-index:4600;background:rgba(15,28,54,.55);display:flex;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:24px 26px;box-shadow:var(--sh2)">
     <div id="wo-prog-t" style="font-size:15px;font-weight:800;color:var(--tx)">만드는 중</div>
@@ -2134,6 +2154,7 @@ function openManualOld(){
     '<li><b>도면 여러 개 등록</b>: 현황 화면 → [📤 Excel 업로드] (양식은 [⬇ 양식] 버튼)</li>',
     '<li><b>납기 고치기</b>: 표에서 납기 칸을 클릭 → 날짜 입력 → Enter (6/30처럼 써도 알아서 2026-06-30으로)</li>',
     '<li><b>여러 건 완료/삭제</b>: 맨 앞 체크박스로 선택 → 위에 뜨는 버튼으로 일괄 처리</li>',
+    '<li><b>납품 반영</b>: [📦 납품 반영] → AXCELIS PO 관리 엑셀 선택 → Received 시트 기준 완료 후보 확인 → [완료 처리]. 바로 [되돌리기] 가능</li>',
     '<li><b>납기 일괄 변경</b>: 체크(프로젝트 줄을 체크하면 그 프로젝트 전부) → [📅 납기 변경] → 날짜로 맞추기 / 며칠 미루기. 바꾼 뒤 [되돌리기] 가능</li>',
     '<li><b>같은 프로젝트 묶어 보기</b>: [🗂 프로젝트 묶기] 버튼 (▶를 누르면 펼쳐짐)</li>',
     '<li><b>이력 관리</b>: 기록 확인·정렬(제목 클릭)·삭제. 삭제는 되돌릴 수 없으니 주의</li>',
@@ -5060,6 +5081,164 @@ var DUEB={
   dismiss:function(){ DUEB.last=null; renderBulkBar(); }
 };
 
+// ── 납품 반영 (AXCELIS Received 시트) ──
+//   현장에서 출하를 찍지 않아도, Axcelis 가 받은 라인(Received)으로 완료 처리한다.
+//   현황 「납품 완료」·「발송 완료」 → 완료 후보 / 「발주 취소」 → 따로 보여 주고 고르게 한다.
+//   먼저 목록을 보여 주고, 확인하면 manually_done 만 바꾼다 (다른 칸은 안 건드림). 바로 되돌릴 수 있다.
+var RCV={
+  groups:null, last:null, file:'',
+  DONE:{'납품 완료':1,'발송 완료':1}, CANCEL:{'발주 취소':1},
+  n:function(v){ return String(v==null?'':v).trim().replace(/\.0+$/,''); },
+  pick:function(){ var f=document.getElementById('rcv-file'); if(f)f.click(); },
+  read:function(input){
+    var file=input.files&&input.files[0]; if(!file)return; input.value='';
+    RCV.file=file.name;
+    loadXLSX(function(){
+      var rd=new FileReader();
+      rd.onload=function(ev){
+        try{
+          var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+          // Received 시트를 이름으로 찾는다. 없으면 「현황」·Item 열이 있는 시트
+          var name=wb.SheetNames.filter(function(s){ return /^received$/i.test(String(s).trim()); })[0];
+          var grid=null, hdr=null;
+          var load=function(sn){
+            var ws=wb.Sheets[sn]; if(!ws||!ws['!ref'])return null;
+            var rf=XLSX.utils.decode_range(ws['!ref']); if(rf.e.c>45)rf.e.c=45;
+            // 필터가 걸려 있어도 숨은 줄까지 전부 읽는다
+            return XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true,range:XLSX.utils.encode_range(rf)});
+          };
+          if(name){ grid=load(name); }
+          else{
+            for(var i=0;i<wb.SheetNames.length&&!grid;i++){
+              var g=load(wb.SheetNames[i]); if(!g||!g.length)continue;
+              var hh=(g[0]||[]).map(function(x){return String(x).trim();});
+              if(hh.indexOf('현황')>=0&&hh.indexOf('Item')>=0){ grid=g; name=wb.SheetNames[i]; }
+            }
+          }
+          if(!grid||grid.length<2){ toast('Received 시트를 찾지 못했습니다','err'); return; }
+          hdr=grid[0].map(function(x){ return String(x).trim().toLowerCase().replace(/\s+/g,''); });
+          var col=function(arr){ for(var i=0;i<arr.length;i++){ var j=hdr.indexOf(arr[i]); if(j>=0)return j; } return -1; };
+          var c={item:col(['item']), po:col(['ordernumber']), ol:col(['orderlines','orderline']),
+                 dl:col(['delline']), qty:col(['quantity']), st:col(['현황'])};
+          if(c.item<0||c.po<0||c.st<0){ toast('Item · Order Number · 현황 열을 찾지 못했습니다','err'); return; }
+          RCV.build(grid.slice(1), c, name);
+        }catch(ex){ console.error(ex); toast('파일을 읽지 못했습니다: '+ex.message,'err'); }
+      };
+      rd.readAsArrayBuffer(file);
+    });
+  },
+  build:function(rows, c, sheet){
+    var n=RCV.n, full={}, byPo={}, total=0;
+    rows.forEach(function(r){
+      var dwg=n(r[c.item]); if(!dwg)return;
+      total++;
+      var po=n(r[c.po]), ol=c.ol>=0?n(r[c.ol]):'', dl=c.dl>=0?n(r[c.dl]):'';
+      var q=parseFloat(r[c.qty])||0, st=String(r[c.st]||'').trim();
+      var add=function(m,k){ var e=m[k]||(m[k]={done:0,cancel:0,other:0,sts:{}}); 
+        if(RCV.DONE[st])e.done+=q; else if(RCV.CANCEL[st])e.cancel+=q; else e.other+=q; e.sts[st||'(빈칸)']=1; };
+      add(full, dwg+'|'+po+'|'+ol+'|'+dl);
+      add(byPo, dwg+'|'+po);
+    });
+    var G={done:[], part:[], cancel:[]}, already=0, used={};
+    HS.orders.forEach(function(o){
+      if(canonCustomer(o.customer)!==canonCustomer('Axcelis'))return;
+      var dwg=n(o.dwg_no), po=n(o.po); if(!dwg||!po)return;
+      var ol=n(o.ord_ln), dl=n(o.del_ln);
+      var byLine=!!(ol||dl);
+      var e=byLine?full[dwg+'|'+po+'|'+ol+'|'+dl]:byPo[dwg+'|'+po];
+      if(!e)return;
+      if(isOrderDone(o)){ already++; return; }
+      var need=parseInt(o.qty,10)||1;
+      var it={o:o, got:e.done, cancel:e.cancel, sts:Object.keys(e.sts).join(', '), byPo:!byLine};
+      if(e.done>=need) G.done.push(it);
+      else if(e.done>0) G.part.push(it);
+      else if(e.cancel>0) G.cancel.push(it);
+    });
+    var byDue=function(a,b){ var x=normDueToISO(a.o.due)||'9999', y=normDueToISO(b.o.due)||'9999'; return x<y?-1:x>y?1:0; };
+    G.done.sort(byDue); G.part.sort(byDue); G.cancel.sort(byDue);
+    RCV.groups=G; RCV.sel={done:true, part:false, cancel:false};
+    RCV.info={sheet:sheet, total:total, already:already};
+    RCV.paint();
+    document.getElementById('rcv-ovl').classList.remove('hidden');
+  },
+  toggle:function(k,on){ RCV.sel[k]=!!on; RCV.paint(); },
+  paint:function(){
+    var G=RCV.groups, I=RCV.info;
+    document.getElementById('rcv-sub').textContent=RCV.file+' · '+I.sheet+' 시트 '+I.total.toLocaleString()+'줄 · 이미 완료된 수주 '+I.already+'건은 제외';
+    var sec=function(k,title,desc,tone){
+      var list=G[k]; if(!list.length)return '';
+      var T={g:['var(--green-lt)','#a7f3d0','var(--green)'],a:['var(--amber-lt)','#fde68a','var(--amber)'],r:['#fef2f2','#fecaca','var(--red)']}[tone];
+      var rows=list.slice(0,400).map(function(x){ var o=x.o;
+        return '<tr style="border-top:1px solid var(--border)">'
+          +'<td style="padding:5px 10px;font-family:var(--mono);font-weight:700">'+hEsc(o.dwg_no)+'</td>'
+          +'<td style="padding:5px 10px;font-family:var(--mono);font-size:11.5px;color:var(--blue)">'+hEsc(o.po||'')
+            +' <span style="color:var(--tx3)">'+(x.byPo?'(라인 없음 · PO로 맞춤)':hEsc((o.ord_ln||'-')+'/'+(o.del_ln||'-')))+'</span></td>'
+          +'<td style="padding:5px 10px;text-align:right;font-family:var(--mono)">'+(o.qty||1)+'</td>'
+          +'<td style="padding:5px 10px;text-align:right;font-family:var(--mono);color:'+T[2]+'">'+(k==='cancel'?x.cancel:x.got)+'</td>'
+          +'<td style="padding:5px 10px;font-size:11.5px;color:var(--tx3)">'+hEsc(x.sts)+'</td>'
+          +'<td style="padding:5px 10px;font-family:var(--mono);font-size:11.5px;color:var(--tx2)">'+hEsc(normDueToISO(o.due)||'—')+'</td></tr>';
+      }).join('');
+      return '<div style="border:1px solid '+T[1]+';border-radius:var(--r2);overflow:hidden;margin-bottom:12px">'
+        +'<label style="display:flex;align-items:center;gap:9px;padding:10px 13px;background:'+T[0]+';cursor:pointer">'
+          +'<input type="checkbox" '+(RCV.sel[k]?'checked':'')+' onchange="RCV.toggle(\''+k+'\',this.checked)">'
+          +'<b style="font-size:13px;color:'+T[2]+'">'+title+' '+list.length+'건</b>'
+          +'<span style="font-size:11.5px;color:var(--tx3)">'+desc+'</span></label>'
+        +'<div style="max-height:220px;overflow-y:auto;background:#fff"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<thead><tr style="background:var(--bg2)"><th style="padding:6px 10px;text-align:left">도면번호</th><th style="padding:6px 10px;text-align:left">PO / 라인</th>'
+        +'<th style="padding:6px 10px;text-align:right">주문</th><th style="padding:6px 10px;text-align:right">'+(k==='cancel'?'취소':'받음')+'</th>'
+        +'<th style="padding:6px 10px;text-align:left">현황</th><th style="padding:6px 10px;text-align:left">납기</th></tr></thead>'
+        +'<tbody>'+rows+'</tbody></table>'
+        +(list.length>400?'<div style="padding:6px 10px;font-size:11.5px;color:var(--tx3)">… 외 '+(list.length-400)+'건</div>':'')
+        +'</div></div>';
+    };
+    var html=sec('done','완료 처리','Received 에 납품·발송 완료로 있고 받은 수량이 주문 이상','g')
+      +sec('part','일부만 받음','받은 수량이 주문보다 적음 — 기본은 그대로 둠','a')
+      +sec('cancel','발주 취소','Axcelis 가 취소한 라인 — 체크하면 완료로 정리','r');
+    if(!html)html='<div style="padding:26px;text-align:center;color:var(--tx3);font-size:13px">완료할 건이 없습니다. Received 에 있는 라인은 이미 모두 완료돼 있습니다.</div>';
+    document.getElementById('rcv-body').innerHTML=html;
+    var cnt=RCV.targets().length;
+    document.getElementById('rcv-cnt').textContent=cnt?cnt+'건을 완료 처리합니다':'고른 건이 없습니다';
+    var sv=document.getElementById('rcv-save'); sv.disabled=!cnt; sv.style.opacity=cnt?'1':'.45';
+  },
+  targets:function(){
+    var G=RCV.groups||{done:[],part:[],cancel:[]}, out=[];
+    ['done','part','cancel'].forEach(function(k){ if(RCV.sel&&RCV.sel[k])G[k].forEach(function(x){ out.push(x.o); }); });
+    return out;
+  },
+  close:function(){ document.getElementById('rcv-ovl').classList.add('hidden'); },
+  setDone:async function(list,val){
+    list.forEach(function(o){ o.manually_done=val; });
+    hsDataChanged(); safeCache('hs_orders',HS.orders);
+    var sb=getSB(), fail=0, ids=list.map(function(o){return o.id;});
+    if(sb){
+      for(var i=0;i<ids.length;i+=200){
+        var ch=ids.slice(i,i+200);
+        try{ var r=await sb.from('harness_orders').update({manually_done:val}).in('id',ch); if(r&&r.error)fail+=ch.length; }
+        catch(e){ fail+=ch.length; }
+      }
+    }
+    return fail;
+  },
+  apply:async function(){
+    var list=RCV.targets(); if(!list.length)return;
+    if(!confirm(list.length+'건을 완료 처리합니다.\n\n바로 뒤에 [되돌리기] 로 원래대로 돌릴 수 있습니다.'))return;
+    var fail=await RCV.setDone(list,true);
+    RCV.last={items:list.map(function(o){return o.id;})};
+    RCV.close(); renderStatus();
+    if(fail)toast((list.length-fail)+'건 완료 · '+fail+'건 서버 저장 실패 (새로고침하면 원래대로 보입니다)','err');
+    else toast('납품 반영 — '+list.length+'건 완료 처리','ok');
+  },
+  undo:async function(){
+    if(!RCV.last)return;
+    var ids=RCV.last.items, list=HS.orders.filter(function(o){ return ids.indexOf(o.id)>=0; });
+    RCV.last=null;
+    var fail=await RCV.setDone(list,false);
+    renderStatus();
+    toast(fail?'되돌리기 중 '+fail+'건 서버 저장 실패':'납품 반영 '+list.length+'건을 되돌렸습니다', fail?'err':'ok');
+  },
+  dismiss:function(){ RCV.last=null; renderBulkBar(); }
+};
+
 // 수주 지우기 — 이력을 남기고, '삭제' 를 입력해야 진행한다.
 async function deleteOrdersWithLog(targets, via){
   if(!targets||!targets.length)return;
@@ -5687,6 +5866,13 @@ function bulkBarHTML(canEdit){
       +'<span style="font-size:12.5px;color:var(--tx2)">방금 <b>납기 '+DUEB.last.items.length+'건</b>을 바꿨습니다</span>'
       +'<button onclick="DUEB.undo()" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--amber);background:#fff;color:var(--amber);font-family:var(--sans)">되돌리기</button>'
       +'<button onclick="DUEB.dismiss()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:var(--sans)">닫기</button>'
+    +'</div>';
+  }
+  if(canEdit&&!selCnt&&typeof RCV!=='undefined'&&RCV.last){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--green-lt);border:1px solid #a7f3d0;border-radius:var(--r2);margin-bottom:10px">'
+      +'<span style="font-size:12.5px;color:var(--tx2)">방금 <b>납품 반영으로 '+RCV.last.items.length+'건</b>을 완료 처리했습니다</span>'
+      +'<button onclick="RCV.undo()" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--green);background:#fff;color:var(--green);font-family:var(--sans)">되돌리기</button>'
+      +'<button onclick="RCV.dismiss()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:var(--sans)">닫기</button>'
     +'</div>';
   }
   if(!(canEdit&&selCnt>0))return '';
@@ -6695,8 +6881,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.16';
+var APP_VER='v7.17';
 var VER_LOG=[
+  {v:'v7.17',d:'2026-09', t:'[📦 납품 반영] 공정현황 위 [📦 납품 반영] 으로 AXCELIS PO 관리 엑셀(Axcelis_PO_management.xlsm)을 고르면 Received 시트를 읽어, 현장에서 출하를 찍지 않은 건도 한꺼번에 완료 처리합니다. 도번 + PO + 오더라인 + 델라인으로 맞추고(라인 없이 등록된 옛 건은 도번 + PO), 현황이 「납품 완료」·「발송 완료」 이고 받은 수량이 주문 이상이면 완료 후보로 보여 줍니다. 받은 수량이 적은 건과 「발주 취소」 라인은 따로 보여 주고 기본으로 빼 두며, 체크하면 함께 정리합니다. 엑셀에 필터가 걸려 있어도 숨은 줄까지 모두 읽습니다. 완료 처리 뒤 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
   {v:'v7.16',d:'2026-09', t:'[공정현황 보기 정리] ① 프로젝트 이름이 「단품」 으로 시작하는 건(단품, 단품 (9월 납기 7품목) 등)도 납기월 묶음에 합쳐, 단품이 두 군데로 나뉘지 않습니다. ② [프로젝트 묶기] + [고객사별] 을 같이 켜면 고객사 머리 아래에 묶음이 납기순(8월 → 9월 → …)으로 나옵니다. 고객사 머리를 누르면 그 고객사만 보이고, 다시 누르면 전체로 돌아갑니다. ③ 납기월 머리의 달력 아이콘을 뺐습니다. ④ 긴 프로젝트 이름·고객사가 두 줄로 꺾이거나 옆 칸을 덮지 않게 한 줄로 줄이고(…), 마우스를 올리면 전체가 보입니다. PO 열 제목을 「PO / 라인」 으로 줄이고 프로젝트 칸을 넓혔습니다'},
   {v:'v7.15',d:'2026-09', t:'[검토 후속 · 화면 쪽 수정] ① 도면 출도 목록의 체크박스·전체선택·선택해제·✕ 가 먹지 않던 문제 수정 — 「REV 다름」 건도 체크하면 출력에 들어갑니다. ② [새로고침] 후에도 다른 폰이 끝낸 공정이 옛 상태로 보이던 문제 수정, 공정 이슈 숫자도 바로 다시 계산. ③ 병합 PDF 쪽번호 {페이지}/{전체} 가 지시서·도면 부수까지 이어서 매겨짐 (머릿말에 {전체} 를 써도 됨). ④ [개별 PDF 일괄 받기] 도 고객사 구성(지시서 + 도면 N부)대로, 「도면만 출력」 에서는 QR 없이. ⑤ 도면만 출력에서 한 도번에 REV 가 여러 개면 멈추던 문제 수정, REV 가 없을 때 최신판을 AA>Z · 10>9 로 바르게 고름. ⑥ 「오늘」 을 한국시간으로 통일 (아침 9시 전 지연·오늘납기·D-day·예상일 [오늘]). ⑦ 납기 칸에 날짜가 아닌 글자를 치면 지우지 않고 그대로 둠. ⑧ 서버가 저장·삭제를 거부하면 성공이라 하지 않고 알림. ⑨ 출력·삭제·공정구분 변경·방금 기록 취소·이력 수정 때 전체를 서버에 덮어쓰던 것을 바꾼 건만 보내도록 — 다른 PC 가 바꾼 값이 되돌아가지 않음. ⑩ 오프라인 대기열에 최신 기록이 남도록, 이력 수정에서 완료가 시작보다 빠르면 막음'},
   {v:'v7.14',d:'2026-09', t:'[공정현황 · 단품 납기월 묶음] 프로젝트 없이 등록한 건(단품)을 고객사 + 납기월로 묶어 한 줄 머리로 보여 줍니다 (예: 📅 2026-09 · 단품 52건 · 지연 21). 지난 달과 이번 달은 펼친 채, 다음 달부터는 접힌 채로 시작하고 머리를 누르면 펴고 접습니다. 머리의 체크를 누르면 그 달 건이 한꺼번에 골라져 납기 변경·완료 처리를 할 수 있습니다 (지금 화면에 보이는 건만). 그 달에 한 건뿐이면 묶지 않습니다. [프로젝트 묶기] 를 끄면 예전처럼 한 줄씩 나옵니다'},
