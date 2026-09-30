@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.13</title>
+<title>하네스 공정관리 v7.14</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.13</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.14</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.13 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.14 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -4667,6 +4667,37 @@ var _spView='due';
 function toggleSpView(){_spView=_spView==='due'?'cust':'due';var b=document.getElementById('sp-cust-btn');if(b)b.classList.toggle('on',_spView==='cust');renderStatus();}
 // 프로젝트 묶음 이름. 비어 있으면 (미지정)
 function _projKey(o){ return (o.project||'').trim()||'(미지정)'; }
+// ── 프로젝트 없는 건(단품)은 고객사 + 납기월로 묶는다 ──
+//   키: '@@mon|고객사|YYYY-MM'  (납기 없으면 월 자리가 빈칸)
+//   지난 달·이번 달·납기 없음은 펼친 채, 다음 달부터는 접힌 채로 시작한다.
+var _spCollapsed=new Set();         // 기본 펼침 묶음 중 사람이 접은 것
+function _monKey(o){
+  var c=(o.customer||'').trim()||'(미지정)';
+  var m=(normDueToISO(o.due)||'').slice(0,7);
+  return '@@mon|'+c+'|'+m;
+}
+function _isMonKey(k){ return String(k||'').indexOf('@@mon|')===0; }
+function _thisMonth(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2); }
+function _monDefOpen(k){ var m=String(k).split('|')[2]||''; return !m || m<=_thisMonth(); }
+function _grpExpanded(k){
+  if(_isMonKey(k)) return _monDefOpen(k) ? !_spCollapsed.has(k) : _spExpanded.has(k);
+  return _spExpanded.has(k);
+}
+// 현황판 묶음 목록. 순서는 들어온 순서(= 현재 정렬)의 첫 건 기준
+function _spGroups(orders){
+  var gs=[], gm={};
+  orders.forEach(function(o){
+    var p=(o.project||'').trim();
+    var k=p||_monKey(o);
+    if(!gm[k]){
+      var sp=k.split('|');
+      gm[k]={key:k, mon:!p, items:[], cust:p?'':sp[1], month:p?'':sp[2]};
+      gs.push(gm[k]);
+    }
+    gm[k].items.push(o);
+  });
+  return gs;
+}
 
 // ── 제작 완료 예상일 ──
 //   납기는 고객과 약속한 날이라 고치지 않는다. 언제쯤 될지를 따로 적는다.
@@ -4773,11 +4804,19 @@ function etaLate(o){
 // 프로젝트 묶음 전체 선택
 function toggleProjSel(el){
   var pk=el.getAttribute('data-pk');
-  var ids=HS.orders.filter(function(o){ return _projKey(o)===pk; }).map(function(o){return o.id;});
+  // 월 묶음은 지금 화면에 보이는 건만 (필터로 가려진 건·완료 건은 고르지 않는다)
+  var ids=_isMonKey(pk)
+    ? HS.orders.filter(function(o){ return _spVisibleIds.indexOf(o.id)>=0 && !(o.project||'').trim() && _monKey(o)===pk; }).map(function(o){return o.id;})
+    : HS.orders.filter(function(o){ return _projKey(o)===pk; }).map(function(o){return o.id;});
   ids.forEach(function(id){ if(el.checked)_selOrders.add(id); else _selOrders.delete(id); });
   refreshSpTab();
 }
-function toggleProjGroup(el){var k=el.dataset.pk||''; if(_spExpanded.has(k))_spExpanded.delete(k); else _spExpanded.add(k); renderStatus();}
+function toggleProjGroup(el){
+  var k=el.dataset.pk||'';
+  if(_isMonKey(k)&&_monDefOpen(k)){ if(_spCollapsed.has(k))_spCollapsed.delete(k); else _spCollapsed.add(k); }
+  else { if(_spExpanded.has(k))_spExpanded.delete(k); else _spExpanded.add(k); }
+  renderStatus();
+}
 var _spSort={key:'due',dir:'asc'};   // 현황판 정렬 상태 (기본: 납기 임박순)
 var _selOrders=new Set();                      // 선택된 주문 id
 function setSpSort(key){
@@ -5257,20 +5296,14 @@ function _renderStatusInner(){
       }).join('');
     } else if(_spGroup){
       // 프로젝트 묶기: 프로젝트 소제목으로 구분
-      var ps=[],pm={};
-      orders.forEach(function(o){
-        var p=(o.project||'').trim();
-        var k=p||('\u0000solo:'+o.id);
-        if(!pm[k]){pm[k]={key:k, solo:!p, items:[]};ps.push(pm[k]);}
-        pm[k].items.push(o);
-      });
+      var ps=_spGroups(orders);
       inner=ps.map(function(g){
-        if(g.solo)return g.items.map(cardHTML).join('');   // 프로젝트 없는 건은 그대로
-        var exp=_spExpanded.has(g.key);
+        if(g.items.length<2)return g.items.map(cardHTML).join('');   // 한 건뿐이면 묶지 않는다
+        var exp=_grpExpanded(g.key);
         var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
         return '<div data-pk="'+hEsc(g.key)+'" onclick="toggleProjGroup(this)" style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:11px 13px;border-radius:9px;background:var(--purple-lt);color:var(--purple);font-size:13px;font-weight:800;cursor:pointer">'
           +'<span style="width:12px">'+(exp?'▼':'▶')+'</span>'
-          +'<span>🗂 '+hEsc(g.key)+'</span>'
+          +'<span>'+(g.mon?'📅 '+hEsc(g.cust)+' · '+(g.month?hEsc(g.month)+' 납기':'납기 없음'):'🗂 '+hEsc(g.key))+'</span>'
           +'<span style="font-weight:600;color:var(--tx3);font-size:11px">'+g.items.length+'건'+(qsum?' · 수량 '+qsum.toLocaleString():'')+'</span></div>'
           +(exp?g.items.map(cardHTML).join(''):'');
       }).join('');
@@ -5368,18 +5401,12 @@ function _renderStatusInner(){
   } else if(_spGroup){
     var COLN=13, canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
     var _todayISO=new Date().toISOString().slice(0,10);
-    var _gs=[],_gm={};
-    orders.forEach(function(o){
-      var p=(o.project||'').trim();
-      // 프로젝트가 없으면 묶지 않고 한 줄씩 (개별 등록한 건)
-      var k=p||('\u0000solo:'+o.id);
-      if(!_gm[k]){_gm[k]={key:k, solo:!p, items:[]};_gs.push(_gm[k]);}
-      _gm[k].items.push(o);
-    });
+    // 프로젝트는 프로젝트로, 프로젝트 없는 건(단품)은 고객사 + 납기월로 묶는다
+    var _gs=_spGroups(orders);
     _gs.forEach(function(g){
       var n=g.items.length, main=g.items[0];
-      if(n>1&&!g.solo){
-        var exp=_spExpanded.has(g.key);
+      if(n>1){
+        var exp=_grpExpanded(g.key);
         // 프로젝트 줄 — 품목 내용은 넣지 않는다
         var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
         var doneN=g.items.filter(function(x){return isOrderDone(x);}).length;
@@ -5393,7 +5420,8 @@ function _renderStatusInner(){
         var ck=Object.keys(custs);
         var dues={}; g.items.forEach(function(x){ var v=normDueToISO(x.due); if(v)dues[v]=1; });
         var dk=Object.keys(dues).sort();
-        var BG='background:var(--purple-lt);border-top:1px solid #ddd6fe;border-bottom:1px solid #ddd6fe';
+        var BG=g.mon?'background:#f1f5fb;border-top:1px solid #dbe3ef;border-bottom:1px solid #dbe3ef'
+                    :'background:var(--purple-lt);border-top:1px solid #ddd6fe;border-bottom:1px solid #ddd6fe';
         var TD='padding:11px 10px;'+BG;
         rows+='<tr class="proj-head" data-pk="'+_he(g.key)+'" style="cursor:pointer" onclick="toggleProjGroup(this)">'
           // 체크
@@ -5410,7 +5438,12 @@ function _renderStatusInner(){
           +'<td style="'+TD+'">'
             +'<span style="display:inline-flex;align-items:center;gap:7px">'
               +'<span style="color:var(--purple);font-size:11px;width:10px">'+(exp?'▼':'▶')+'</span>'
-              +'<span style="font-size:13px;font-weight:800;color:var(--tx)">'+_he(g.key)+'</span>'
+              +(g.mon
+                ? '<span style="display:inline-block;line-height:1.3">'
+                    +'<span style="display:block;font-size:13px;font-weight:800;color:var(--tx);white-space:nowrap">📅 '+(g.month?_he(g.month):'납기 없음')+'</span>'
+                    +'<span style="display:block;font-size:10.5px;color:var(--tx3);font-weight:600;white-space:nowrap">단품 · 납기월</span>'
+                  +'</span>'
+                : '<span style="font-size:13px;font-weight:800;color:var(--tx)">'+_he(g.key)+'</span>')
             +'</span>'
           +'</td>'
           // 도면번호 자리 — 몇 건인지
@@ -5438,7 +5471,7 @@ function _renderStatusInner(){
           +'<td style="'+TD+'"></td>'
           +'<td style="'+TD+'"></td>'
         +'</tr>';
-        if(exp){ for(var i=0;i<n;i++){ rows+=rowHTML(g.items[i],'<span style="color:var(--tx3);padding-left:14px">└ '+_he(g.items[i].project||'')+'</span>',true); } }
+        if(exp){ for(var i=0;i<n;i++){ rows+=rowHTML(g.items[i],'<span style="color:var(--tx3);padding-left:14px">└ '+_he(g.items[i].project||(g.mon?'단품':''))+'</span>',true); } }
       } else {
         rows+=rowHTML(main, _he(main.project||'—'), false);
       }
@@ -6568,8 +6601,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.13';
+var APP_VER='v7.14';
 var VER_LOG=[
+  {v:'v7.14',d:'2026-09', t:'[공정현황 · 단품 납기월 묶음] 프로젝트 없이 등록한 건(단품)을 고객사 + 납기월로 묶어 한 줄 머리로 보여 줍니다 (예: 📅 2026-09 · 단품 52건 · 지연 21). 지난 달과 이번 달은 펼친 채, 다음 달부터는 접힌 채로 시작하고 머리를 누르면 펴고 접습니다. 머리의 체크를 누르면 그 달 건이 한꺼번에 골라져 납기 변경·완료 처리를 할 수 있습니다 (지금 화면에 보이는 건만). 그 달에 한 건뿐이면 묶지 않습니다. [프로젝트 묶기] 를 끄면 예전처럼 한 줄씩 나옵니다'},
   {v:'v7.13',d:'2026-09', t:'[공정 이력관리] PO 옆에 Order / Del Line 열을 넣었습니다. 같은 도면이 PO 라인별로 여러 건일 때 어느 건의 기록인지 구분됩니다. 머리를 누르면 라인 순으로 정렬되고, 검색창에 「818052 1/2」 처럼 넣어도 찾습니다. CSV 내보내기에도 Order Line · Del Line 열이 붙습니다. CSV 의 PO 가 같은 도면의 다른 수주 PO 로 찍힐 수 있던 문제도 고쳐, 이제 기록에 남은 PO 를 그대로 씁니다. 라인 없이 찍힌 옛 기록은 — 로 보입니다'},
   {v:'v7.12',d:'2026-09', t:'[납기 일괄 변경] 공정현황에서 건을 체크하면 위 일괄 처리 줄에 [📅 납기 변경] 이 생깁니다. 프로젝트 묶음 줄을 체크하면 그 프로젝트 건이 한꺼번에 잡힙니다. 「날짜로 맞추기」 는 모두 같은 날짜로, 「며칠 미루기」 는 건마다 지금 납기에서 +1주·+2주처럼 옮깁니다 (− 로 넣으면 앞당김). 바뀌기 전·후 납기를 목록으로 보여 주고, 출하까지 끝난 건은 건드리지 않습니다. 바꾼 뒤에는 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
   {v:'v7.11',d:'2026-09', t:'[REV 대조] 도면 출도 때 PO · 작업지시서(OCR) · 도면 세 가지의 REV 가 맞는지 확인합니다. 예전에는 OCR 은 REV 를 보지 않고 도면번호만으로 골랐고, 도면은 맞는 REV 가 없으면 다른 REV 로 조용히 대신했습니다. 이제 PO 의 REV 와 같은 파일을 먼저 고르고, 하나라도 다르면 「REV 다름」 으로 표시해 출력에서 빼 둡니다. 빨간 [REV 다름] 카드를 누르면 어느 건이 어떻게 다른지 목록이 나오고 복사할 수 있습니다. 확인하고 그대로 뽑을 거면 목록에서 체크하면 됩니다. 파일 이름에 REV 가 없으면 「REV 확인 못 함」 으로 알려 줍니다. 목록에서 체크를 풀면 줄이 사라지던 문제도 함께 고쳤습니다'},
