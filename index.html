@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.14</title>
+<title>하네스 공정관리 v7.16</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.14</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.16</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -715,7 +715,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.14 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.16 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -2429,16 +2429,19 @@ function hsLogRow(l){
           result:l.result||null};
 }
 async function hsSaveOrders(only){
+  hsDataChanged();
   safeCache('hs_orders',HS.orders);
   const sb=getSB();
   if(!sb){ if(Array.isArray(only)&&only.length)outboxPut('orders',only); return; }
   // only(배열)가 주어지면 해당 건만 전송
   const _rows=(Array.isArray(only)&&only.length)?only:HS.orders;
+  // 전체 저장이 실패했을 때 수천 건을 대기열에 넣으면 1000건에서 잘리며 최신 기록이 버려진다 → 고른 건만 넣는다
+  const _q=(Array.isArray(only)&&only.length)?_rows:[];
   try{
     const res=await sb.from('harness_orders').upsert(_rows.map(hsOrderRow));
     if(res.error){
       console.warn('orders sync err',res.error);
-      if(!(res.error.message&&res.error.message.includes('column')))outboxPut('orders',_rows);
+      if(!(res.error.message&&res.error.message.includes('column')))outboxPut('orders',_q);
       if(res.error.message&&res.error.message.includes('column')){
         // 어떤 컬럼이 없는지 오류 문구에서 알아내, 그것만 빼고 다시 보낸다.
         //   예전에는 기본 7개만 남겨 PO·라인·납기까지 사라졌다.
@@ -2458,7 +2461,7 @@ async function hsSaveOrders(only){
         }));
         if(res2.error){
           console.warn('orders sync err(2)',res2.error);
-          outboxPut('orders',_rows);
+          outboxPut('orders',_q);
           toast('저장 실패 — 컬럼 추가 SQL 을 실행하세요','err');
         }else{
           outboxDrop('orders',_rows);
@@ -2467,21 +2470,22 @@ async function hsSaveOrders(only){
       }
     }
     else{ outboxDrop('orders',_rows); }
-  }catch(e){console.warn('orders sync err',e);outboxPut('orders',_rows);}
+  }catch(e){console.warn('orders sync err',e);outboxPut('orders',_q);}
 }
 
 async function hsSaveLogs(only){
-  invalidateLogIdx();
+  hsDataChanged();
   safeCache('hs_logs',HS.logs);
   const sb=getSB();
   if(!sb){ if(Array.isArray(only)&&only.length)outboxPut('logs',only); return; }
   // only(배열)가 주어지면 해당 건만 전송 — 스캔 1건에 전체 로그를 보내지 않도록
   const _rows=(Array.isArray(only)&&only.length)?only:HS.logs;
+  const _q=(Array.isArray(only)&&only.length)?_rows:[];
   try{
     const res=await sb.from('harness_logs').upsert(_rows.map(hsLogRow));
     if(res.error){
       console.warn('logs sync err',res.error);
-      if(!(res.error.message&&res.error.message.includes('column')))outboxPut('logs',_rows);
+      if(!(res.error.message&&res.error.message.includes('column')))outboxPut('logs',_q);
       if(res.error.message&&res.error.message.includes('column')){
         await sb.from('harness_logs').upsert(_rows.map(function(l){
           return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
@@ -2491,7 +2495,7 @@ async function hsSaveLogs(only){
       }
     }
     else{ outboxDrop('logs',_rows); clearSyncWarn(); }
-  }catch(e){console.warn('logs sync err',e);outboxPut('logs',_rows);}
+  }catch(e){console.warn('logs sync err',e);outboxPut('logs',_q);}
 }
 
 // 지우기 전에 내용을 남긴다. 되돌릴 수 없는 작업이라 기록이 있어야 한다.
@@ -2519,12 +2523,12 @@ async function archiveDeletedOrders(orders, via, reason){
 async function hsDeleteOrder(id){
   safeCache('hs_orders',HS.orders);
   const sb=getSB();if(!sb)return;
-  try{ await sb.from('harness_orders').delete().eq('id',id); }catch(e){}
+  try{ var _r=await sb.from('harness_orders').delete().eq('id',id); if(_r&&_r.error)toast('서버에서 지우지 못했습니다: '+_r.error.message,'err'); }catch(e){ toast('서버에서 지우지 못했습니다','err'); }
 }
 async function hsDeleteLog(id){
   safeCache('hs_logs',HS.logs);
   const sb=getSB();if(!sb)return;
-  try{ await sb.from('harness_logs').delete().eq('id',id); }catch(e){}
+  try{ var _r=await sb.from('harness_logs').delete().eq('id',id); if(_r&&_r.error)toast('서버에서 기록을 지우지 못했습니다: '+_r.error.message,'err'); }catch(e){ toast('서버에서 기록을 지우지 못했습니다','err'); }
 }
 
 
@@ -3267,7 +3271,7 @@ WOC.findDwg=function(order){
     if(same.length)return same.reduce(function(a,x){ return x.ed>a.ed?x:a; });
   }
   return c.reduce(function(a,x){
-    var ra=(a.rev||'').charCodeAt(0)||0, rx=(x.rev||'').charCodeAt(0)||0;
+    var ra=revRank(a.rev), rx=revRank(x.rev);
     if(rx!==ra)return rx>ra?x:a;
     return x.ed>a.ed?x:a;
   });
@@ -3540,41 +3544,81 @@ WOC.paintPO=function(){
   +(multi?'<div style="margin-top:9px;background:var(--blue-lt);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:9px 12px;font-size:12px;color:var(--tx2);line-height:1.7">\ud83d\udccc \uac19\uc740 \ub3c4\uba74\ubc88\ud638\uac00 <b>\uc5ec\ub7ec PO</b>\ub85c \ub098\ub220\uc9c4 \uac83\uc774 '+multi+'\uc885 \uc788\uc2b5\ub2c8\ub2e4. <b>PO \uac74\ub9c8\ub2e4 \ud55c \uc7a5\uc529</b> \ub530\ub85c \ub9cc\ub4e4\uc5b4 \ucd9c\ub825\ud569\ub2c8\ub2e4.</div>':'');
 };
 
+// 머릿말·꼬리말에 쪽번호가 들어가는지
+WOC._usesPg=function(ctx){
+  var s=[ctx.header,ctx.footer].map(function(x){ return x&&x.on?((x.l||'')+(x.c||'')+(x.r||'')):''; }).join('');
+  return /\{페이지\}|\{전체\}/.test(s);
+};
+WOC._usesTotal=function(ctx){
+  var s=[ctx.header,ctx.footer].map(function(x){ return x&&x.on?((x.l||'')+(x.c||'')+(x.r||'')):''; }).join('');
+  return /\{전체\}/.test(s);
+};
+WOC._pages=async function(bytes){
+  try{ return (await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true})).getPageCount(); }catch(e){ return 0; }
+};
+// 한 건이 몇 쪽이 되는지 (지시서 부수 + 도면 부수까지) — {전체} 계산용
+WOC.countSet=async function(t){
+  var self=WO_ctx();
+  var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
+  if(WOC.cust==='dwgonly'){
+    var b=t.bytes||new Uint8Array(await t.file.arrayBuffer());
+    return (await WOC._pages(b))*(rec.dwg||1);
+  }
+  var n=0;
+  if(rec.wo>0)n+=(await WOC._pages(await self.ensureBytes(t)))*rec.wo;
+  if(rec.dwg&&t.order){
+    var hit=WOC.findDwg(t.order);
+    if(hit)n+=(await WOC._pages(new Uint8Array(await hit.file.arrayBuffer())))*rec.dwg;
+  }
+  return n;
+};
+// 여러 PDF 를 하나로 (개별 저장용)
+WOC.mergeParts=async function(parts){
+  if(parts.length===1)return parts[0];
+  var m=await PDFLib.PDFDocument.create();
+  for(var i=0;i<parts.length;i++){
+    var d=await PDFLib.PDFDocument.load(parts[i]);
+    var pp=await m.copyPages(d,d.getPageIndices());
+    pp.forEach(function(x){ m.addPage(x); });
+  }
+  return await m.save();
+};
+// 한 건 = [작업지시서 × 부수] + [도면 × 부수]
+//   쪽번호를 쓰면 부수마다 따로 그려 번호가 이어지게 한다 (예전에는 모든 부에 같은 번호가 찍혔다).
 WOC.buildOneSet=async function(t, pgFrom, pgTotal){
   var self=WO_ctx();
   var rec=WOC.RECIPE[WOC.cust]||WOC.RECIPE.harness;
-  var out=[];
-  // 도면만 출력 — 고른 파일 그대로 머릿말만 넣는다
-  if(WOC.cust==='dwgonly'){
+  var out=[], pg=pgFrom||1, per=WOC._usesPg(self);
+  // 같은 판을 부수만큼 넣는다. 쪽번호가 있으면 부마다 새로 그린다.
+  async function copies(n, make){
+    var one=null;
+    for(var c=0;c<n;c++){
+      if(!one||per){ one=await make(pg); }
+      out.push(one);
+      if(per)pg+=await WOC._pages(one);
+    }
+  }
+  async function asDwg(file, order, from){
+    // 도면에도 같은 머릿말·꼬리말이 찍혀야 한다.
+    //   DQ.buildOne 은 DQ 의 설정을 보므로 그리는 동안만 WO 것으로 바꿔 둔다.
     var _h=DQ.header, _f=DQ.footer;
     DQ.header=self.header; DQ.footer=self.footer;
-    try{
-      var one=await DQ.buildOne({file:t.file, order:t.order||{}},
-              {noQr:true, pgFrom:pgFrom, pgTotal:pgTotal});
-      for(var d0=0;d0<(rec.dwg||1);d0++)out.push(one);
-    } finally { DQ.header=_h; DQ.footer=_f; }
+    try{ return await DQ.buildOne({file:file, order:order}, {noQr:true, pgFrom:from, pgTotal:pgTotal}); }
+    finally{ DQ.header=_h; DQ.footer=_f; }
+  }
+  // 도면만 출력 — 고른 파일 그대로 머릿말만 넣는다
+  if(WOC.cust==='dwgonly'){
+    await copies(rec.dwg||1, function(from){ return asDwg(t.file, t.order||{}, from); });
     return out;
   }
   // ① 작업지시서 — QR 을 넣는다
   if(rec.wo>0){
-    var woPdf=await self.buildOne(t,{pgFrom:pgFrom, pgTotal:pgTotal});
-    for(var w=0;w<rec.wo;w++)out.push(woPdf);
+    await copies(rec.wo, function(from){ return self.buildOne(t,{pgFrom:from, pgTotal:pgTotal}); });
   }
   // ② 도면 — QR 을 넣지 않는다. A4 로 맞추고 회전만 바로 세운다.
   if(rec.dwg&&t.order){
     var hit=WOC.findDwg(t.order);
-    if(hit){
-      // 도면에도 같은 머릿말·꼬리말이 찍혀야 한다.
-      //   DQ.buildOne 은 DQ 의 설정을 보므로 그리는 동안만 WO 것으로 바꿔 둔다.
-      var _h=DQ.header, _f=DQ.footer;
-      DQ.header=self.header; DQ.footer=self.footer;
-      var one;
-      try{
-        one=await DQ.buildOne({file:hit.file, order:t.order},
-              {noQr:true, pgFrom:pgFrom, pgTotal:pgTotal});
-      } finally { DQ.header=_h; DQ.footer=_f; }
-      for(var i=0;i<rec.dwg;i++)out.push(one);
-    }
+    if(hit)await copies(rec.dwg, function(from){ return asDwg(hit.file, t.order, from); });
   }
   return out;
 };
@@ -4210,7 +4254,7 @@ var ALMUI={
         +'<td style="padding:9px 10px;white-space:nowrap">'+(function(){
             var _can=(typeof AUTH==='undefined'||AUTH.isAdmin());
             var e=normDueToISO(o.eta);
-            var today=new Date().toISOString().slice(0,10);
+            var today=almToday();
             if(!e)return _can
               ? '<button onclick="editETA(\''+o.id+'\')" style="border:1px dashed var(--border);background:transparent;'
                 +'color:var(--tx3);padding:3px 10px;border-radius:7px;font-size:11px;cursor:pointer;font-family:var(--sans)">적기</button>'
@@ -4439,6 +4483,7 @@ async function hsLoad(){
     const [d1,d2]=await Promise.race([dataP,timeout]);
     HS.orders=d1||[];
     HS.logs=d2||[];
+    hsDataChanged();
     // 고객사 표기가 섞여 있으면 화면에서 두 곳으로 나뉜다. 보여줄 때 한 가지로 맞춘다.
     //   (서버 자료는 PO 를 다시 올릴 때 함께 정리된다)
     HS.orders.forEach(function(o){ if(o.customer)o.customer=canonCustomer(o.customer); });
@@ -4624,6 +4669,9 @@ function logsFor(dwg){
   return _logIdx.get(dwg)||[];
 }
 function invalidateLogIdx(){_logIdx=null;}
+// 자료가 바뀌면 도번별 로그 목록과 공정 이슈 계산을 버린다.
+//   건수만 보고 다시 만들면, 다른 폰이 공정을 「끝냄」 만 했을 때(건수 그대로) 옛 상태가 남는다.
+function hsDataChanged(){ _logIdx=null; try{ _almCache=null; }catch(e){} }
 // 로그-주문 매칭: 객체(ref)면 도번+PO+OL+DL 합치키, 문자열이면 도번만(레거시)
 function logMatch(l, ref){
   if(ref&&typeof ref==='object'){
@@ -4671,6 +4719,8 @@ function _projKey(o){ return (o.project||'').trim()||'(미지정)'; }
 //   키: '@@mon|고객사|YYYY-MM'  (납기 없으면 월 자리가 빈칸)
 //   지난 달·이번 달·납기 없음은 펼친 채, 다음 달부터는 접힌 채로 시작한다.
 var _spCollapsed=new Set();         // 기본 펼침 묶음 중 사람이 접은 것
+// 묶음용 프로젝트 이름 — 「단품」, 「단품 (9월 납기 7품목)」 처럼 단품으로 시작하면 프로젝트가 없는 것으로 본다
+function _grpProj(o){ var p=(o.project||'').trim(); return /^단품/.test(p)?'':p; }
 function _monKey(o){
   var c=(o.customer||'').trim()||'(미지정)';
   var m=(normDueToISO(o.due)||'').slice(0,7);
@@ -4687,7 +4737,7 @@ function _grpExpanded(k){
 function _spGroups(orders){
   var gs=[], gm={};
   orders.forEach(function(o){
-    var p=(o.project||'').trim();
+    var p=_grpProj(o);
     var k=p||_monKey(o);
     if(!gm[k]){
       var sp=k.split('|');
@@ -4713,7 +4763,7 @@ var ETA={
     var g=function(k){return document.getElementById(k);};
     g('eta-sub').textContent=(o.dwg_no||'')+(o.rev?' '+o.rev:'')
       +(o.po?'  ·  '+o.po:'')+((o.ord_ln||o.del_ln)?'  '+(o.ord_ln||'-')+'/'+(o.del_ln||'-'):'');
-    var today=new Date().toISOString().slice(0,10);
+    var today=almToday();
     var late=due&&due<today&&!isOrderDone(o);
     var dd=due?Math.floor((new Date(today)-new Date(due))/86400000):0;
     g('eta-now').innerHTML=
@@ -4761,12 +4811,12 @@ var ETA={
   close:function(){ var e=document.getElementById('eta-ovl'); if(e)e.classList.add('hidden'); ETA.id=null; },
   add:function(n){
     var el=document.getElementById('eta-input');
-    var base=el.value||new Date().toISOString().slice(0,10);
+    var base=el.value||almToday();
     var d=new Date(base+'T00:00:00'); if(isNaN(d))d=new Date();
     d.setDate(d.getDate()+n);
     el.value=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
   },
-  today:function(){ document.getElementById('eta-input').value=new Date().toISOString().slice(0,10); },
+  today:function(){ document.getElementById('eta-input').value=almToday(); },
   clear:function(){ document.getElementById('eta-input').value=''; ETA.save(); },
   save:async function(){
     var o=ETA.o; if(!o)return;
@@ -4799,17 +4849,27 @@ function editETA(id){ ETA.open(id); }
 function etaLate(o){
   var e=normDueToISO(o&&o.eta); if(!e)return false;
   if(isOrderDone(o))return false;
-  return e < new Date().toISOString().slice(0,10);
+  return e < almToday();
 }
 // 프로젝트 묶음 전체 선택
 function toggleProjSel(el){
   var pk=el.getAttribute('data-pk');
   // 월 묶음은 지금 화면에 보이는 건만 (필터로 가려진 건·완료 건은 고르지 않는다)
   var ids=_isMonKey(pk)
-    ? HS.orders.filter(function(o){ return _spVisibleIds.indexOf(o.id)>=0 && !(o.project||'').trim() && _monKey(o)===pk; }).map(function(o){return o.id;})
+    ? HS.orders.filter(function(o){ return _spVisibleIds.indexOf(o.id)>=0 && !_grpProj(o) && _monKey(o)===pk; }).map(function(o){return o.id;})
     : HS.orders.filter(function(o){ return _projKey(o)===pk; }).map(function(o){return o.id;});
   ids.forEach(function(id){ if(el.checked)_selOrders.add(id); else _selOrders.delete(id); });
   refreshSpTab();
+}
+// 고객사별 보기에서 고객사 머리를 누르면 그 고객사만 (다시 누르면 전체)
+function spCustFilter(c){
+  var s=document.getElementById('flt-cust'); if(!s)return;
+  if(s.value){ s.value=''; }
+  else{
+    if(![].some.call(s.options,function(op){return op.value===c;})){ var op=document.createElement('option'); op.value=c; op.textContent=c; s.appendChild(op); }
+    s.value=c;
+  }
+  renderStatus();
 }
 function toggleProjGroup(el){
   var k=el.dataset.pk||'';
@@ -4867,8 +4927,9 @@ async function bulkChangeType(){
   if(!code)return;
   code=code.trim().toUpperCase();
   if(!H_STEP_TYPES.some(function(t){return t.code===code;})){toast('없는 공정구분: '+code,'err');return;}
-  HS.orders.forEach(function(o){if(_selOrders.has(o.id))o.step_type=code;});
-  await hsSaveOrders();
+  var _chg=HS.orders.filter(function(o){return _selOrders.has(o.id);});
+  _chg.forEach(function(o){o.step_type=code;});
+  await hsSaveOrders(_chg);
   _selOrders.clear();
   renderStatus();
   toast('공정구분 '+code+'형으로 변경 완료','ok');
@@ -4877,11 +4938,13 @@ async function bulkDoneSelected(val){
   if(!_selOrders.size)return;
   var ids=[..._selOrders];
   ids.forEach(function(id){var o=HS.orders.find(function(x){return x.id===id;});if(o)o.manually_done=val;});
+  hsDataChanged();
   safeCache('hs_orders',HS.orders);
-  var sb=getSB();
-  if(sb){for(var i=0;i<ids.length;i++){try{await sb.from('harness_orders').update({manually_done:val}).eq('id',ids[i]);}catch(e){}}}
+  var sb=getSB(), fail=0;
+  if(sb){for(var i=0;i<ids.length;i++){try{var _r=await sb.from('harness_orders').update({manually_done:val}).eq('id',ids[i]);if(_r&&_r.error)fail++;}catch(e){fail++;}}}
   _selOrders.clear();renderStatus();
-  toast(val?ids.length+'건 완료 처리':ids.length+'건 완료 취소','ok');
+  if(fail)toast((ids.length-fail)+'건 저장 · '+fail+'건 서버 저장 실패 (새로고침하면 원래대로 보입니다)','err');
+  else toast(val?ids.length+'건 완료 처리':ids.length+'건 완료 취소','ok');
 }
 async function bulkDeleteSelected(){
   if(!_selOrders.size)return;
@@ -5026,11 +5089,12 @@ async function deleteOrdersWithLog(targets, via){
   }
   var ids=targets.map(function(o){return o.id;});
   HS.orders=HS.orders.filter(function(o){return ids.indexOf(o.id)<0;});
-  hsSaveOrders();
-  var sb=getSB();
-  if(sb){for(var i=0;i<ids.length;i++){try{await sb.from('harness_orders').delete().eq('id',ids[i]);}catch(e){}}}
+  hsDataChanged(); safeCache('hs_orders',HS.orders);
+  var sb=getSB(), fail=0;
+  if(sb){for(var i=0;i<ids.length;i++){try{var _r=await sb.from('harness_orders').delete().eq('id',ids[i]);if(_r&&_r.error)fail++;}catch(e){fail++;}}}
   _selOrders.clear(); renderStatus();
-  toast(ids.length+'건 삭제됨'+(arch.ok?' · 이력 남김':' · 이력 없음'), arch.ok?'ok':'warn');
+  if(fail)toast((ids.length-fail)+'건 삭제 · '+fail+'건은 서버에서 지우지 못했습니다 (권한 확인)','err');
+  else toast(ids.length+'건 삭제됨'+(arch.ok?' · 이력 남김':' · 이력 없음'), arch.ok?'ok':'warn');
 }
 
 // 프로젝트 묶음 통째로 지우기
@@ -5094,7 +5158,7 @@ function getFilteredOrders(){
       ||(o.po||'').toLowerCase().includes(q)||(o.rev||'').toLowerCase().includes(q);
   });
   if(_spKpi){
-    var _t=new Date().toISOString().slice(0,10);
+    var _t=almToday();
     orders=orders.filter(function(o){
       if(isOrderDone(o))return false;
       var iso=o.due?normDueToISO(o.due):'';
@@ -5141,7 +5205,7 @@ function _renderStatusInner(){
   var cnt=document.getElementById('sp-cnt');
   if(cnt){
     // 상단 요약: 진행 · 오늘납기 · 지연 · 재작업 · 재검대기
-    var todayISO=new Date().toISOString().slice(0,10);
+    var todayISO=almToday();
     var sAct=0,sToday=0,sLate=0,sRw=0,sHold=0;
     HS.orders.forEach(function(o){
       var dn=isOrderDone(o);
@@ -5234,7 +5298,7 @@ function _renderStatusInner(){
       if(due){
         var iso=normDueToISO(due), lbl=fmtYYMMDD(due);
         if(/^\d{4}-\d{2}-\d{2}$/.test(iso)&&!done){
-          var dd=Math.floor((new Date(iso)-new Date(new Date().toISOString().slice(0,10)))/86400000);
+          var dd=Math.floor((new Date(iso)-new Date(almToday()))/86400000);
           if(dd<0)dueBadge='<span style="font-size:11px;font-weight:800;background:#d8443c;color:#fff;padding:3px 9px;border-radius:8px">납기 '+lbl+' · '+(-dd)+'일 지연</span>';
           else if(dd<=3)dueBadge='<span style="font-size:11px;font-weight:800;background:#E0922F;color:#fff;padding:3px 9px;border-radius:8px">납기 '+lbl+' · D-'+dd+'</span>';
           else dueBadge='<span style="font-size:11px;color:var(--tx2);font-weight:600">납기 '+lbl+'</span>';
@@ -5244,7 +5308,7 @@ function _renderStatusInner(){
       var _canEta=(typeof AUTH==='undefined'||AUTH.isAdmin());
       var _eta=normDueToISO(o.eta);
       if(!done){
-        var _lateE=_eta&&_eta<new Date().toISOString().slice(0,10);
+        var _lateE=_eta&&_eta<almToday();
         dueBadge+='<div style="margin-top:3px">'
           +(_eta
             ? '<span '+(_canEta?'onclick="event.stopPropagation();editETA(\''+o.id+'\')" style="cursor:pointer;':'style="')
@@ -5303,7 +5367,7 @@ function _renderStatusInner(){
         var qsum=g.items.reduce(function(s,x){return s+(parseInt(x.qty,10)||0);},0);
         return '<div data-pk="'+hEsc(g.key)+'" onclick="toggleProjGroup(this)" style="display:flex;align-items:center;gap:6px;margin:4px 2px 2px;padding:11px 13px;border-radius:9px;background:var(--purple-lt);color:var(--purple);font-size:13px;font-weight:800;cursor:pointer">'
           +'<span style="width:12px">'+(exp?'▼':'▶')+'</span>'
-          +'<span>'+(g.mon?'📅 '+hEsc(g.cust)+' · '+(g.month?hEsc(g.month)+' 납기':'납기 없음'):'🗂 '+hEsc(g.key))+'</span>'
+          +'<span>'+(g.mon?hEsc(g.cust)+' · '+(g.month?hEsc(g.month)+' 납기':'납기 없음'):'🗂 '+hEsc(g.key))+'</span>'
           +'<span style="font-weight:600;color:var(--tx3);font-size:11px">'+g.items.length+'건'+(qsum?' · 수량 '+qsum.toLocaleString():'')+'</span></div>'
           +(exp?g.items.map(cardHTML).join(''):'');
       }).join('');
@@ -5332,7 +5396,7 @@ function _renderStatusInner(){
     var checked=_selOrders.has(o.id)?' checked':'';
     return '<tr style="'+rowStyle+(canEdit?';cursor:pointer':'')+'" onclick="rowClickSel(\''+o.id+'\',event)">'
       +'<td style="text-align:center">'+(canEdit?'<input type="checkbox"'+checked+' data-oid="'+o.id+'" onchange="toggleOrderSel(this.dataset.oid,this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">':'')+'</td>'
-      +'<td style="font-weight:600;font-size:12px">'+(o.customer||'—')+'</td>'
+      +'<td title="'+hEsc(o.customer||'')+'" style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(o.customer||'—')+'</td>'
       +'<td style="font-family:var(--mono);font-size:11.5px">'+(function(){
           // 윗줄 PO, 아랫줄 오더라인/납품라인. 한 줄에 몰면 눈에 안 들어온다.
           if(!po&&!ol&&!dl)return '<span style="color:var(--tx3);font-size:10px">—</span>';
@@ -5345,7 +5409,7 @@ function _renderStatusInner(){
           }
           return top+sub;
         })()+'</td>'
-      +'<td style="font-size:12px;color:var(--tx2)">'+projCell+'</td>'
+      +'<td title="'+hEsc(o.project||'')+'" style="font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+projCell+'</td>'
       +'<td title="등록일 '+(o.created_at?fmtYYMMDD(isoToLocalYMD(o.created_at)):'—')+'"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="dwg-no">'+(o.dwg_no||'—')+'</span>'+reworkBadge+'</div></td>'
       +'<td style="text-align:center">'+(o.rev?'<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx2)">'+hEsc(o.rev)+'</span>':'<span style="color:var(--tx3);font-size:10px">—</span>')+'</td>'
       +'<td style="text-align:center;font-size:12px">'+(o.unit||'—')+'</td>'
@@ -5355,7 +5419,7 @@ function _renderStatusInner(){
           if(!due)return '<span style="color:var(--tx3);font-size:10px">—</span>';
           var iso=normDueToISO(due), lbl=fmtYYMMDD(due);
           if(/^\d{4}-\d{2}-\d{2}$/.test(iso)&&!done){
-            var dd=Math.floor((new Date(iso)-new Date(new Date().toISOString().slice(0,10)))/86400000);
+            var dd=Math.floor((new Date(iso)-new Date(almToday()))/86400000);
             if(dd<0)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:#fef2f2;border:1px solid #fecaca;color:var(--red);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">'+(-dd)+'일 지연</span></span>';
             if(dd<=3)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:var(--amber-lt);border:1px solid #fde68a;color:var(--amber);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">D-'+dd+'</span></span>';
           }
@@ -5367,7 +5431,7 @@ function _renderStatusInner(){
           var _can=(typeof AUTH==='undefined'||AUTH.isAdmin());
           var e=normDueToISO(o.eta);
           if(!e)return '';   // 적힌 것만 보여 준다. 없는 행까지 나오면 목록이 지저분해진다
-          var lateE=e<new Date().toISOString().slice(0,10);
+          var lateE=e<almToday();
           return '<div style="margin-top:3px"><span '
             +(_can?'onclick="event.stopPropagation();editETA(\''+o.id+'\')" style="cursor:pointer;':'style="')
             +'font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;'
@@ -5389,20 +5453,18 @@ function _renderStatusInner(){
       +'</tr>';
   }
   var rows='';
-  if(_spView==='cust'){
-    // 고객사별 소제목 구분 (섹션 내부는 현재 정렬 = 납기순 유지)
-    var _cs=[],_cm={};
-    orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!_cm[k]){_cm[k]={key:k,items:[]};_cs.push(_cm[k]);}_cm[k].items.push(o);});
-    _cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
-    _cs.forEach(function(g){
-      rows+='<tr><td colspan="11" style="background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12px;padding:7px 12px;border-top:2px solid rgba(23,85,244,.25)">🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span></td></tr>';
-      g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
-    });
-  } else if(_spGroup){
+  // 묶음 줄 (프로젝트 · 단품 납기월) — 전체 보기와 고객사별 보기가 같이 쓴다
+  function _groupRowsHTML(list){
+    var rows='';
     var COLN=13, canEdit=(typeof AUTH==='undefined'||AUTH.isAdmin());
-    var _todayISO=new Date().toISOString().slice(0,10);
+    var _todayISO=almToday();
     // 프로젝트는 프로젝트로, 프로젝트 없는 건(단품)은 고객사 + 납기월로 묶는다
-    var _gs=_spGroups(orders);
+    var _gs=_spGroups(list);
+    if(_spSort.key==='due'){
+      var _gmin=function(g){ var m='9999-99-99'; g.items.forEach(function(x){ var v=normDueToISO(x.due); if(v&&v<m)m=v; }); return m; };
+      _gs.forEach(function(g){ g._min=_gmin(g); });
+      _gs.sort(function(a,b){ var r=a._min<b._min?-1:a._min>b._min?1:0; return _spSort.dir==='asc'?r:-r; });
+    }
     _gs.forEach(function(g){
       var n=g.items.length, main=g.items[0];
       if(n>1){
@@ -5434,16 +5496,16 @@ function _renderStatusInner(){
           +'</td>'
           // PO — 묶음이라 비워 둔다
           +'<td style="'+TD+';color:var(--tx3)">—</td>'
-          // 프로젝트 (펼침 표시 + 이름)
-          +'<td style="'+TD+'">'
-            +'<span style="display:inline-flex;align-items:center;gap:7px">'
+          // 프로젝트 (펼침 표시 + 이름) — 칸을 넘치면 … 로 줄이고, 옆 칸을 덮지 않게
+          +'<td style="'+TD+';overflow:hidden">'
+            +'<span style="display:flex;align-items:center;gap:7px;min-width:0">'
               +'<span style="color:var(--purple);font-size:11px;width:10px">'+(exp?'▼':'▶')+'</span>'
               +(g.mon
                 ? '<span style="display:inline-block;line-height:1.3">'
-                    +'<span style="display:block;font-size:13px;font-weight:800;color:var(--tx);white-space:nowrap">📅 '+(g.month?_he(g.month):'납기 없음')+'</span>'
+                    +'<span style="display:block;font-size:13px;font-weight:800;color:var(--tx);white-space:nowrap">'+(g.month?_he(g.month):'납기 없음')+'</span>'
                     +'<span style="display:block;font-size:10.5px;color:var(--tx3);font-weight:600;white-space:nowrap">단품 · 납기월</span>'
                   +'</span>'
-                : '<span style="font-size:13px;font-weight:800;color:var(--tx)">'+_he(g.key)+'</span>')
+                : '<span title="'+_he(g.key)+'" style="font-size:13px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1">'+_he(g.key)+'</span>')
             +'</span>'
           +'</td>'
           // 도면번호 자리 — 몇 건인지
@@ -5476,6 +5538,25 @@ function _renderStatusInner(){
         rows+=rowHTML(main, _he(main.project||'—'), false);
       }
     });
+    return rows;
+  }
+  if(_spView==='cust'){
+    // 고객사별: 고객사 머리 아래에 묶음(프로젝트·납기월)을 납기순으로. 머리를 누르면 그 고객사만 보기
+    var _cs=[],_cm={};
+    orders.forEach(function(o){var k=(o.customer||'').trim()||'(미지정)';if(!_cm[k]){_cm[k]={key:k,items:[]};_cs.push(_cm[k]);}_cm[k].items.push(o);});
+    _cs.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
+    var _fc=(document.getElementById('flt-cust')||{}).value||'';
+    _cs.forEach(function(g){
+      rows+='<tr><td colspan="12" onclick="spCustFilter(this.dataset.c)" data-c="'+_he(g.key)+'" title="눌러서 이 고객사만 보기 / 다시 누르면 전체" '
+        +'style="cursor:pointer;background:var(--blue-lt);color:var(--blue);font-weight:800;font-size:12.5px;padding:8px 12px;border-top:2px solid rgba(23,85,244,.25)">'
+        +'🏢 '+_he(g.key)+' <span style="font-weight:600;color:var(--tx3)">('+g.items.length+'건)</span>'
+        +'<span style="float:right;font-size:11px;font-weight:700;color:'+(_fc?'var(--red)':'var(--tx3)')+'">'+(_fc?'✕ 전체 고객사 보기':'이 고객사만 보기')+'</span>'
+        +'</td></tr>';
+      if(_spGroup) rows+=_groupRowsHTML(g.items);
+      else g.items.forEach(function(o){rows+=rowHTML(o,_he(o.project||'—'),false);});
+    });
+  } else if(_spGroup){
+    rows=_groupRowsHTML(orders);
   } else {
     rows=orders.map(function(o){return rowHTML(o, _he(o.project||'—'), false);}).join('');
   }
@@ -5485,9 +5566,9 @@ function _renderStatusInner(){
   var cols=[
     {h:'',key:null,w:32,al:'center'},
     {h:'고객사',key:'customer',w:96},
-    {h:'PO / Order Lines / Del Lines',key:'po',w:142},
-    {h:'프로젝트',key:'project',w:106},
-    {h:'도면번호',key:'dwg_no',w:150},
+    {h:'PO / 라인',key:'po',w:142},
+    {h:'프로젝트',key:'project',w:140},
+    {h:'도면번호',key:'dwg_no',w:124},
     {h:'Rev',key:'rev',w:46,al:'center'},
     {h:'호기',key:'unit',w:48,al:'center'},
     {h:'수량',key:'qty',w:48,al:'center'},
@@ -5738,14 +5819,22 @@ function autoDash(v){
 }
 async function saveDueText(input){
   var id=input.dataset.oid;
-  var isoVal=input.value.trim()?normDueToISO(input.value):'';
+  var raw=input.value.trim();
+  var isoVal=raw?normDueToISO(raw):'';
   if(isoVal&&!/^\d{4}-\d{2}-\d{2}$/.test(isoVal))isoVal='';
   var order=HS.orders.find(function(o){return o.id===id;});
   if(!order){renderStatus();return;}
+  // 뭔가 쳤는데 날짜로 못 읽으면 지우지 않고 그대로 둔다 (예전에는 납기가 지워졌다)
+  if(raw&&!isoVal){ toast('날짜로 읽을 수 없습니다: '+raw+' — 납기는 그대로 둡니다','err'); renderStatus(); return; }
+  var prevDue=order.due;
   order.due=isoVal;
+  hsDataChanged();
   safeCache('hs_orders',HS.orders);
   var sb=getSB();
-  if(sb){try{await sb.from('harness_orders').update({due:isoVal||null}).eq('id',id);toast('납기 저장: '+(isoVal?fmtYYMMDD(isoVal):'삭제'),'ok');}catch(ex){toast('납기 저장 실패','err');}}
+  if(sb){try{var _r=await sb.from('harness_orders').update({due:isoVal||null}).eq('id',id);
+      if(_r&&_r.error)throw _r.error;
+      toast('납기 저장: '+(isoVal?fmtYYMMDD(isoVal):'삭제'),'ok');}
+    catch(ex){ order.due=prevDue; safeCache('hs_orders',HS.orders); toast('납기 저장 실패: '+((ex&&ex.message)||''),'err');}}
   else{toast('납기 저장 (로컬)','ok');}
   renderStatus();
 }
@@ -5754,9 +5843,13 @@ async function toggleManualDone(cb){
   var order=HS.orders.find(function(o){return o.id===id;});
   if(!order)return;
   order.manually_done=val;
+  hsDataChanged();
   safeCache('hs_orders',HS.orders);
   var sb=getSB();
-  if(sb){try{await sb.from('harness_orders').update({manually_done:val}).eq('id',id);toast(val?'완료 처리됨':'완료 취소됨','ok');}catch(e){toast('저장 실패','err');}}
+  if(sb){try{var _r=await sb.from('harness_orders').update({manually_done:val}).eq('id',id);
+      if(_r&&_r.error)throw _r.error;
+      toast(val?'완료 처리됨':'완료 취소됨','ok');}
+    catch(e){ order.manually_done=!val; safeCache('hs_orders',HS.orders); toast('저장 실패: '+((e&&e.message)||''),'err');}}
   else{toast(val?'완료 처리 (로컬)':'완료 취소 (로컬)','ok');}
   renderStatus();
 }
@@ -6142,8 +6235,9 @@ function undoLastAction(){
   if(i>=0){
     var lg=HS.logs[i];
     HS.logs.splice(i,1);
+    hsDataChanged();
+    outboxDrop('logs',[lg]);                       // 대기열에 있던 것도 같이 뺀다 (안 빼면 나중에 다시 올라감)
     if(typeof hsDeleteLog==='function')hsDeleteLog(lg.id);
-    hsSaveLogs();
   }
   if(_lastAction.reworkSet&&_lastAction.orderId){
     var ord=HS.orders.find(function(o){return o.id===_lastAction.orderId;});
@@ -6601,8 +6695,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.14';
+var APP_VER='v7.16';
 var VER_LOG=[
+  {v:'v7.16',d:'2026-09', t:'[공정현황 보기 정리] ① 프로젝트 이름이 「단품」 으로 시작하는 건(단품, 단품 (9월 납기 7품목) 등)도 납기월 묶음에 합쳐, 단품이 두 군데로 나뉘지 않습니다. ② [프로젝트 묶기] + [고객사별] 을 같이 켜면 고객사 머리 아래에 묶음이 납기순(8월 → 9월 → …)으로 나옵니다. 고객사 머리를 누르면 그 고객사만 보이고, 다시 누르면 전체로 돌아갑니다. ③ 납기월 머리의 달력 아이콘을 뺐습니다. ④ 긴 프로젝트 이름·고객사가 두 줄로 꺾이거나 옆 칸을 덮지 않게 한 줄로 줄이고(…), 마우스를 올리면 전체가 보입니다. PO 열 제목을 「PO / 라인」 으로 줄이고 프로젝트 칸을 넓혔습니다'},
+  {v:'v7.15',d:'2026-09', t:'[검토 후속 · 화면 쪽 수정] ① 도면 출도 목록의 체크박스·전체선택·선택해제·✕ 가 먹지 않던 문제 수정 — 「REV 다름」 건도 체크하면 출력에 들어갑니다. ② [새로고침] 후에도 다른 폰이 끝낸 공정이 옛 상태로 보이던 문제 수정, 공정 이슈 숫자도 바로 다시 계산. ③ 병합 PDF 쪽번호 {페이지}/{전체} 가 지시서·도면 부수까지 이어서 매겨짐 (머릿말에 {전체} 를 써도 됨). ④ [개별 PDF 일괄 받기] 도 고객사 구성(지시서 + 도면 N부)대로, 「도면만 출력」 에서는 QR 없이. ⑤ 도면만 출력에서 한 도번에 REV 가 여러 개면 멈추던 문제 수정, REV 가 없을 때 최신판을 AA>Z · 10>9 로 바르게 고름. ⑥ 「오늘」 을 한국시간으로 통일 (아침 9시 전 지연·오늘납기·D-day·예상일 [오늘]). ⑦ 납기 칸에 날짜가 아닌 글자를 치면 지우지 않고 그대로 둠. ⑧ 서버가 저장·삭제를 거부하면 성공이라 하지 않고 알림. ⑨ 출력·삭제·공정구분 변경·방금 기록 취소·이력 수정 때 전체를 서버에 덮어쓰던 것을 바꾼 건만 보내도록 — 다른 PC 가 바꾼 값이 되돌아가지 않음. ⑩ 오프라인 대기열에 최신 기록이 남도록, 이력 수정에서 완료가 시작보다 빠르면 막음'},
   {v:'v7.14',d:'2026-09', t:'[공정현황 · 단품 납기월 묶음] 프로젝트 없이 등록한 건(단품)을 고객사 + 납기월로 묶어 한 줄 머리로 보여 줍니다 (예: 📅 2026-09 · 단품 52건 · 지연 21). 지난 달과 이번 달은 펼친 채, 다음 달부터는 접힌 채로 시작하고 머리를 누르면 펴고 접습니다. 머리의 체크를 누르면 그 달 건이 한꺼번에 골라져 납기 변경·완료 처리를 할 수 있습니다 (지금 화면에 보이는 건만). 그 달에 한 건뿐이면 묶지 않습니다. [프로젝트 묶기] 를 끄면 예전처럼 한 줄씩 나옵니다'},
   {v:'v7.13',d:'2026-09', t:'[공정 이력관리] PO 옆에 Order / Del Line 열을 넣었습니다. 같은 도면이 PO 라인별로 여러 건일 때 어느 건의 기록인지 구분됩니다. 머리를 누르면 라인 순으로 정렬되고, 검색창에 「818052 1/2」 처럼 넣어도 찾습니다. CSV 내보내기에도 Order Line · Del Line 열이 붙습니다. CSV 의 PO 가 같은 도면의 다른 수주 PO 로 찍힐 수 있던 문제도 고쳐, 이제 기록에 남은 PO 를 그대로 씁니다. 라인 없이 찍힌 옛 기록은 — 로 보입니다'},
   {v:'v7.12',d:'2026-09', t:'[납기 일괄 변경] 공정현황에서 건을 체크하면 위 일괄 처리 줄에 [📅 납기 변경] 이 생깁니다. 프로젝트 묶음 줄을 체크하면 그 프로젝트 건이 한꺼번에 잡힙니다. 「날짜로 맞추기」 는 모두 같은 날짜로, 「며칠 미루기」 는 건마다 지금 납기에서 +1주·+2주처럼 옮깁니다 (− 로 넣으면 앞당김). 바뀌기 전·후 납기를 목록으로 보여 주고, 출하까지 끝난 건은 건드리지 않습니다. 바꾼 뒤에는 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
@@ -6891,14 +6987,14 @@ function deleteSelectedLogs(){
   if(!confirm(_selLogs.size+'건을 삭제할까요?'))return;
   var ids=[..._selLogs];
   HS.logs=HS.logs.filter(function(l){return !_selLogs.has(l.id);});
-  _selLogs.clear();hsSaveLogs();
+  _selLogs.clear();hsDataChanged();safeCache('hs_logs',HS.logs);
   var sb=getSB();if(sb)ids.forEach(function(id){sb.from('harness_logs').delete().eq('id',id).then(function(){});});
   renderLogMgmt();renderStatus();toast('삭제 완료','ok');
 }
 function deleteLog(id){
   if(!confirm('이 이력을 삭제할까요?'))return;
   HS.logs=HS.logs.filter(function(l){return l.id!==id;});
-  _selLogs.delete(id);hsSaveLogs();hsDeleteLog(id);renderLogMgmt();renderStatus();toast('삭제 완료','ok');
+  _selLogs.delete(id);hsDataChanged();hsDeleteLog(id);renderLogMgmt();renderStatus();toast('삭제 완료','ok');
 }
 var _editId=null;
 function openLogEdit(id){
@@ -6917,10 +7013,11 @@ function saveLogEdit(){
   log.worker=document.getElementById('le-worker').value.trim();
   const sv=document.getElementById('le-start').value;
   const ev=document.getElementById('le-end').value;
+  if(sv&&ev&&new Date(ev)<new Date(sv)){ toast('완료 시각이 시작보다 빠릅니다','err'); return; }
   if(sv)log.started_at=new Date(sv).toISOString();
   if(ev){log.ended_at=new Date(ev).toISOString();if(log.started_at)log.duration_min=Math.round((new Date(log.ended_at)-new Date(log.started_at))/60000);}
   else{log.ended_at=null;log.duration_min=null;}
-  hsSaveLogs();closeLogEdit();renderLogMgmt();renderStatus();toast('수정 완료','ok');
+  hsSaveLogs([log]);closeLogEdit();renderLogMgmt();renderStatus();toast('수정 완료','ok');
 }
 // ════════════════════════════════════════
 // QR 스탬프 JS
@@ -7196,6 +7293,8 @@ var WO={
   $:function(id){return document.getElementById(id+(this.ns||''));},
   render:function(){
     var self=this;
+    // 목록 HTML 안의 버튼은 전역에서 실행되므로 이름으로 부른다 (self 는 브라우저 창을 가리킨다)
+    var G=(typeof DQ!=='undefined'&&self===DQ)?'DQ':'WO';
     var el=this.$('wo-list');if(!el)return;
     if(self.files.length===0){el.innerHTML='';this.$('wo-actions').style.display='none';return;}
     var okN=self.files.filter(function(f){return f.status==='ok';}).length;
@@ -7218,7 +7317,7 @@ var WO={
                   :(f.note||'등록된 수주정보에 없습니다');
       if(ok&&f.note)line2+=' · '+f.note;
       return '<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid #f0f2f6;'+(ok?'':'background:#fffafa')+'">'
-        +'<input type="checkbox" '+(f.sel?'checked':'')+(ok?'':' disabled')+' onchange="self.toggleSel('+i+',this.checked)" style="width:15px;height:15px;cursor:pointer">'
+        +'<input type="checkbox" '+(f.sel?'checked':'')+(ok?'':' disabled')+' onchange="'+G+'.toggleSel('+i+',this.checked)" style="width:15px;height:15px;cursor:pointer">'
         +'<div style="width:26px;font-size:11px;color:var(--tx3);text-align:right">'+(ok&&f.sel!==false?(ord+1):'-')+'</div>'
         +'<div style="flex:1;min-width:0">'
           +'<div style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--tx)">'+hEsc(f.dwg)+'</div>'
@@ -7228,7 +7327,7 @@ var WO={
         +(ok?'<button onclick="QRH.showOrder('+i+')" title="이 건의 공정 QR 을 화면에 띄웁니다" '
           +'style="border:1px solid #ddd6fe;background:var(--purple-lt);color:var(--purple);'
           +'padding:3px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans)">QR</button>':'')
-        +'<button onclick="self.remove('+i+')" title="목록에서 제거" style="border:none;background:none;color:var(--tx3);font-size:15px;cursor:pointer;padding:2px 4px">✕</button>'
+        +'<button onclick="'+G+'.remove('+i+')" title="목록에서 제거" style="border:none;background:none;color:var(--tx3);font-size:15px;cursor:pointer;padding:2px 4px">✕</button>'
       +'</div>';
     }).join('');
     var selN=self.files.filter(function(f){return f.status==='ok'&&f.sel;}).length;
@@ -7236,8 +7335,8 @@ var WO={
       '<div style="display:flex;gap:14px;align-items:flex-start;margin-top:14px;flex-wrap:wrap">'
       +'<div style="flex:1;min-width:320px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff">'
         +'<div style="display:flex;align-items:center;gap:9px;padding:9px 14px;background:#f7f8fb;border-bottom:1px solid var(--border)">'
-          +'<button class="btn btn-sm btn-outline" onclick="self.selAll(true)">전체선택</button>'
-          +'<button class="btn btn-sm btn-outline" onclick="self.selAll(false)">선택해제</button>'
+          +'<button class="btn btn-sm btn-outline" onclick="'+G+'.selAll(true)">전체선택</button>'
+          +'<button class="btn btn-sm btn-outline" onclick="'+G+'.selAll(false)">선택해제</button>'
           +'<span style="margin-left:auto;font-size:11.5px;color:var(--tx3)">출력 순서대로 표시됩니다</span>'
         +'</div>'
         +rows
@@ -7498,7 +7597,12 @@ var WO={
       for(var i=0;i<targets.length;i++){
         var t=targets[i];
         WOP.step(i,(t.dwg||t.name||'')+' 처리 중');
-        var bytes=await self.buildOne(t);
+        // 고객사 구성대로 (지시서 + 도면 N부 / 도면만 출력). 쪽번호는 파일마다 1부터.
+        var bytes;
+        if(self.mode==='wo'&&typeof WOC!=='undefined'){
+          var _tot=WOC._usesTotal(self)?await WOC.countSet(t):0;
+          bytes=await WOC.mergeParts(await WOC.buildOneSet(t,1,_tot));
+        } else bytes=await self.buildOne(t);
         var nm=self.fileNameOf(t,used);
         if(useZip)zip.file(nm,bytes);
         else{ self.download(bytes,nm); await new Promise(function(r){setTimeout(r,250);}); }
@@ -7526,9 +7630,14 @@ var WO={
       var merged=await PDFDocument.create();
       // 전체 페이지 수 미리 계산 (꼬리말 {전체}용). 원본 쪽수와 출력 쪽수는 같다.
       var _pgNo=0,_pgTotal=0;
-      if(self.footer.on&&/\{전체\}/.test((self.footer.l||'')+(self.footer.c||'')+(self.footer.r||''))){
+      var _woSet=(self.mode==='wo'&&typeof WOC!=='undefined');
+      // {전체} 는 머릿말·꼬리말 어디에 있든 센다. 고객사 구성(지시서·도면 부수)까지 넣어 센다.
+      if(typeof WOC!=='undefined'&&WOC._usesTotal(self)){
         for(var k=0;k<targets.length;k++){
-          try{ _pgTotal+=(await PDFDocument.load(await self.ensureBytes(targets[k]),{ignoreEncryption:true})).getPageCount(); }catch(e){}
+          try{
+            _pgTotal+=_woSet ? await WOC.countSet(targets[k])
+              : (await PDFDocument.load(await self.ensureBytes(targets[k]),{ignoreEncryption:true})).getPageCount();
+          }catch(e){}
         }
       }
       // 한 건씩 buildOne 으로 만든 뒤 이어 붙인다.
@@ -7550,7 +7659,8 @@ var WO={
         if(t.order){t.order.qr_printed=true;t.order.qr_printed_at=new Date().toISOString();
           addQRHistoryEntry({drawingNo:t.order.dwg_no,customer:t.order.customer,project:t.order.project,unit:t.order.unit,qty:t.order.qty,po:t.order.po,qrSize:'공정'},self.outName()+'_병합.pdf');}
       }
-      hsSaveOrders&&hsSaveOrders();
+      // 출력 표시한 건만 저장 (예전에는 수주 전체를 올려 다른 PC 가 바꾼 값을 되돌렸다)
+      hsSaveOrders&&hsSaveOrders(targets.map(function(t){return t.order;}).filter(Boolean));
       var bytes=await merged.save();
       self.download(bytes,self.outName()+'_'+isoToLocalYMD(new Date().toISOString())+'.pdf');
       renderStatus&&renderStatus();
@@ -8047,6 +8157,8 @@ DQ.pickFolder=function(input){
 };
 
 // REV 순위 (A<B<…<Z<AA)
+// REV 순서 — 글자는 A<B<…<Z<AA, 숫자는 크기대로
+function revRank(r){ r=String(r||'').trim().toUpperCase(); return /^\d+$/.test(r)?parseInt(r,10):dqRevRank(r); }
 function dqRevRank(r){
   r=String(r||'').toUpperCase(); var n=0;
   for(var i=0;i<r.length;i++)n=n*26+(r.charCodeAt(i)-64);
@@ -9604,7 +9716,7 @@ async function ssSaveMerge(){
     var{PDFDocument}=PDFLib;var mergedDoc=await PDFDocument.create();
     for(var i=0;i<targets.length;i++){var bytes=await ssBuildPdfBytes(targets[i]);var sub=await PDFDocument.load(bytes);var pgs=await mergedDoc.copyPages(sub,sub.getPageIndices());pgs.forEach(function(p){mergedDoc.addPage(p);});setProgress(Math.round((i+1)/targets.length*100),(i+1)+'/'+targets.length);}
     var merged=await mergedDoc.save();var blob=new Blob([merged],{type:'application/pdf'});var url=URL.createObjectURL(blob);var a=document.createElement('a');
-    a.href=url;a.download='단건QR_병합_'+new Date().toISOString().slice(0,10)+'.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},5000);
+    a.href=url;a.download='단건QR_병합_'+almToday()+'.pdf';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},5000);
     targets.forEach(function(e){ssSaveToOrders(e);e.saved=true;addQRHistoryEntry(e,e.drawingNo+'_QR.pdf');});
     ssRenderList();hideOvl();renderStatus();toast('병합 저장 완료 ('+targets.length+'개) + 공정현황 등록','ok');
   }catch(ex){hideOvl();toast('저장 오류: '+ex.message,'err');}
@@ -9971,7 +10083,7 @@ function exportQRHistCSV(){
       r.deleted?'삭제됨':'', dd, r.deleted_by||'']);
   });
   var csv='\uFEFF'+rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
-  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='QR이력_'+new Date().toISOString().slice(0,10)+'.csv';
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='QR이력_'+almToday()+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},3000);
   toast('CSV 추출 완료 ('+hist.length+'건)','ok');
 }
