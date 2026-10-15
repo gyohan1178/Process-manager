@@ -136,6 +136,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   #pg-status .pg-crumb{display:none}
   .role-worker .sp-bar .sp-sep{display:none}
 }
+@media (min-width:769px) and (max-height:760px){
+  .sb-nav .sn-item{height:29px}
+  .sb-nav .sn-sub{height:26px}
+  .sb-nav .sn-group{margin-top:2px;padding-top:6px;padding-bottom:4px}
+  .sb-ver{padding:7px 12px}
+  #au-userbox{margin-top:5px!important;padding-top:5px!important}
+}
 /* 노트북 가로(1600px 이하) — 툴바를 한 줄로 */
 @media (min-width:769px) and (max-width:1600px){
   .sp-bar-in{gap:7px}
@@ -161,6 +168,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .dwg-table td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12.5px;color:var(--tx2)}
 .dwg-table tbody tr{transition:background .1s}
 .dwg-table tr:last-child td{border-bottom:none}
+#sp-table td{padding-top:7px;padding-bottom:7px}
 .dwg-table tr:hover td{background:var(--bg2)}
 .dwg-no{font-family:var(--mono);font-weight:800;font-size:13px;color:var(--tx);letter-spacing:-.2px}
 .step-col{text-align:center;min-width:68px}
@@ -810,6 +818,7 @@ body:not(.role-worker) .worker-only{display:none!important}
         <button class="sp-tog admin-only sp-board-only" id="sp-printed-btn" onclick="toggleSpPrinted()" title="오늘 작업지시서를 출력한 건만 보기 — 다시 누르면 전체">🖨 오늘 출력</button>
         <input type="file" id="rcv-file" accept=".xlsx,.xlsm,.xls" style="display:none" onchange="RCV.read(this)">
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button id="sp-colreset" class="sp-tog sp-board-only" style="display:none" onclick="spResetCols()" title="손으로 바꾼 열 너비를 지우고 화면에 맞춥니다">↔ 열 너비 초기화</button>
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
           <input type="file" id="orderExcelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleOrderExcel(this)">
         </div>
@@ -1011,7 +1020,12 @@ body:not(.role-worker) .worker-only{display:none!important}
 
         <!-- 3. 머릿말/꼬리말 -->
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px">
-          <div style="font-size:15px;font-weight:700;color:var(--tx)">2. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
+          <div onclick="woHfToggle()" style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none" title="눌러서 펴고 접기">
+            <div style="font-size:15px;font-weight:700;color:var(--tx);white-space:nowrap">2. 머릿말 · 꼬리말 <span style="font-size:11px;font-weight:700;color:#12a05f;background:#eafaf1;border:1px solid #c7ecd8;padding:2px 8px;border-radius:20px;margin-left:6px">선택</span></div>
+            <div id="wo-hf-sum" style="flex:1;min-width:0;font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <span id="wo-hf-tog" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--purple);border:1.5px solid #ddd6fe;background:var(--purple-lt);padding:4px 11px;border-radius:8px">펼치기 ▾</span>
+          </div>
+          <div id="wo-hf-body">
           <div style="font-size:12.5px;color:var(--tx3);margin-top:4px;line-height:1.6">
             페이지 위·아래에 프로젝트명이나 페이지 번호를 넣습니다. 출력물을 도면과 대조할 때 사용합니다.
           </div>
@@ -1059,6 +1073,7 @@ body:not(.role-worker) .worker-only{display:none!important}
               </span>
             </div>
             <div id="wo-hf-prev" style="margin-top:12px;font-size:12px;color:var(--tx2);background:#fff;border:1px solid var(--border-in,#f0f2f6);border-radius:8px;padding:10px 12px;line-height:1.7"></div>
+          </div>
           </div>
         </div>
 
@@ -4545,7 +4560,7 @@ var ALMUI={
               ?'<div style="color:var(--tx3);font-size:10.5px;margin-top:2px;white-space:nowrap">'+hEsc(o.ord_ln||'–')+' <span style="opacity:.6">/</span> '+hEsc(o.del_ln||'–')+'</div>':'';
             return top+sub;
           })()+'</td>'
-        +'<td style="padding:9px 10px;color:var(--tx2)">'+hEsc([o.customer,o.project].filter(Boolean).join(' · ')||'—')+'</td>'
+        +'<td title="'+hEsc([o.customer,o.project].filter(Boolean).join(' · '))+'" style="padding:9px 10px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0">'+hEsc([o.customer,o.project].filter(Boolean).join(' · ')||'—')+'</td>'
         +'<td style="padding:9px 12px;color:var(--tx2);white-space:nowrap">'+hEsc(o.unit||'—')+'</td>'
         +'<td style="padding:9px 12px;color:var(--tx2);white-space:nowrap">'+hEsc(x.step||(x.done?'완료':'—'))+'</td>'
         +'<td style="padding:9px 12px;font-family:var(--mono);white-space:nowrap;'+(urgent?'color:var(--red);font-weight:700':'color:var(--tx2)')+'">'+(x.due?fmtYYMMDD(x.due):'—')+'</td>'
@@ -4569,7 +4584,7 @@ var ALMUI={
               +e+'</span>'
               +(o.eta_by?'<div style="font-size:10px;color:var(--tx3);margin-top:2px">'+hEsc(o.eta_by)+'</div>':'');
           })()+'</td>'
-        +'<td style="padding:9px 10px;color:var(--tx3);line-height:1.6;font-size:11.5px">'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</td>'
+        +'<td title="'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'" style="padding:9px 10px;color:var(--tx3);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0">'+hEsc(x.kinds.map(function(k){return k.msg;}).join(' · '))+'</td>'
       +'</tr>';
     }).join('');
   },
@@ -5964,8 +5979,11 @@ function _renderStatusInner(){
           var iso=normDueToISO(due), lbl=fmtYYMMDD(due);
           if(/^\d{4}-\d{2}-\d{2}$/.test(iso)&&!done){
             var dd=Math.floor((new Date(iso)-new Date(almToday()))/86400000);
-            if(dd<0)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:#fef2f2;border:1px solid #fecaca;color:var(--red);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">'+(-dd)+'일 지연</span></span>';
-            if(dd<=3)return '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;background:var(--amber-lt);border:1px solid #fde68a;color:var(--amber);padding:4px 9px;border-radius:7px;font-weight:800;line-height:1.3"><span style="font-family:var(--mono)">'+lbl+'</span><span style="font-size:10px;font-weight:700">D-'+dd+'</span></span>';
+            // 노트북에서 줄 높이를 줄이려고 한 줄로 쓴다: 올해면 월-일만, 지연은 +N일. 전체는 마우스를 올리면 보인다.
+            var sh=(iso.slice(0,4)===almToday().slice(0,4))?iso.slice(5):iso.slice(2);
+            if(dd<0)return '<span title="납기 '+lbl+' · '+(-dd)+'일 지연" style="display:inline-flex;align-items:center;gap:4px;background:#fef2f2;border:1px solid #fecaca;color:var(--red);padding:2px 7px;border-radius:6px;font-weight:800;white-space:nowrap"><span style="font-family:var(--mono)">'+sh+'</span><span style="font-size:10px">+'+(-dd)+'일</span></span>';
+            if(dd<=3)return '<span title="납기 '+lbl+' · D-'+dd+'" style="display:inline-flex;align-items:center;gap:4px;background:var(--amber-lt);border:1px solid #fde68a;color:var(--amber);padding:2px 7px;border-radius:6px;font-weight:800;white-space:nowrap"><span style="font-family:var(--mono)">'+sh+'</span><span style="font-size:10px">'+(dd===0?'오늘':'D-'+dd)+'</span></span>';
+            return '<span title="납기 '+lbl+'" style="color:var(--tx2)">'+sh+'</span>';
           }
           return '<span style="color:var(--tx2)">'+lbl+'</span>';
         })()
@@ -6035,7 +6053,7 @@ function _renderStatusInner(){
             +(canEdit?'<input type="checkbox" onclick="event.stopPropagation();toggleProjSel(this)" data-pk="'+_he(g.key)+'">':'')
           +'</td>'
           // 고객사
-          +'<td style="'+TD+';font-size:12px;color:var(--tx2)">'
+          +'<td title="'+_he(ck.join(', '))+'" style="'+TD+';font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
             +(ck.length===1?_he(ck[0]):(ck.length?_he(ck[0])+' <span style="color:var(--tx3)">외 '+(ck.length-1)+'</span>':'—'))
           +'</td>'
           // PO — 묶음이라 비워 둔다
@@ -6065,8 +6083,8 @@ function _renderStatusInner(){
           // 납기
           +'<td style="'+TD+'">'
             +(dk.length
-              ? '<span style="font-family:var(--mono);font-size:11.5px;font-weight:700;color:'+(dk[0]<_todayISO?'var(--red)':'var(--tx2)')+'">'+dk[0]+'</span>'
-                +(dk.length>1?'<div style="font-size:10px;color:var(--tx3)">외 '+(dk.length-1)+'</div>':'')
+              ? '<span title="'+_he(dk.join(', '))+'" style="white-space:nowrap"><span style="font-family:var(--mono);font-size:11.5px;font-weight:700;color:'+(dk[0]<_todayISO?'var(--red)':'var(--tx2)')+'">'+(dk[0].slice(0,4)===_todayISO.slice(0,4)?dk[0].slice(5):dk[0].slice(2))+'</span>'
+                +(dk.length>1?' <span style="font-size:10px;color:var(--tx3)">외 '+(dk.length-1)+'</span>':'')+'</span>'
               : '<span style="color:var(--tx3)">—</span>')
           +'</td>'
           // 현황판 자리 — 지연만 표시
@@ -6123,6 +6141,7 @@ function _renderStatusInner(){
   ];
   var savedCols=JSON.parse(localStorage.getItem('hs_col_widths')||'null');
   var colWidths=(savedCols&&savedCols.length===cols.length)?savedCols:cols.map(function(c){return c.w;});
+  var _crb=document.getElementById('sp-colreset'); if(_crb)_crb.style.display=localStorage.getItem('hs_col_widths')?'':'none';
   // 손으로 너비를 바꾼 적이 없으면, 현황판 열이 남는 폭을 가져가 가로 스크롤 없이 맞춘다 (노트북 기준)
   if(!(savedCols&&savedCols.length===cols.length)){
     var _bd=document.getElementById('sp-board'), _av=_bd?_bd.clientWidth-40-12:0;
@@ -7265,7 +7284,7 @@ var Analytics={
 // ════════════════════════════════════════
 var APP_VER='v7.23';
 var VER_LOG=[
-  {v:'v7.23',d:'2026-10', t:'[출력 ≠ 출도] 작업지시서 출력과 출도를 따로 봅니다 — 출도는 자재까지 챙겨 현장에 넘긴 것이라, 출력해도 출도가 자동으로 찍히지 않습니다. 그래서 공정현황의 [🖨 오늘 출도] 를 [🖨 오늘 출력] 으로 이름을 바꿨고(오늘 뽑은 건 보기), 출력 끝 안내에 「자재까지 챙겨 넘길 때 [출도] 를 찍으세요」 를 넣었습니다. 출도 공정의 기본 설명도 「자재까지 챙겨 현장 전달」 로 바꿨습니다. [노트북 화면 · 흐름 정리] ① 노트북(1366·1536 화면)에서 공정현황 표가 가로로 밀리던 것을 고쳤습니다 — 현황판 배지가 한 줄에 들어가고 상태·QR 열이 잘리지 않습니다. 열 너비는 창 크기에 맞춰 다시 잡습니다(손으로 바꾼 너비가 있으면 그대로). ② 세로가 낮은 화면에서는 맨 위 작은 제목줄과 지표 카드 설명을 줄여 표가 더 보입니다. ③ 툴바를 한 줄로 — [📦 납품 반영]·[📥 CSV] 를 오른쪽 위 [↻ 새로고침] 옆으로 옮기고, 화면만 다시 그리던 툴바 ↻ 는 없앴습니다. ④ 공정 이력관리 탭에서는 눌러도 아무 일이 없던 고객사·프로젝트·진행중/완료·묶기·고객사별·오늘 출도 단추를 감췄습니다(검색만 적용). ⑤ 사이드바에서 공정 이력관리·도면만 출력 같은 하위 메뉴가 다른 화면으로 가도 진하게 남아 두 곳이 켜져 보이던 문제 수정. ⑥ 도면 출도에서 출력이 끝나면 [📊 공정현황에서 확인 (오늘 출도)] 단추가 떠 바로 확인하러 갈 수 있습니다. 「출력하는 건만 등록」 일 때는 안내 문구도 「PO 를 먼저 읽으세요」 로 맞췄습니다. ⑦ 스캔 화면에 ① 공정 선택 → ② QR 순서 번호. ⑧ QR 이력의 [최근 1주][1달][전체] 단추가 PC 에서 모양 없이 나오던 것 수정'},
+  {v:'v7.23',d:'2026-10', t:'[노트북 추가 정리] ① 공정현황 줄 높이를 줄였습니다 — 납기를 한 줄(올해면 10-07 +8일 / D-2)로 쓰고, 전체 날짜는 마우스를 올리면 보입니다. 1366 노트북에서 한 화면에 보이는 줄이 5줄 → 8줄 남짓. 묶음 줄의 고객사·납기도 한 줄로. ② 도면 출도의 「2. 머릿말·꼬리말」 은 기본으로 접어 두고, 접힌 줄에 지금 쓰는 문구를 요약해 보여 줍니다([펼치기] 로 고침). [만들기] 까지 스크롤이 짧아졌습니다. ③ 공정현황에 [↔ 열 너비 초기화] — 손으로 바꾼 열 너비가 저장된 PC 에서만 보이고, 누르면 화면에 맞춥니다. ④ 공정 이슈·재고 현황의 고객사·프로젝트, 공정 이슈의 내용 칸을 한 줄로 줄였습니다(마우스를 올리면 전체). ⑤ 세로가 낮은 노트북에서 사이드바 메뉴 간격을 줄여 공정 설정·사용 설명서까지 한 화면에 들어갑니다. [출력 ≠ 출도] 작업지시서 출력과 출도를 따로 봅니다 — 출도는 자재까지 챙겨 현장에 넘긴 것이라, 출력해도 출도가 자동으로 찍히지 않습니다. 그래서 공정현황의 [🖨 오늘 출도] 를 [🖨 오늘 출력] 으로 이름을 바꿨고(오늘 뽑은 건 보기), 출력 끝 안내에 「자재까지 챙겨 넘길 때 [출도] 를 찍으세요」 를 넣었습니다. 출도 공정의 기본 설명도 「자재까지 챙겨 현장 전달」 로 바꿨습니다. [노트북 화면 · 흐름 정리] ① 노트북(1366·1536 화면)에서 공정현황 표가 가로로 밀리던 것을 고쳤습니다 — 현황판 배지가 한 줄에 들어가고 상태·QR 열이 잘리지 않습니다. 열 너비는 창 크기에 맞춰 다시 잡습니다(손으로 바꾼 너비가 있으면 그대로). ② 세로가 낮은 화면에서는 맨 위 작은 제목줄과 지표 카드 설명을 줄여 표가 더 보입니다. ③ 툴바를 한 줄로 — [📦 납품 반영]·[📥 CSV] 를 오른쪽 위 [↻ 새로고침] 옆으로 옮기고, 화면만 다시 그리던 툴바 ↻ 는 없앴습니다. ④ 공정 이력관리 탭에서는 눌러도 아무 일이 없던 고객사·프로젝트·진행중/완료·묶기·고객사별·오늘 출도 단추를 감췄습니다(검색만 적용). ⑤ 사이드바에서 공정 이력관리·도면만 출력 같은 하위 메뉴가 다른 화면으로 가도 진하게 남아 두 곳이 켜져 보이던 문제 수정. ⑥ 도면 출도에서 출력이 끝나면 [📊 공정현황에서 확인 (오늘 출도)] 단추가 떠 바로 확인하러 갈 수 있습니다. 「출력하는 건만 등록」 일 때는 안내 문구도 「PO 를 먼저 읽으세요」 로 맞췄습니다. ⑦ 스캔 화면에 ① 공정 선택 → ② QR 순서 번호. ⑧ QR 이력의 [최근 1주][1달][전체] 단추가 PC 에서 모양 없이 나오던 것 수정'},
   {v:'v7.22',d:'2026-10', t:'[사용 설명서 · 작업자도 보기] 작업자 계정도 사용 설명서를 볼 수 있습니다. 작업자에게는 QR 스캔 · 공정현황 · 문제가 생기면 탭만 나오고, 처음 열면 QR 스캔 설명부터 보입니다. 폰 아래 탭에 [📖 설명서] 가 생겼습니다(작업자만). 내용도 지금 기능에 맞게 고쳤습니다 — QR 스캔: 공정을 먼저 고르고 찍기, 1분 안 [↩ 방금 기록 취소], 이미 끝난 공정 다시 찍으면 재작업 확인, 검사도 찍으면 바로 완료(합격/불합격 단추는 지금 쓰지 않음), 시간기록 모드, 작업지시서를 잃어버렸을 때 공정현황 [QR]. 공정현황: 단품 납기월 묶음, 보기 단추(묶기·고객사별·오늘 출도), 걸린 조건 칩, 납기 일괄 변경, 납품 반영, 이력관리 라인. 작업지시서 QR: 출력하는 건만 등록, 이미 등록된 PO 다시 뽑기, REV 대조, 탭별 기본 구성(SEMES용 하네스·도면만 출력 포함, 도면 1부)과 순서, 끌어다 놓기. 문제가 생기면: 「이 도면에 없는 공정」·「등록되지 않은 도면」·「REV 다름」·뽑은 건이 공정현황에 없을 때'},
   {v:'v7.21',d:'2026-10', t:'[공정현황 툴바 정리] 보기 단추(묶기·고객사별·오늘 출도)에 테두리를 넣고 켜지면 보라색으로 채워 ✓ 표시가 나오게 했습니다. 진행중/완료/전체도 고른 쪽이 보라로 채워집니다. [📦 납품 반영] 은 동작 단추라 초록으로 구분했습니다. 고객사·프로젝트·검색·오늘 출도·지표 카드 같은 조건이 걸리면 표 위에 「걸린 조건」 칩과 건수가 나오고 ✕ 로 하나씩 뺄 수 있습니다. 검색하거나 오늘 출도로 좁혀 볼 때는 묶음을 펼친 채 보여 줍니다. CSV 는 화면에 걸린 조건·정렬 그대로 내보내고(오늘 출도 포함), 공정 이력관리 CSV 도 검색 결과만 내보냅니다. [🖨 오늘 출도] 툴바의 [🖨 오늘 출도] 를 누르면 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다 (다시 누르면 전체). 고객사·검색·묶기와 같이 쓸 수 있고, 진행중/완료/전체 보기도 그대로 적용됩니다. QR 이력의 날짜 필터도 한국 시간 기준으로 바꿔, 아침 9시 전에 뽑은 것이 어제로 잡히지 않습니다. 공정 이력관리에서 바로 찍은 공정(소요 0분)이 「진행중」 으로 보이던 것도 고쳤습니다'},
   {v:'v7.20',d:'2026-10', t:'[도면 출도 · 출력하는 건만 등록] 「출력하는 건만 등록」(기본 켬) — PO 를 붙여넣거나 엑셀로 올려도 바로 공정현황에 등록하지 않고 읽어만 둡니다. [만들기] 로 실제 출력하는 건만 그 순간 등록되고 QR 이 들어갑니다. OCR·도면이 없어 못 뽑은 건은 등록되지 않으므로, 다음에 같은 PO 를 다시 올리면 「새 건」 으로 나와 그때 뽑으면 됩니다. 이미 등록된 건은 지금처럼 따로 보여 주고 빼 둡니다. 체크를 끄면 예전처럼 읽는 즉시 등록합니다 (고객사 탭마다 따로 기억)'},
@@ -7410,6 +7429,7 @@ function showVersionModal(){
 // 공정현황 탭 관리
 // ════════════════════════════════════════
 var _spTab='board';
+function spResetCols(){ try{ localStorage.removeItem('hs_col_widths'); }catch(e){} renderStatus(); toast('열 너비를 화면에 맞췄습니다','ok'); }
 // 창 크기를 바꾸면 현황판 열 너비를 다시 맞춘다 (손으로 바꾼 너비가 없을 때만)
 window.addEventListener('resize',function(){
   clearTimeout(window.__spRz);
@@ -8295,6 +8315,31 @@ function hfUp(o){
     return {on:!!o.on, l:'', c:o.text, r:''};
   return {on:!!o.on, l:o.l||'', c:o.c||'', r:o.r||''};
 }
+// 머릿말·꼬리말 카드는 한 번 정하면 잘 안 바꾸므로 기본으로 접어 둔다 (노트북에서 [만들기] 까지 스크롤이 길었다)
+function woHfOpen(){ try{ return localStorage.getItem('hs_wo_hf_open')==='1'; }catch(e){ return false; } }
+function woHfToggle(force){
+  var on=(typeof force==='boolean')?force:!woHfOpen();
+  try{ localStorage.setItem('hs_wo_hf_open',on?'1':'0'); }catch(e){}
+  woHfPaint();
+}
+function woHfPaint(){
+  var b=document.getElementById('wo-hf-body'), t=document.getElementById('wo-hf-tog'), sm=document.getElementById('wo-hf-sum');
+  var on=woHfOpen();
+  if(b)b.style.display=on?'':'none';
+  if(t)t.textContent=on?'접기 ▴':'펼치기 ▾';
+  if(sm){
+    function v(id){ var e=document.getElementById(id); return e?String(e.value||'').trim():''; }
+    function part(pre,onId,ids){
+      var c=document.getElementById(onId);
+      if(!c||!c.checked)return pre+' 안 씀';
+      var t=ids.map(v).filter(Boolean).join(' · ');
+      return pre+' '+(t||'(비어 있음)');
+    }
+    sm.textContent=on?'':(part('위:','wo-hd-on',['wo-hf-hl','wo-hf-hc','wo-hf-hr'])+'   |   '+part('아래:','wo-ft-on',['wo-hf-fl','wo-hf-fc','wo-hf-fr']));
+  }
+}
+document.addEventListener('input',function(e){ if(e.target&&/^wo-(hf-|hd-on|ft-on)/.test(e.target.id||''))woHfPaint(); });
+document.addEventListener('change',function(e){ if(e.target&&/^wo-(hf-|hd-on|ft-on)/.test(e.target.id||''))woHfPaint(); });
 function paintHF(ctx){
   var a=document.getElementById('wo-hd-on'), c=document.getElementById('wo-ft-on');
   if(a)a.checked=ctx.header.on;
@@ -8303,6 +8348,7 @@ function paintHF(ctx){
     var hv=document.getElementById('wo-hf-h'+p); if(hv)hv.value=ctx.header[p]||'';
     var fv=document.getElementById('wo-hf-f'+p); if(fv)fv.value=ctx.footer[p]||'';
   });
+  woHfPaint();
 }
 function woRestore(ctx,keyMode,keyPos,keyHF){
   try{
@@ -9780,7 +9826,7 @@ var STK={
       return '<tr style="border-bottom:1px solid var(--border)'+(neg?';background:#fef2f2':'')+'">'+
         '<td style="padding:9px 12px;font-family:var(--mono);font-weight:700;color:var(--tx);white-space:nowrap">'+STK._esc(r.dwg)+
           (r.rev?'<span style="margin-left:6px;font-size:10px;font-weight:700;color:var(--purple);background:var(--purple-lt);padding:1px 6px;border-radius:8px">REV '+STK._esc(r.rev)+'</span>':'')+'</td>'+
-        '<td style="padding:9px 12px;color:var(--tx2)">'+(sub?STK._esc(sub):'<span style="color:var(--tx3)">—</span>')+'</td>'+
+        '<td title="'+STK._esc(sub||'')+'" style="padding:9px 12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(sub?STK._esc(sub):'<span style="color:var(--tx3)">—</span>')+'</td>'+
         '<td style="padding:9px 12px;'+mono+';color:var(--tx3)">'+r.ordn+'</td>'+
         '<td ondblclick="STK.edit(this,\''+STK._q(r.dwg)+'\',\'open\')" title="더블클릭해 수정" style="padding:9px 12px;'+mono+';color:var(--tx2);cursor:cell;background:#fafbff">'+STK._n(r.open)+'</td>'+
         '<td style="padding:9px 12px;'+mono+';color:var(--tx2)">'+STK._n(r.pack)+'</td>'+
