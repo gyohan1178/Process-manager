@@ -100,7 +100,20 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 .sp-show-btns{display:flex;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--white)}
 .sp-show-btn{padding:7px 13px;font-size:12px;font-weight:700;border:none;background:transparent;color:var(--tx2);cursor:pointer;transition:all .15s;border-radius:7px}
 .sp-show-btn:hover{background:var(--bg2)}
-.sp-show-btn.on{background:var(--purple-lt);color:var(--purple)}
+.sp-show-btn.on{background:var(--purple);color:#fff}
+.sp-show-btns .sp-show-btn{border-radius:0}
+.sp-show-btns .sp-show-btn+.sp-show-btn{border-left:1.5px solid var(--border)}
+/* 켜고 끄는 보기 단추 — 테두리로 단추임을 보이고, 켜지면 보라로 채운다 */
+.sp-tog{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:var(--tx2);border-radius:8px;cursor:pointer;font-family:var(--sans);transition:all .12s;white-space:nowrap}
+.sp-tog:hover{border-color:#c4b5fd;color:var(--purple)}
+.sp-tog.on{background:var(--purple);border-color:var(--purple);color:#fff}
+.sp-tog.on::before{content:'✓';font-weight:800;margin-right:1px}
+.sp-lbl{font-size:11px;font-weight:700;color:var(--tx3);margin-right:-2px}
+.sp-act{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;font-size:12px;font-weight:700;border:1.5px solid #a7f3d0;background:var(--green-lt);color:var(--green);border-radius:8px;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.sp-act:hover{border-color:var(--green)}
+#sp-active{display:none;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 20px 0;padding:8px 12px;background:var(--purple-lt);border:1px solid #ddd6fe;border-radius:var(--r)}
+.sp-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 6px 3px 10px;background:#fff;border:1px solid #ddd6fe;border-radius:20px;font-size:11.5px;font-weight:700;color:var(--purple)}
+.sp-chip button{border:none;background:var(--purple-lt);color:var(--purple);width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;padding:0}
 .grp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
 .grp-hd{padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
 .grp-name{font-size:12px;font-weight:700;color:var(--tx);font-family:var(--mono)}
@@ -754,10 +767,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <button class="sp-show-btn" id="show-done" onclick="setShowMode('done')">완료</button>
           <button class="sp-show-btn" id="show-all" onclick="setShowMode('all')">전체</button>
         </div>
-        <button class="sp-show-btn on admin-only" id="sp-group-btn" onclick="toggleSpGroup()" title="같은 프로젝트끼리 묶어 대표 1건만 표시 (▶ 클릭 시 세부 펼침)" style="margin-left:6px">🗂 프로젝트 묶기</button>
-        <button class="sp-show-btn admin-only" id="sp-cust-btn" onclick="toggleSpView()" title="고객사별 소제목으로 구분해 보기" style="margin-left:4px">🏢 고객사별</button>
-        <button class="sp-show-btn admin-only" id="sp-printed-btn" onclick="toggleSpPrinted()" title="오늘 출도(작업지시서 QR 출력)한 건만 보기 — 다시 누르면 전체" style="margin-left:4px">🖨 오늘 출도</button>
-        <button class="sp-show-btn admin-only" onclick="RCV.pick()" title="AXCELIS PO 관리 엑셀의 Received 시트로 납품된 건을 한꺼번에 완료 처리" style="margin-left:4px">📦 납품 반영</button>
+        <div class="sp-sep admin-only"></div>
+        <span class="sp-lbl admin-only">보기</span>
+        <button class="sp-tog on admin-only" id="sp-group-btn" onclick="toggleSpGroup()" title="프로젝트·단품 납기월로 묶어 보기 (▶ 눌러서 펼침)">🗂 묶기</button>
+        <button class="sp-tog admin-only" id="sp-cust-btn" onclick="toggleSpView()" title="고객사별로 나눠 보기">🏢 고객사별</button>
+        <button class="sp-tog admin-only" id="sp-printed-btn" onclick="toggleSpPrinted()" title="오늘 작업지시서를 출력한 건만 보기 — 다시 누르면 전체">🖨 오늘 출도</button>
+        <div class="sp-sep admin-only"></div>
+        <button class="sp-act admin-only" onclick="RCV.pick()" title="AXCELIS PO 관리 엑셀의 Received 시트로 납품된 건을 한꺼번에 완료 처리">📦 납품 반영</button>
         <input type="file" id="rcv-file" accept=".xlsx,.xlsm,.xls" style="display:none" onchange="RCV.read(this)">
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--tx3)" id="sp-cnt"></span>
@@ -766,6 +782,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
           <button class="btn btn-outline btn-sm" onclick="refreshSpTab()">↻</button>
         </div>
       </div></div>
+      <div id="sp-active"></div>
       <div class="sp-content" id="sp-board">
         <div class="sp-empty">
           <div class="sp-empty-ic">📋</div>
@@ -2456,7 +2473,7 @@ function hsLogRow(l){
   return {id:l.id,dwg_no:l.dwg_no,customer:l.customer||null,project:l.project||null,
           unit:l.unit||null,qty:l.qty||1,worker:l.worker||null,process:l.process,
           po:l.po||null,ord_ln:l.ord_ln||null,del_ln:l.del_ln||null,
-          started_at:l.started_at||null,ended_at:l.ended_at||null,duration_min:l.duration_min||null,
+          started_at:l.started_at||null,ended_at:l.ended_at||null,duration_min:(l.duration_min!=null?l.duration_min:null),
           result:l.result||null};
 }
 async function hsSaveOrders(only){
@@ -4866,7 +4883,12 @@ function _monKey(o){
 function _isMonKey(k){ return String(k||'').indexOf('@@mon|')===0; }
 function _thisMonth(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2); }
 function _monDefOpen(k){ var m=String(k).split('|')[2]||''; return !m || m<=_thisMonth(); }
+// 검색·오늘 출도로 좁혀 볼 때는 묶음을 펼친 채 보여 준다 (접혀 있으면 걸러도 변한 게 없어 보인다)
+function _spAutoOpen(){
+  return (typeof _spPrinted!=='undefined'&&_spPrinted)||!!(((document.getElementById('sp-search')||{}).value||'').trim());
+}
 function _grpExpanded(k){
+  if(_spAutoOpen()) return !_spCollapsed.has(k);
   if(_isMonKey(k)) return _monDefOpen(k) ? !_spCollapsed.has(k) : _spExpanded.has(k);
   return _spExpanded.has(k);
 }
@@ -5010,7 +5032,7 @@ function spCustFilter(c){
 }
 function toggleProjGroup(el){
   var k=el.dataset.pk||'';
-  if(_isMonKey(k)&&_monDefOpen(k)){ if(_spCollapsed.has(k))_spCollapsed.delete(k); else _spCollapsed.add(k); }
+  if(_spAutoOpen()||(_isMonKey(k)&&_monDefOpen(k))){ if(_spCollapsed.has(k))_spCollapsed.delete(k); else _spCollapsed.add(k); }
   else { if(_spExpanded.has(k))_spExpanded.delete(k); else _spExpanded.add(k); }
   renderStatus();
 }
@@ -5480,6 +5502,26 @@ function populateFilters(orders){
 }
 // 화면에 걸린 조건 그대로 걸러 준다.
 //   CSV 추출도 이 함수를 써야 화면과 같은 것이 나온다.
+// 지금 걸린 필터를 표 위에 칩으로 보여 준다 — 눌러도 「변한 게 없어 보이는」 일이 없게
+function paintSpActive(n){
+  var el=document.getElementById('sp-active'); if(!el)return;
+  var chips=[];
+  var v=function(id){ return ((document.getElementById(id)||{}).value||'').trim(); };
+  if(_spPrinted)chips.push(['🖨 오늘 출도한 건만',"toggleSpPrinted()"]);
+  if(v('flt-cust'))chips.push(['고객사 '+v('flt-cust'),"document.getElementById('flt-cust').value='';refreshSpTab()"]);
+  if(v('flt-proj'))chips.push(['프로젝트 '+v('flt-proj'),"document.getElementById('flt-proj').value='';refreshSpTab()"]);
+  if(v('sp-search'))chips.push(['검색 「'+v('sp-search')+'」',"document.getElementById('sp-search').value='';refreshSpTab()"]);
+  if(typeof _spKpi!=='undefined'&&_spKpi){
+    var KN={today:'오늘 납기',late:'지연',act:'진행중',rw:'재작업',hold:'재검 대기'};
+    chips.push(['지표 '+(KN[_spKpi]||_spKpi),"setSpKpi('"+_spKpi+"')"]);
+  }
+  if(!chips.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='flex';
+  el.innerHTML='<span style="font-size:11.5px;font-weight:700;color:var(--tx2)">걸린 조건</span>'
+    +chips.map(function(c){ return '<span class="sp-chip">'+hEsc(c[0])+'<button onclick="'+c[1]+'" title="이 조건 빼기">✕</button></span>'; }).join('')
+    +'<span style="margin-left:auto;font-size:12px;font-weight:800;color:var(--purple)">'+(n!=null?n+'건':'')+'</span>'
+    +(_spPrinted&&n===0?'<span style="font-size:11.5px;color:var(--tx3);width:100%">오늘 출력한 기록이 없습니다. (v7.15 이후 [만들기] 로 출력한 건부터 출력 시각이 남습니다)</span>':'');
+}
 // 오늘 출도한 건만 보기 (작업지시서 QR 을 오늘 뽑은 건)
 var _spPrinted=false;
 function toggleSpPrinted(){
@@ -5526,6 +5568,7 @@ function currentFilterLabel(){
   if(fc)p.push(fc);
   if(fp)p.push(fp);
   if(q)p.push('검색 '+q);
+  if(typeof _spPrinted!=='undefined'&&_spPrinted)p.push('오늘출도');
   if(_showMode==='active')p.push('진행중'); else if(_showMode==='done')p.push('완료');
   var K={act:'진행중',today:'오늘납기',late:'지연',rw:'재작업',hold:'재검대기'};
   if(_spKpi&&K[_spKpi])p.push(K[_spKpi]);
@@ -5545,6 +5588,7 @@ function _renderStatusInner(){
   if(clearBtn) clearBtn.style.display=q?'block':'none';
   var orders=getFilteredOrders();
   populateFilters(HS.orders);
+  try{ paintSpActive(orders.length); }catch(e){}
   var cnt=document.getElementById('sp-cnt');
   if(cnt){
     // 상단 요약: 진행 · 오늘납기 · 지연 · 재작업 · 재검대기
@@ -7059,7 +7103,7 @@ var Analytics={
 // ════════════════════════════════════════
 var APP_VER='v7.21';
 var VER_LOG=[
-  {v:'v7.21',d:'2026-10', t:'[공정현황 · 🖨 오늘 출도] 툴바의 [🖨 오늘 출도] 를 누르면 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다 (다시 누르면 전체). 고객사·검색·묶기와 같이 쓸 수 있고, 진행중/완료/전체 보기도 그대로 적용됩니다. QR 이력의 날짜 필터도 한국 시간 기준으로 바꿔, 아침 9시 전에 뽑은 것이 어제로 잡히지 않습니다'},
+  {v:'v7.21',d:'2026-10', t:'[공정현황 툴바 정리] 보기 단추(묶기·고객사별·오늘 출도)에 테두리를 넣고 켜지면 보라색으로 채워 ✓ 표시가 나오게 했습니다. 진행중/완료/전체도 고른 쪽이 보라로 채워집니다. [📦 납품 반영] 은 동작 단추라 초록으로 구분했습니다. 고객사·프로젝트·검색·오늘 출도·지표 카드 같은 조건이 걸리면 표 위에 「걸린 조건」 칩과 건수가 나오고 ✕ 로 하나씩 뺄 수 있습니다. 검색하거나 오늘 출도로 좁혀 볼 때는 묶음을 펼친 채 보여 줍니다. CSV 는 화면에 걸린 조건·정렬 그대로 내보내고(오늘 출도 포함), 공정 이력관리 CSV 도 검색 결과만 내보냅니다. [🖨 오늘 출도] 툴바의 [🖨 오늘 출도] 를 누르면 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다 (다시 누르면 전체). 고객사·검색·묶기와 같이 쓸 수 있고, 진행중/완료/전체 보기도 그대로 적용됩니다. QR 이력의 날짜 필터도 한국 시간 기준으로 바꿔, 아침 9시 전에 뽑은 것이 어제로 잡히지 않습니다. 공정 이력관리에서 바로 찍은 공정(소요 0분)이 「진행중」 으로 보이던 것도 고쳤습니다'},
   {v:'v7.20',d:'2026-10', t:'[도면 출도 · 출력하는 건만 등록] 「출력하는 건만 등록」(기본 켬) — PO 를 붙여넣거나 엑셀로 올려도 바로 공정현황에 등록하지 않고 읽어만 둡니다. [만들기] 로 실제 출력하는 건만 그 순간 등록되고 QR 이 들어갑니다. OCR·도면이 없어 못 뽑은 건은 등록되지 않으므로, 다음에 같은 PO 를 다시 올리면 「새 건」 으로 나와 그때 뽑으면 됩니다. 이미 등록된 건은 지금처럼 따로 보여 주고 빼 둡니다. 체크를 끄면 예전처럼 읽는 즉시 등록합니다 (고객사 탭마다 따로 기억)'},
   {v:'v7.19',d:'2026-10', t:'[도면 출도 · 출력 순서 고르기] 「한 건마다」 부수 칸 옆에 [순서] 를 넣었습니다 — 「작업지시서 → 도면」(기본) 또는 「도면 → 작업지시서」. 고객사 탭마다 따로 기억합니다 (AXCELIS·EDWARDS·SEMES용 하네스 각각). 병합 PDF·개별 PDF 모두 적용되고, 쪽번호 {페이지}/{전체} 도 바뀐 순서대로 이어집니다'},
   {v:'v7.18',d:'2026-09', t:'[SEMES용 하네스 · 현장관리 요청] ① 도면 출도에 「SEMES용 하네스」 탭 추가 — PO 등록 양식을 엑셀로 올리거나 머리글째 붙여넣으면 줄마다 고객사·프로젝트·호기·불출일·납기를 읽습니다. 머릿말 기본값: 위 {납기} · {업체} {프로젝트} {수량} · {페이지}/{전체}, 아래 {불출일} (고쳐서 저장 가능). 새 항목 {업체}·{불출일} 추가. 기본 위치 \\\\jinsuntech-nas\\…\\4. 하네스_QR. ② [PO 엑셀 올리기]·OCR 폴더·도면 폴더 칸에 탐색기에서 파일/폴더를 끌어다 놓을 수 있습니다. ③ [고침] PO 가 없는 하네스는 같은 도면이 다른 프로젝트에 있으면 「이미 있는 건」 으로 빠지던 문제 — 이제 PO 가 없으면 도면번호+프로젝트+호기로 가립니다 (DSI 26→24, 85→84 로 줄던 원인). ④ [고침] 엑셀 날짜 서식(mm-dd-yy)이면 납기·불출일이 비어 저장되던 문제. ⑤ [고침] 「D200-91447A (KMEL-370155)」 처럼 도번 뒤에 번호가 붙은 줄이 말없이 빠지던 문제 — 앞 도번으로 등록하고 뒤 번호는 품명에 남기며, 못 읽은 줄은 확인창에 알려 줍니다. ⑥ 붙여넣기에 PO 없는 줄이 섞여도 PO 있는 줄은 PO 로 가립니다. ⑦ 도면·OCR 파일 이름 D202-30380A_003 · NXR206404_5 도 인식, REV 003 과 3 을 같게 봅니다'},
@@ -7237,6 +7281,13 @@ function exportBoardCSV(){
   // 화면에 걸린 조건 그대로 뽑는다
   var _src=getFilteredOrders();
   if(!_src.length){ toast('내보낼 건이 없습니다','warn'); return; }
+  // 표와 같은 순서로
+  _src.sort(function(a,b){
+    var ea=spIsEmpty(a,_spSort.key), eb=spIsEmpty(b,_spSort.key);
+    if(ea&&!eb)return 1; if(eb&&!ea)return -1; if(ea&&eb)return 0;
+    var va=spSortVal(a,_spSort.key), vb=spSortVal(b,_spSort.key);
+    var r=va<vb?-1:va>vb?1:0; return _spSort.dir==='asc'?r:-r;
+  });
   var rows=_src.map(function(o){
     var po=o.po||'', ol=o.ord_ln||'', dl=o.del_ln||'', due=o.due||'';
     var done=isOrderDone(o);
@@ -7251,12 +7302,16 @@ function exportBoardCSV(){
   // 어떤 조건으로 뽑았는지 파일명에 남긴다
   var _lb=currentFilterLabel().replace(/[\\/:*?"<>|]/g,'').replace(/\s·\s/g,'_').replace(/\s+/g,'');
   downloadCSV(headers,rows,'하네스현황_'+fmtDate(new Date())+(_lb?'_'+_lb:''));
-  toast(rows.length+'건 내보냄'+(_lb?' ('+currentFilterLabel()+')':''),'ok');
-  toast('현황판 CSV 내보내기 완료 ('+rows.length+'건)','ok');
+  toast('현황판 CSV '+rows.length+'건 내보냄'+(_lb?' ('+currentFilterLabel()+')':''),'ok');
 }
 function exportLogCSV(){
   var headers=['고객사','PO No','Order Line','Del Line','프로젝트','도면번호','호기','수량','공정','합불','작업자','시작시간','완료시간','소요(분)'];
-  var rows=HS.logs.map(function(l){
+  // 화면에 걸린 검색·정렬 그대로 (예전에는 검색어를 무시하고 전체를 내보냈다)
+  var _byId={}; HS.logs.forEach(function(l){ _byId[l.id]=l; });
+  var _src=(typeof _currentLogIds!=='undefined'&&Array.isArray(_currentLogIds))
+    ? _currentLogIds.map(function(id){ return _byId[id]; }).filter(Boolean) : HS.logs;
+  if(!_src.length){ toast('내보낼 이력이 없습니다','warn'); return; }
+  var rows=_src.map(function(l){
     var order=HS.orders.find(function(o){return o.dwg_no===l.dwg_no;})||{};
     return [l.customer||order.customer||'',l.po||order.po||'',l.ord_ln||'',l.del_ln||'',l.project||order.project||'',l.dwg_no||'',
       l.unit||order.unit||'',l.qty||order.qty||'',l.process||'',l.result||'',l.worker||'',
@@ -7308,7 +7363,9 @@ function renderLogMgmt(){
   const fmt=function(dt){if(!dt)return '—';const d=new Date(dt);const p=function(n){return String(n).padStart(2,'0');};return p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());};
   const rows=logs.map(function(l){
     const step=H_STEPS.find(function(s){return s.id===l.process;})||{color:'#888',icon:'?'};
-    const dur=l.duration_min!=null?l.duration_min+'분':'<span style="color:var(--blue)">진행중</span>';
+    // 완료 시각이 있으면 끝난 것 — 바로 찍은 공정은 소요가 0 이라 예전에는 빈 값으로 저장돼 「진행중」 으로 보였다
+    const dur=l.ended_at?((l.duration_min!=null?l.duration_min:Math.max(0,Math.round((new Date(l.ended_at)-new Date(l.started_at))/60000)))+'분')
+                        :'<span style="color:var(--blue)">진행중</span>';
     var resBadge='';
     if(l.result==='합격')resBadge=' <span style="font-size:9px;background:rgba(16,185,129,.12);color:#10b981;padding:1px 5px;border-radius:8px">합격</span>';
     else if(l.result==='불합격')resBadge=' <span style="font-size:9px;background:rgba(244,63,94,.12);color:#f43f5e;padding:1px 5px;border-radius:8px">불합격</span>';
