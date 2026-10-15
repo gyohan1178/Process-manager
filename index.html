@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.21</title>
+<title>하네스 공정관리 v7.22</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -541,6 +541,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   @media(max-width:768px){.app,.main,.page{padding-bottom:calc(56px + env(safe-area-inset-bottom))}}
 }
 .role-worker .admin-only{display:none!important}
+body:not(.role-worker) .worker-only{display:none!important}
 #fileInput{display:none}
 @media print{.app>*{display:none!important}#print-area{display:block!important}}
 #print-area{display:none;padding:16mm}
@@ -609,7 +610,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.21</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.22</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -729,7 +730,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.21 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.22 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -1584,7 +1585,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     <div style="font-size:11px;color:var(--tx3)">하네스 공정관리</div>
     <div style="font-size:20px;font-weight:800;color:var(--tx)">📖 사용 설명서</div>
     <div style="font-size:12px;color:var(--tx3);margin-top:3px;line-height:1.6">
-      화면별로 무엇을 하는 곳인지, 어떤 순서로 쓰는지 적어 두었습니다. 위 탭에서 화면을 고르세요.
+      화면별로 무엇을 하는 곳인지, 어떤 순서로 쓰는지 적어 두었습니다. 목차에서 화면을 고르세요.
     </div>
   </div>
 
@@ -1895,6 +1896,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   <button class="mob-nav-btn admin-only" id="mn-issue" onclick="setPage('issue')">
     <span class="mn-ic">⚠️</span>이슈
     <span id="mn-issue-badge" class="mn-bd" style="display:none"></span>
+  </button>
+  <button class="mob-nav-btn worker-only" id="mn-manual" onclick="setPage('manual')">
+    <span class="mn-ic">📖</span>설명서
   </button>
   <button class="mob-nav-btn admin-only" id="mn-more" onclick="MOB.open()">
     <span class="mn-ic">☰</span>전체
@@ -3784,15 +3788,21 @@ WOC.buildOneSet=async function(t, pgFrom, pgTotal){
 var MAN={
   tab:'status',
   TABS:[
+    {k:'scan',   ic:'📷', t:'QR 스캔 (현장)', adminOnly:false},
     {k:'status', ic:'📊', t:'공정현황',      adminOnly:false},
-    {k:'scan',   ic:'📷', t:'QR 스캔',       adminOnly:false},
     {k:'wo',     ic:'📄', t:'작업지시서 QR', adminOnly:true},
     {k:'issue',  ic:'⚠️', t:'공정 이슈',     adminOnly:true},
     {k:'stock',  ic:'📦', t:'재고 현황',     adminOnly:true},
     {k:'set',    ic:'⚙️', t:'공정 설정',     adminOnly:true},
     {k:'trouble',ic:'🩹', t:'문제가 생기면', adminOnly:false}
   ],
-  open:function(){ MAN.render(); },
+  adm:function(){ return (typeof AUTH==='undefined')||!AUTH.user||AUTH.isAdmin(); },
+  _first:true,
+  open:function(){
+    // 작업자는 처음 열 때 QR 스캔 설명부터 보여 준다
+    if(MAN._first){ MAN._first=false; if(!MAN.adm())MAN.tab='scan'; }
+    MAN.render();
+  },
   go:function(k){
     MAN.tab=k;
     var q=document.getElementById('man-q'); if(q)q.value='';
@@ -3840,7 +3850,7 @@ var MAN={
   render:function(){
     var tabs=document.getElementById('man-tabs'), body=document.getElementById('man-body');
     if(!tabs||!body)return;
-    var admin=(typeof AUTH==='undefined')||AUTH.isAdmin();
+    var admin=MAN.adm();
     var list=MAN.TABS.filter(function(t){ return admin||!t.adminOnly; });
     if(!list.some(function(t){return t.k===MAN.tab;}))MAN.tab=list[0].k;
     tabs.innerHTML=list.map(function(t){
@@ -3858,7 +3868,7 @@ var MAN={
     q=String(q||'').trim();
     var body=document.getElementById('man-body'); if(!body)return;
     if(!q){ MAN.render(); return; }
-    var admin=(typeof AUTH==='undefined')||AUTH.isAdmin();
+    var admin=MAN.adm();
     var hits=[];
     MAN.TABS.filter(function(t){return admin||!t.adminOnly;}).forEach(function(t){
       var html=(MAN.PAGES[t.k]||function(){return '';})();
@@ -3885,58 +3895,113 @@ var MAN={
 };
 
 MAN.PAGES.status=function(){
+  var adm=MAN.adm();
   var steps=(typeof H_STEPS!=='undefined'?H_STEPS:[]).map(function(s){return s.id;}).join(' → ')||'출도 → 재단 → 제작 → 검사 → 포장 → 출하';
-  return MAN.card({ic:'📊',t:'공정현황이란',d:'등록된 모든 건이 어느 공정까지 왔는지 한눈에 보는 화면입니다.',
+  var h=MAN.card({ic:'📊',t:'공정현황이란',d:'등록된 모든 건이 어느 공정까지 왔는지 한눈에 보는 화면입니다.',
       body:MAN.bul([
         '<b>현황판</b> 칸의 색이 찬 배지가 <b>끝난 공정</b>입니다. 회색은 아직입니다.',
         '기본 공정 순서: <b>'+hEsc(steps)+'</b>',
-        '<b>A형</b>은 기본 6단계, <b>B형</b>은 넘버링·하우징·압착 등이 들어간 긴 공정입니다. 배지 앞 <b>A형/B형</b>을 누르면 바뀝니다.',
-        '납기가 지난 건은 <b>빨간 배지</b>로 며칠 지났는지 같이 나옵니다.'
+        '<b>A형</b>은 기본 6단계, <b>B형</b>은 넘버링·하우징 등이 들어간 긴 공정입니다. 도면마다 정해져 있습니다.',
+        '납기가 지난 건은 <b>빨간 배지</b>로 며칠 지났는지 같이 나옵니다. 주황 <b>D-3</b> 은 3일 안에 납기입니다.',
+        '빨간 점은 현장에서 <b>작업중단</b>을 건 건입니다. 점에 마우스를 올리면 사유가 보입니다.'
       ])+MAN.tip('공정 배지에 마우스를 올리면 <b>누가 언제 찍었는지</b>가 나옵니다.')})
-  + MAN.card({ic:'📥',t:'수주 등록은 어디서 하나',d:'작업지시서 QR · 도면 출도 화면에서 합니다.',
-      body:MAN.bul([
-        '왼쪽 메뉴에서 <b>작업지시서 QR</b> 또는 <b>도면 출도</b> 를 고릅니다.',
-        '<b>⬇ 양식 내려받기</b> 로 서식을 받아 채우고 <b>PO 엑셀 올리기</b> 로 올립니다.',
-        'AXCELIS · EDWARDS 는 엑셀 대신 <b>그대로 붙여넣기</b> 도 됩니다.',
-        '같은 파일을 다시 올려도 <b>중복이 생기지 않습니다</b>.'
-      ])+MAN.tip('공정현황에는 등록 단추가 없습니다. 등록과 출력을 한 화면에서 하도록 옮겼습니다.')})
-  + MAN.card({ic:'🔎',t:'찾기와 정리',
+  + MAN.card({ic:'🔎',t:'찾아보기',
       body:MAN.bul([
         '검색창에 <b>도면번호·PO·고객사·프로젝트</b> 아무거나 넣으면 걸립니다.',
-        '<b>프로젝트 묶기</b>를 켜면 같은 프로젝트가 한 줄로 접힙니다. ▶ 를 누르면 펼쳐집니다.',
-        '열 제목을 누르면 <b>정렬</b>됩니다. 한 번 더 누르면 반대로 정렬됩니다.',
-        '<b>PO / Order Lines / Del Lines</b> 는 한 칸에 <b>/</b> 로 구분해 나옵니다.',
-        '등록일은 <b>도면번호에 마우스를 올리면</b> 보입니다. CSV·엑셀에는 그대로 들어갑니다.'
+        '<b>진행중</b>(기본)은 출하 전인 건, <b>완료</b>는 끝난 건만 보여 줍니다.',
+        '같은 프로젝트는 <b>한 줄로 묶여</b> 나옵니다. ▶ 를 누르면 펼쳐집니다.',
+        '프로젝트 없이 들어온 <b>단품</b>은 고객사 + 납기월로 묶입니다. 예) 📅 2026-10 · 단품 52건. 지난 달·이번 달은 펼친 채, 다음 달부터는 접힌 채로 나옵니다.',
+        '검색하면 묶음이 <b>펼친 채</b> 보여 찾은 건이 바로 보입니다.'
       ])})
+  + MAN.card({ic:'🔲',t:'작업지시서를 잃어버렸을 때',tone:'green',d:'종이가 없어도 공정을 찍을 수 있습니다.',
+      body:MAN.steps([
+        '공정현황에서 <b>도면번호로 검색</b>합니다.',
+        '그 줄 오른쪽 <b>[QR]</b> 을 누르면 그 건의 공정 QR 이 화면에 뜹니다.',
+        '다른 폰의 스캔 화면으로 그 QR 을 찍으면 됩니다. 종이가 필요하면 [인쇄] 로 뽑습니다.'
+      ])});
+  if(!adm)return h+MAN.tip('작업자 화면에서는 <b>보기만</b> 됩니다. 납기·공정 타입 수정이나 삭제는 사무실(관리자)에 말씀하세요.','info');
+  return h
+  + MAN.card({ic:'🧭',t:'보기 단추 (관리자)',d:'켜진 단추는 보라색으로 채워지고 ✓ 가 붙습니다. 다시 누르면 꺼집니다.',
+      body:MAN.bul([
+        '<b>🗂 묶기</b> — 프로젝트·단품 납기월로 묶어 봅니다. 끄면 한 줄씩 나옵니다.',
+        '<b>🏢 고객사별</b> — 고객사 머리 아래에 묶음이 납기순(8월 → 9월 → …)으로 나옵니다. 고객사 머리를 누르면 그 고객사만 봅니다.',
+        '<b>🖨 오늘 출도</b> — 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다. 방금 뽑은 것이 제대로 들어갔는지 볼 때 씁니다.',
+        '위 <b>지표 카드</b>(진행중·오늘 납기·지연·재작업…)를 누르면 그 종류만 걸러 봅니다.',
+        '조건이 걸리면 표 위에 <b>「걸린 조건」 칩</b>과 건수가 나옵니다. 칩의 ✕ 로 하나씩 뺍니다.'
+      ])+MAN.tip('<b>📥 CSV</b> 는 화면에 걸린 조건·정렬 그대로 내보냅니다. 전체가 필요하면 조건을 다 풀고 뽑으세요.')})
+  + MAN.card({ic:'📥',t:'수주 등록은 어디서 하나',d:'작업지시서 QR · 도면 출도 화면에서 합니다.',
+      body:MAN.bul([
+        '왼쪽 메뉴에서 <b>작업지시서 QR</b> 또는 <b>도면 출도</b>(AXCELIS · EDWARDS · SEMES용 하네스)를 고릅니다.',
+        '「출력하는 건만 등록」 이 켜져 있으면(기본) <b>실제로 뽑은 건만</b> 공정현황에 들어옵니다.',
+        '같은 파일을 다시 올려도 <b>중복이 생기지 않습니다</b>.'
+      ])+MAN.tip('공정현황에는 등록 단추가 없습니다. 등록과 출력을 한 화면에서 합니다.')})
   + MAN.card({ic:'✏️',t:'고치기',tone:'amber',d:'표에서 바로 고칠 수 있는 것들입니다.',
       body:MAN.bul([
-        '<b>납기</b> — 날짜를 누르면 그 자리에서 고쳐집니다.',
-        '<b>공정 타입</b> — A형/B형 배지를 누르면 A → B → C 로 돕니다.',
-        '<b>여러 건 한꺼번에</b> — 왼쪽 네모를 체크하면 위에 일괄 처리 단추가 나옵니다.'
-      ])+MAN.tip('삭제는 <b>되돌릴 수 없습니다</b>. 지우기 전에 진행 기록이 있는지 확인하세요.','warn')});
+        '<b>납기</b> — 날짜를 누르면 그 자리에서 고쳐집니다. 6/30 처럼 써도 됩니다.',
+        '<b>공정 타입</b> — A형/B형 배지를 누르면 다음 타입으로 바뀝니다.',
+        '<b>여러 건 한꺼번에</b> — 왼쪽 네모를 체크하면 위에 일괄 처리 줄이 나옵니다: 완료 처리 · 완료 취소 · 📅 납기 변경 · 공정구분 변경 · 🗑 삭제.',
+        '프로젝트 줄이나 납기월 머리를 체크하면 <b>그 묶음이 한꺼번에</b> 골라집니다 (화면에 보이는 건만).'
+      ])+MAN.tip('삭제는 <b>화면에서 되돌릴 수 없습니다</b>. 「삭제」 라고 입력해야 지워집니다. 진행 기록이 있는 건은 지우지 말고 값만 고치세요.','warn')})
+  + MAN.card({ic:'📅',t:'납기 일괄 변경',
+      body:MAN.steps([
+        '바꿀 건을 체크합니다 (프로젝트·납기월 머리 체크도 됩니다).',
+        '일괄 처리 줄의 <b>[📅 납기 변경]</b> 을 누릅니다.',
+        '<b>날짜로 맞추기</b>(모두 같은 날짜) 또는 <b>며칠 미루기</b>(건마다 +1주·+2주, − 는 앞당김)를 고릅니다.',
+        '바뀌기 전·후를 확인하고 적용합니다. 바로 뒤 <b>[되돌리기]</b> 로 원래대로 돌릴 수 있습니다.'
+      ])+MAN.tip('출하까지 끝난 건은 바꾸지 않습니다.','info')})
+  + MAN.card({ic:'📦',t:'납품 반영 (AXCELIS)',d:'현장에서 출하를 안 찍었어도, Axcelis 가 받은 건을 한꺼번에 완료로 만듭니다.',
+      body:MAN.steps([
+        '툴바의 <b>[📦 납품 반영]</b> 을 누르고 <b>AXCELIS PO 관리 엑셀</b>(.xlsm)을 고릅니다.',
+        'Received 시트를 읽어 <b>도번 + PO + 오더라인 + 델라인</b>으로 맞춥니다.',
+        '「납품 완료·발송 완료」 이고 받은 수량이 주문 이상인 건이 완료 후보로 나옵니다.',
+        '확인하고 <b>[완료 처리]</b>. 잘못했으면 바로 <b>[되돌리기]</b>.'
+      ])+MAN.tip('엑셀에 필터가 걸려 있어도 숨은 줄까지 모두 읽습니다. 받은 수량이 모자란 건·발주 취소 라인은 따로 보여 주고 기본으로 빼 둡니다.','info')})
+  + MAN.card({ic:'📋',t:'공정 이력관리',d:'왼쪽 메뉴 공정현황 아래에 있습니다. 찍힌 기록을 한 줄씩 봅니다.',
+      body:MAN.bul([
+        'PO 옆 <b>Order / Del Line</b> 으로 같은 도면이 라인별로 여러 건일 때 어느 건의 기록인지 구분합니다.',
+        '검색창에 <b>818052 1/2</b> 처럼 PO 와 라인을 같이 넣어도 찾습니다.',
+        '열 제목을 누르면 정렬, <b>CSV</b> 는 검색 결과만 내보냅니다.'
+      ])+MAN.tip('기록 삭제는 되돌릴 수 없습니다. 잘못 찍은 것은 현장에서 1분 안에 [↩ 방금 기록 취소] 하는 것이 가장 안전합니다.','warn')});
 };
 
 MAN.PAGES.scan=function(){
-  return MAN.card({ic:'📷',t:'현장에서 찍는 순서',d:'공정을 먼저 고르고 QR을 찍습니다. 순서가 반대면 인식하지 않습니다.',
+  return MAN.card({ic:'📷',t:'찍는 순서',d:'공정을 먼저 고르고, 그다음 작업지시서 QR 을 찍습니다.',
       body:MAN.steps([
-        '<b>작업자 이름</b>을 넣습니다. 한 번 넣으면 기억됩니다.',
-        '가운데에서 <b>공정</b>을 고릅니다 (재단·제작·검사…).',
-        '<b>카메라로 스캔</b>을 누르고 도면의 QR을 찍습니다.',
-        '초록 화면이 뜨면 기록된 것입니다.'
+        '<b>작업자</b> 칸을 확인합니다. 로그인 이름이 자동으로 들어갑니다. 다른 사람 대신 찍을 때만 고치세요.',
+        '<b>공정 선택</b>에서 지금 끝낸 공정을 누릅니다 (재단·제작·검사…).',
+        '<b>[📷 카메라로 스캔]</b> 을 누르고 작업지시서의 QR 을 찍습니다. PC 는 USB 스캐너로 찍어도 됩니다.',
+        '<b>초록 화면</b>이 뜨면 기록된 것입니다. 소리·진동도 같이 옵니다.',
+        '같은 공정이면 공정을 다시 고르지 않고 <b>다음 QR 만 계속</b> 찍으면 됩니다.'
+      ])+MAN.tip('QR 을 먼저 찍고 공정을 나중에 누르면 <b>기록되지 않습니다</b>. 공정을 누른 뒤 QR 을 한 번 더 찍으세요.','warn')})
+  + MAN.card({ic:'↩️',t:'잘못 찍었을 때',tone:'amber',
+      body:MAN.bul([
+        '찍은 뒤 <b>1분 안</b>에는 위에 <b>[↩ 방금 기록 취소]</b> 단추가 나옵니다. 누르면 그 기록이 지워집니다.',
+        '1분이 지났으면 사무실(관리자)에 말씀하세요. 공정 이력관리에서 지웁니다.',
+        '이미 끝난 공정을 또 찍으면 <b>「다시 처리(재작업)할까요?」</b> 를 묻습니다. 재작업이 아니면 [취소] 를 누르세요.'
+      ])})
+  + MAN.card({ic:'🔍',t:'검사 공정',
+      body:MAN.bul([
+        '검사도 다른 공정과 똑같이 <b>[검사] 를 고르고 QR 을 찍으면 완료</b>로 기록됩니다.',
+        '불량이 나와 작업을 못 하면 아래 <b>[⛔ 작업중단 / 불가]</b> 로 사유를 남기세요.'
       ])})
   + MAN.card({ic:'⏭️',t:'앞 공정을 건너뛰어도 됩니다',tone:'green',
       body:MAN.bul([
         '재단을 안 찍고 제작부터 찍어도 <b>막지 않습니다</b>.',
-        '등록되지 않은 도면을 찍으면 <b>물어봅니다</b>. [예] 를 누르면 그 자리에서 등록되고 기록도 남습니다.',
+        '등록되지 않은 도면을 찍으면 <b>물어봅니다</b>. [확인] 을 누르면 그 자리에서 등록되고 기록도 남습니다.',
         '그렇게 등록된 건은 사무실 <b>공정 이슈</b> 화면에 「현장 등록」으로 표시됩니다.'
-      ])+MAN.tip('잘못 찍었으면 [아니오] 를 누르세요. 아무것도 남지 않습니다.','info')})
-  + MAN.card({ic:'⛔',t:'작업을 못 할 때',tone:'red',d:'부품이 없거나 도면이 이상하면 알립니다.',
+      ])+MAN.tip('잘못 찍었으면 [취소] 를 누르세요. 아무것도 남지 않습니다.','info')})
+  + MAN.card({ic:'⛔',t:'작업을 못 할 때',tone:'red',d:'자재가 없거나 도면이 이상하면 알립니다.',
       body:MAN.steps([
         '공정을 고릅니다.',
-        '아래 <b>작업중단 / 불가</b> 를 누르고 사유를 적습니다.',
-        'QR을 찍습니다.',
-        '사무실 화면에 빨간 표시가 뜹니다. 문제가 풀려 그 공정을 완료로 찍으면 자동으로 풀립니다.'
+        '아래 <b>[⛔ 작업중단 / 불가]</b> 를 누르고 사유를 적습니다. 예) 자재 부족, 도면 오류',
+        'QR 을 찍습니다.',
+        '사무실 화면에 빨간 표시가 뜹니다. 문제가 풀려 그 공정을 완료로 찍으면 <b>자동으로 풀립니다</b>.'
       ])})
+  + MAN.card({ic:'⏱️',t:'시간기록 모드',d:'공정 선택 오른쪽 위 체크. 작업 시간을 재야 할 때만 켭니다.',
+      body:MAN.bul([
+        '켜면 <b>처음 찍을 때 시작</b>, <b>한 번 더 찍을 때 완료</b>로 기록되고 걸린 시간이 남습니다.',
+        '끄면(기본) 한 번 찍을 때 바로 완료입니다.'
+      ])+MAN.tip('켜 둔 채 한 번만 찍으면 「진행중」 으로 남습니다. 끝나면 꼭 한 번 더 찍으세요.','warn')})
   + MAN.card({ic:'📶',t:'인터넷이 끊겨도 찍힙니다',tone:'green',
       body:MAN.bul([
         '연결이 끊겨도 스캔은 됩니다. 기록은 <b>이 기기에 남습니다</b>.',
@@ -4024,33 +4089,57 @@ MAN.PAGES.dwgqr=function(){
 };
 
 MAN.PAGES.wo=function(){
+  var td='padding:8px 12px;color:var(--tx2)', th='padding:8px 12px;font-weight:700';
+  function row(a,b,c,d){ return '<tr style="border-top:1px solid var(--border)"><td style="'+th+'">'+a+'<div style="font-size:11px;color:var(--tx3);font-weight:500">'+b+'</div></td><td style="'+td+'">'+c+'</td><td style="'+td+'">'+d+'</td></tr>'; }
   return MAN.card({ic:'🔄',t:'전체 흐름',d:'OCR로 만든 작업지시서에 공정 QR을 넣어 뽑습니다.',
       body:MAN.steps([
         '<b>OCR로 작업지시서를 만들어</b> 폴더에 저장합니다. 파일명은 <span style="font-family:var(--mono)">도면번호_REV.pdf</span>',
-        '이 화면에서 <b>PO를 등록</b>합니다 (엑셀 또는 붙여넣기).',
-        '<b>OCR 폴더</b>를 고르면 도면번호로 맞춰 줍니다.',
-        'AXCELIS·EDWARDS는 <b>도면 폴더</b>도 고릅니다.',
-        '<b>만들기</b> — 공정 QR을 넣어 저장합니다.'
-      ])+MAN.tip('PO를 먼저 등록해야 합니다. QR 안에 도번·PO·수량·납기가 들어가는데, 파일명만으로는 수량·납기를 알 수 없기 때문입니다.')+MAN.tip('<b>이 화면은 사무실 PC에서만 씁니다.</b> 폰은 폴더를 고를 수 없어 메뉴에 나오지 않습니다.','warn')})
-  + MAN.card({ic:'📄',t:'고객사별로 뽑히는 모양',
+        '이 화면에서 <b>PO를 읽습니다</b> (엑셀 올리기 또는 붙여넣기).',
+        '<b>OCR 폴더</b>를 고르면 도면번호·REV 로 맞춰 줍니다. 도면 출도 탭은 <b>도면 폴더</b>도 고릅니다.',
+        '맞은 결과를 확인하고 <b>만들기</b> — 공정 QR 을 넣어 저장합니다.'
+      ])+MAN.tip('엑셀 파일이나 폴더는 탐색기에서 해당 칸에 <b>끌어다 놓아도</b> 됩니다. [경로 복사] 를 눌러 탐색기 주소창에 붙이면 기본 폴더로 바로 갑니다.')
+        +MAN.tip('<b>이 화면은 사무실 PC에서만 씁니다.</b> 폰은 폴더를 고를 수 없어 메뉴에 나오지 않습니다.','warn')})
+  + MAN.card({ic:'✅',t:'출력하는 건만 등록 (기본 켬)',tone:'green',d:'PO 를 읽기만 하고, 실제로 뽑은 건만 공정현황에 등록합니다.',
+      body:MAN.bul([
+        'PO 를 붙여넣거나 엑셀로 올려도 <b>바로 등록하지 않습니다</b>. 단추 이름도 [📋 읽기 (출력할 때 등록)] 로 바뀝니다.',
+        '[만들기] 로 출력하는 순간 그 건만 등록되고 QR 이 들어갑니다.',
+        'OCR·도면이 없어 못 뽑은 건은 등록되지 않습니다. 나중에 같은 PO 를 다시 올리면 <b>「새 건」</b> 으로 나와 그때 뽑으면 됩니다.',
+        '체크를 끄면 예전처럼 <b>읽는 즉시 등록</b>합니다. 고객사 탭마다 따로 기억합니다.'
+      ])+MAN.tip('방금 뽑은 건이 잘 들어갔는지는 공정현황의 <b>[🖨 오늘 출도]</b> 로 확인합니다.','info')})
+  + MAN.card({ic:'🔁',t:'이미 등록된 PO 다시 뽑기',d:'OCR 이 늦게 와서 나중에 뽑거나, 종이를 다시 뽑아야 할 때.',
+      body:MAN.bul([
+        '올린 것이 전부 등록된 건이면 <b>「다시 출도할까요?」</b> 를 묻습니다.',
+        '일부만 겹치면 <b>[이미 등록된 건]</b> 목록에서 체크해 출도에 넣습니다.',
+        '새 건을 만들지 않고 <b>등록된 그 건</b>으로 QR 을 넣으므로 공정 기록이 둘로 나뉘지 않습니다.',
+        '출하까지 끝난 건은 넣지 않습니다.'
+      ])})
+  + MAN.card({ic:'🔤',t:'REV 대조',tone:'amber',d:'PO · 작업지시서(OCR) · 도면 세 가지의 REV 가 맞는지 봅니다.',
+      body:MAN.bul([
+        'PO 의 REV 와 <b>같은 REV 파일</b>을 먼저 고릅니다.',
+        '하나라도 다르면 <span style="color:var(--red);font-weight:700">「REV 다름」</span> 으로 표시하고 <b>출력에서 빼 둡니다</b>. 구판이 현장에 나가는 것을 막기 위해서입니다.',
+        '빨간 [REV 다름] 카드를 누르면 어느 건이 어떻게 다른지 목록이 나오고 복사할 수 있습니다.',
+        '확인하고 그대로 뽑을 거면 목록에서 <b>체크</b>하면 출력에 들어갑니다.',
+        '파일 이름에 REV 가 없으면 「REV 확인 못 함」 으로 알려 줍니다. REV 003 과 3 은 같게 봅니다.'
+      ])})
+  + MAN.card({ic:'📄',t:'탭별로 뽑히는 모양',d:'부수와 순서는 [만들기] 위 「한 건마다」 칸에서 바꿉니다. 탭마다 따로 기억합니다.',
       body:'<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">'
         +'<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
         +'<thead><tr style="background:var(--bg2);border-bottom:2px solid var(--border)">'
-          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:112px">메뉴</th>'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:120px">메뉴</th>'
           +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2);width:98px">PO 넣는 법</th>'
-          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">뽑히는 모양</th></tr></thead><tbody>'
-        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">작업지시서 QR<div style="font-size:11px;color:var(--tx3);font-weight:500">하네스 공통</div></td>'
-          +'<td style="padding:8px 12px;color:var(--tx2)">엑셀</td>'
-          +'<td style="padding:8px 12px;color:var(--tx2)">작업지시서만</td></tr>'
-        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">도면 출도<div style="font-size:11px;color:var(--tx3);font-weight:500">AXCELIS</div></td>'
-          +'<td style="padding:8px 12px;color:var(--tx2)">엑셀</td>'
-          +'<td style="padding:8px 12px;color:var(--tx2)">작업지시서 1부 + 도면 2부</td></tr>'
-        +'<tr style="border-top:1px solid var(--border)"><td style="padding:8px 12px;font-weight:700">도면 출도<div style="font-size:11px;color:var(--tx3);font-weight:500">EDWARDS</div></td>'
-          +'<td style="padding:8px 12px;color:var(--tx2)">붙여넣기</td>'
-          +'<td style="padding:8px 12px;color:var(--tx2)">갑지 + 도면마다 [작업지시서 1 + 도면 2]</td></tr>'
+          +'<th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--tx2)">기본 구성</th></tr></thead><tbody>'
+        +row('작업지시서 QR','하네스 공통','엑셀','작업지시서만')
+        +row('도면 출도','AXCELIS','엑셀 · 붙여넣기','작업지시서 1 + 도면 1')
+        +row('도면 출도','EDWARDS','붙여넣기','갑지 + 도면마다 [작업지시서 1 + 도면 1]')
+        +row('도면 출도','SEMES용 하네스','엑셀 · 붙여넣기','작업지시서 1 + 도면 1 · PO 없어도 됨')
+        +row('도면만 출력','PO 없이','도면번호 붙여넣기','도면만 · QR 없음')
         +'</tbody></table></div>'
-        +MAN.tip('<b>QR은 작업지시서에만</b> 들어갑니다. 도면에는 넣지 않습니다. 도면도 A4로 맞추고 누워 있으면 바로 세웁니다.')})
-  + MAN.card({ic:'📁',t:'파일 이름 규칙',tone:'amber',
+        +MAN.bul([
+          '<b>순서</b> — 「작업지시서 → 도면」(기본) 또는 「도면 → 작업지시서」. 쪽번호 {페이지}/{전체} 도 바뀐 순서대로 이어집니다.',
+          '<b>QR은 작업지시서에만</b> 들어갑니다. 도면도 A4로 맞추고 누워 있으면 바로 세웁니다.',
+          'AXCELIS 에서 CCN 이 <b>B</b>(미국행)인 건은 작업지시서에 찍히는 납기를 1주일 앞당깁니다. 공정현황 납기는 그대로입니다.'
+        ])})
+  + MAN.card({ic:'📁',t:'파일 이름 규칙',
       body:'<div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-bottom:5px">들어오는 것 — OCR 폴더</div>'
         +'<div style="background:var(--bg2);border-radius:var(--r);padding:11px 14px;font-family:var(--mono);font-size:13px;font-weight:700;text-align:center;color:var(--tx)">160021769_D.pdf</div>'
         +'<div style="font-size:12px;color:var(--tx3);text-align:center;margin-top:4px">도면번호 _ REV</div>'
@@ -4058,22 +4147,21 @@ MAN.PAGES.wo=function(){
         +'<div style="background:var(--purple-lt);border:1px solid #ddd6fe;border-radius:var(--r);padding:11px 14px;font-family:var(--mono);font-size:13px;font-weight:700;text-align:center;color:var(--purple)">출도용_160021769_47324KF_3_1.pdf</div>'
         +'<div style="font-size:12px;color:var(--tx3);text-align:center;margin-top:4px">출도용 _ 도면번호 _ PO _ 오더라인 _ 납품라인</div>'
         +MAN.bul([
-          'REV 없이 <span style="font-family:var(--mono)">160021769.pdf</span> 로 저장해도 됩니다.',
-          '나가는 이름은 [3. 만들기]에서 세 가지 중 고를 수 있습니다.',
-          'PO 안의 공백은 자동으로 빠집니다.'
+          'REV 없이 <span style="font-family:var(--mono)">160021769.pdf</span> 로 저장해도 되지만, 그러면 REV 대조를 못 합니다.',
+          '<span style="font-family:var(--mono)">D202-30380A_003</span> · <span style="font-family:var(--mono)">NXR206404_5</span> 같은 이름도 읽습니다.',
+          '나가는 이름은 [만들기]에서 세 가지 중 고를 수 있습니다. PO 안의 공백은 자동으로 빠집니다.'
         ])
         +MAN.tip('<b>같은 도면번호에 PO가 여러 건</b>이면 어느 PO인지 알 수 없어, 납기가 빠른 것으로 넣습니다. '
-                 +'PO별로 따로 뽑아야 하면 파일명을 <span style="font-family:var(--mono)">도면번호_PO_오더라인_납품라인.pdf</span> 로 저장하세요. '
-                 +'폴더를 고르면 해당하는 파일 수를 주황색으로 알려 줍니다.','warn')})
+                 +'PO별로 따로 뽑아야 하면 파일명을 <span style="font-family:var(--mono)">도면번호_PO_오더라인_납품라인.pdf</span> 로 저장하세요.','warn')})
   + MAN.card({ic:'🎚️',t:'머릿말 · 꼬리말',d:'위·아래 각각 왼쪽·가운데·오른쪽 여섯 칸입니다.',
       body:MAN.bul([
         '<b>채운 칸만</b> 나옵니다. 빈 칸은 자리를 차지하지 않습니다.',
-        '메뉴마다 <b>따로 저장</b>됩니다. 하네스에서 고친 문구가 AXCELIS에 옮아가지 않습니다.',
-        '항목 단추는 <b>마지막에 손댄 칸</b>으로 들어갑니다.'
+        '탭마다 <b>따로 저장</b>됩니다. 하네스에서 고친 문구가 AXCELIS에 옮아가지 않습니다.',
+        '항목 단추({납기}·{프로젝트}·{업체}·{불출일}·{페이지}/{전체} 등)는 <b>마지막에 손댄 칸</b>으로 들어갑니다.'
       ])})
   + MAN.card({ic:'📦',t:'저장 방법 두 가지',
       body:MAN.bul([
-        '<b>병합 저장</b> — 전부 한 PDF로. 한꺼번에 인쇄할 때. 파일 이름 규칙은 적용되지 않습니다.',
+        '<b>병합 저장</b> — 전부 한 PDF로. 한꺼번에 인쇄할 때. 쪽번호가 끝까지 이어집니다.',
         '<b>개별 저장</b> — 건별 PDF를 ZIP으로. 파일 이름 규칙이 적용됩니다.'
       ])+MAN.tip('다시 뽑아도 <b>같은 건으로 잡힙니다</b>. QR 안의 고유번호가 바뀌지 않기 때문입니다.','info')});
 };
@@ -4087,27 +4175,33 @@ MAN.PAGES.set=function(){
       ])+MAN.tip('<b>이미 기록이 쌓인 공정의 이름을 바꾸면</b> 옛 기록과 이어지지 않습니다. 바꾸기 전에 확인하세요.','warn')})
   + MAN.card({ic:'👥',t:'사용자 관리',
       body:MAN.bul([
-        '가입 신청을 <b>승인</b>해야 쓸 수 있습니다.',
-        '<b>작업자</b>는 스캔 화면과 공정현황만 봅니다.',
-        '<b>관리자</b>는 모든 화면을 봅니다.'
+        '가입 신청을 <b>승인</b>해야 쓸 수 있습니다. 비밀번호는 6자 이상입니다.',
+        '<b>작업자</b>는 QR 스캔 · 공정현황(보기만) · 사용 설명서를 봅니다.',
+        '<b>관리자</b>는 모든 화면을 보고 가입을 승인합니다. <b>최고관리자</b>는 관리자를 임명합니다.'
       ])});
 };
 
 MAN.PAGES.trouble=function(){
+  var adm=MAN.adm();
+  function qa(q,a){ return '<b>'+q+'</b><br><span style="color:var(--tx3)">'+a+'</span><br><br>'; }
+  var common=qa('화면이 예전 그대로예요','Ctrl + Shift + R 을 누르세요. 폰은 브라우저를 완전히 닫았다 다시 여세요.')
+    +qa('위에 빨간 띠가 떠요','서버에 아직 못 보낸 기록이 있다는 뜻입니다. 띠를 누르면 다시 보냅니다. 인터넷을 확인하세요.')
+    +qa('QR을 찍었는데 반응이 없어요','① 작업자 이름이 들어 있는지 ② 공정을 먼저 골랐는지 확인하세요. QR 을 먼저 찍었다면 공정을 누른 뒤 한 번 더 찍으세요.')
+    +qa('「이 도면에 없는 공정」 이라고 떠요','그 도면의 공정 타입(A형·B형)에 없는 공정을 골랐습니다. 공정을 다시 고르거나, 타입이 틀렸으면 사무실에 말씀하세요.')
+    +qa('「등록되지 않은 도면입니다」 라고 물어요','사무실에서 아직 등록하지 않은 도면입니다. 맞는 작업지시서면 [확인] — 그 자리에서 등록됩니다.')
+    +qa('작업지시서를 잃어버렸어요','공정현황에서 도면번호를 검색해 [QR] 을 누르면 화면에 QR 이 뜹니다. 그걸 찍으면 됩니다.');
+  var admin=qa('뽑은 건이 공정현황에 없어요','「출력하는 건만 등록」 이 켜져 있으면 [만들기] 로 실제 출력한 건만 등록됩니다. 읽기만 하고 안 뽑은 건은 없는 게 맞습니다. [🖨 오늘 출도] 로 오늘 뽑은 건을 확인하세요.')
+    +qa('「REV 다름」 으로 빠졌어요','PO·OCR·도면 중 REV 가 다른 것이 있습니다. 빨간 카드로 내용을 보고, 그대로 뽑을 거면 목록에서 체크하세요.')
+    +qa('화면을 새로고침했더니 폴더가 풀렸어요','브라우저 보안상 그렇습니다. 폴더를 다시 고르면 됩니다.')
+    +qa('목록이 안 바뀌어요','자동 새로고침은 1분마다 봅니다. 바로 보려면 툴바 오른쪽 ↻ 를 누르세요.');
   return MAN.card({ic:'🩹',t:'자주 나오는 문제',tone:'amber',
-      body:'<div style="font-size:13px;color:var(--tx2);line-height:1.9">'
-        +'<b>화면이 예전 그대로예요</b><br><span style="color:var(--tx3)">Ctrl + Shift + R 을 누르세요. 그냥 새로고침(F5)으로는 안 바뀔 때가 있습니다.</span><br><br>'
-        +'<b>위에 빨간 띠가 떠요</b><br><span style="color:var(--tx3)">서버에 아직 못 보낸 기록이 있다는 뜻입니다. 띠를 누르면 다시 보냅니다. 인터넷을 확인하세요.</span><br><br>'
-        +'<b>QR을 찍었는데 반응이 없어요</b><br><span style="color:var(--tx3)">① 작업자 이름을 넣었는지 ② 공정을 골랐는지 ③ 그 도면의 공정 타입에 있는 공정인지 확인하세요.</span><br><br>'
-        +'<b>화면을 새로고침했더니 도면 폴더가 풀렸어요</b><br><span style="color:var(--tx3)">브라우저 보안상 그렇습니다. 폴더를 다시 고르면 됩니다.</span><br><br>'
-        +'<b>목록이 안 바뀌어요</b><br><span style="color:var(--tx3)">값만 고친 것은 자동 새로고침이 잡지 못합니다. 오른쪽 위 ↻ 를 누르세요.</span>'
-      +'</div>'})
-  + MAN.card({ic:'🚫',t:'되돌릴 수 없는 것',tone:'red',
+      body:'<div style="font-size:13px;color:var(--tx2);line-height:1.9">'+common+(adm?admin:'')+'</div>'})
+  + (adm?MAN.card({ic:'🚫',t:'되돌릴 수 없는 것',tone:'red',
       body:MAN.bul([
-        '<b>삭제</b> — 지운 건은 복구되지 않습니다.',
+        '<b>삭제</b> — 화면에서는 복구되지 않습니다.',
         '기초재고 <b>일괄 업로드</b>는 [되돌리기] 로 바로 전 상태까지만 돌아갑니다.',
         '같은 건을 두 사람이 동시에 고치면 <b>나중에 저장한 쪽</b>이 남습니다.'
-      ])+MAN.tip('지우기 전에 그 건에 <b>진행 기록이 있는지</b> 꼭 보세요. 기록이 있으면 지우지 말고 값만 고치세요.','warn')})
+      ])+MAN.tip('지우기 전에 그 건에 <b>진행 기록이 있는지</b> 꼭 보세요. 기록이 있으면 지우지 말고 값만 고치세요.','warn')}):'')
   + MAN.card({ic:'📞',t:'그래도 안 되면',
       body:MAN.bul([
         '왼쪽 아래 <b>버전 번호</b>를 눌러 무엇이 바뀌었는지 볼 수 있습니다.',
@@ -4743,8 +4837,8 @@ var MOB={
     if(u)u.textContent=((AUTH.profile&&AUTH.profile.username)||'')+' \u00b7 '+(admin?'\uad00\ub9ac\uc790':'\uc791\uc5c5\uc790');
     var v=document.getElementById('ms-ver');
     if(v)v.textContent=(typeof APP_VER!=='undefined'?APP_VER:'');
-    // 작업자에게는 스캔·현황만 보인다
-    var open4worker=['status','scan'];
+    // 작업자에게는 스캔·현황·설명서만 보인다
+    var open4worker=['status','scan','manual'];
     var html='';
     MOB.ITEMS.forEach(function(it,i){
       if(it.g){ html+='<div class="ms-grp">'+hEsc(it.g)+'</div>'; return; }
@@ -4772,7 +4866,7 @@ var MOB={
 
 function setPage(p){
   // ★ 역할 기반 접근 차단: 작업자는 현황/스캔만
-  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue','manual','stepset'].indexOf(p)>=0){
+  if(typeof AUTH!=='undefined'&&AUTH.user&&!AUTH.isAdmin()&&['analytics','stamp','stamp-single','qrhist','users','workorder','dwgqr','stock','issue','stepset'].indexOf(p)>=0){
     toast('접근 권한이 없습니다','warn');return;
   }
   if(p==='users'&&(typeof AUTH==='undefined'||!AUTH.isAdmin())){toast('관리자만 접근 가능합니다','warn');return;}
@@ -7101,8 +7195,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.21';
+var APP_VER='v7.22';
 var VER_LOG=[
+  {v:'v7.22',d:'2026-10', t:'[사용 설명서 · 작업자도 보기] 작업자 계정도 사용 설명서를 볼 수 있습니다. 작업자에게는 QR 스캔 · 공정현황 · 문제가 생기면 탭만 나오고, 처음 열면 QR 스캔 설명부터 보입니다. 폰 아래 탭에 [📖 설명서] 가 생겼습니다(작업자만). 내용도 지금 기능에 맞게 고쳤습니다 — QR 스캔: 공정을 먼저 고르고 찍기, 1분 안 [↩ 방금 기록 취소], 이미 끝난 공정 다시 찍으면 재작업 확인, 검사도 찍으면 바로 완료(합격/불합격 단추는 지금 쓰지 않음), 시간기록 모드, 작업지시서를 잃어버렸을 때 공정현황 [QR]. 공정현황: 단품 납기월 묶음, 보기 단추(묶기·고객사별·오늘 출도), 걸린 조건 칩, 납기 일괄 변경, 납품 반영, 이력관리 라인. 작업지시서 QR: 출력하는 건만 등록, 이미 등록된 PO 다시 뽑기, REV 대조, 탭별 기본 구성(SEMES용 하네스·도면만 출력 포함, 도면 1부)과 순서, 끌어다 놓기. 문제가 생기면: 「이 도면에 없는 공정」·「등록되지 않은 도면」·「REV 다름」·뽑은 건이 공정현황에 없을 때'},
   {v:'v7.21',d:'2026-10', t:'[공정현황 툴바 정리] 보기 단추(묶기·고객사별·오늘 출도)에 테두리를 넣고 켜지면 보라색으로 채워 ✓ 표시가 나오게 했습니다. 진행중/완료/전체도 고른 쪽이 보라로 채워집니다. [📦 납품 반영] 은 동작 단추라 초록으로 구분했습니다. 고객사·프로젝트·검색·오늘 출도·지표 카드 같은 조건이 걸리면 표 위에 「걸린 조건」 칩과 건수가 나오고 ✕ 로 하나씩 뺄 수 있습니다. 검색하거나 오늘 출도로 좁혀 볼 때는 묶음을 펼친 채 보여 줍니다. CSV 는 화면에 걸린 조건·정렬 그대로 내보내고(오늘 출도 포함), 공정 이력관리 CSV 도 검색 결과만 내보냅니다. [🖨 오늘 출도] 툴바의 [🖨 오늘 출도] 를 누르면 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다 (다시 누르면 전체). 고객사·검색·묶기와 같이 쓸 수 있고, 진행중/완료/전체 보기도 그대로 적용됩니다. QR 이력의 날짜 필터도 한국 시간 기준으로 바꿔, 아침 9시 전에 뽑은 것이 어제로 잡히지 않습니다. 공정 이력관리에서 바로 찍은 공정(소요 0분)이 「진행중」 으로 보이던 것도 고쳤습니다'},
   {v:'v7.20',d:'2026-10', t:'[도면 출도 · 출력하는 건만 등록] 「출력하는 건만 등록」(기본 켬) — PO 를 붙여넣거나 엑셀로 올려도 바로 공정현황에 등록하지 않고 읽어만 둡니다. [만들기] 로 실제 출력하는 건만 그 순간 등록되고 QR 이 들어갑니다. OCR·도면이 없어 못 뽑은 건은 등록되지 않으므로, 다음에 같은 PO 를 다시 올리면 「새 건」 으로 나와 그때 뽑으면 됩니다. 이미 등록된 건은 지금처럼 따로 보여 주고 빼 둡니다. 체크를 끄면 예전처럼 읽는 즉시 등록합니다 (고객사 탭마다 따로 기억)'},
   {v:'v7.19',d:'2026-10', t:'[도면 출도 · 출력 순서 고르기] 「한 건마다」 부수 칸 옆에 [순서] 를 넣었습니다 — 「작업지시서 → 도면」(기본) 또는 「도면 → 작업지시서」. 고객사 탭마다 따로 기억합니다 (AXCELIS·EDWARDS·SEMES용 하네스 각각). 병합 PDF·개별 PDF 모두 적용되고, 쪽번호 {페이지}/{전체} 도 바뀐 순서대로 이어집니다'},
@@ -10948,7 +11043,7 @@ var AUTH={
     });
     if(!admin){
       var cur=document.querySelector('.page:not(.hidden)');
-      var safe=['pg-status','pg-scan'];
+      var safe=['pg-status','pg-scan','pg-manual'];
       if(cur&&safe.indexOf(cur.id)<0){setPage(isMobile?'scan':'status');}
     }
   },
