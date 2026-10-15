@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.19</title>
+<title>하네스 공정관리 v7.20</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.19</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.20</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -716,7 +716,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.19 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.20 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -867,6 +867,13 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
             </label>
             <span id="wo-grp-note" style="font-size:11.5px;color:var(--tx3);margin-left:auto"></span>
           </div>
+          <div id="wo-defer-box" style="display:flex;align-items:flex-start;gap:9px;margin-top:8px;background:var(--purple-lt);border:1px solid #ddd6fe;border-radius:var(--r);padding:9px 12px">
+            <input type="checkbox" id="wo-defer" onchange="WOC.setDefer(this.checked)" style="margin-top:2px;cursor:pointer">
+            <div style="line-height:1.6">
+              <label for="wo-defer" style="font-size:12.5px;font-weight:700;color:var(--purple);cursor:pointer">출력하는 건만 등록</label>
+              <div id="wo-defer-note" style="font-size:11.5px;color:var(--tx2)"></div>
+            </div>
+          </div>
           <div id="wo-po-info" style="margin-top:12px"></div>
           <div id="wo-dup-info"></div>
 
@@ -877,7 +884,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
               style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;font-family:var(--mono);line-height:1.7;resize:vertical" oninput="clearTimeout(window.__pvT);window.__pvT=setTimeout(function(){WOC.preview();},250)"></textarea>
             <div id="wo-paste-help" style="font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.6"></div>
             <div style="display:flex;gap:9px;margin-top:10px;align-items:center">
-              <button class="btn btn-pr" onclick="WOC.readPaste()">📋 읽어서 등록</button>
+              <button class="btn btn-pr" id="wo-read-btn" onclick="WOC.readPaste()">📋 읽어서 등록</button>
               <button class="btn btn-outline" onclick="WOC.preview()">먼저 확인만</button>
               <span id="wo-paste-cnt" style="font-size:12px;color:var(--tx3);margin-left:auto"></span>
             </div>
@@ -2611,6 +2618,8 @@ var WOC={
       var e=document.getElementById(id); if(e)e.style.display=only?'none':'';
     });
     var gb=document.getElementById('wo-grp-box'); if(gb)gb.style.display=only?'none':'flex';
+    var dfb=document.getElementById('wo-defer-box'); if(dfb)dfb.style.display=only?'none':'flex';
+    WOC.paintDefer();
     // wo-folder-box / wo-need-po / wo-path-* 는 각자 paint 함수가 아래에서 정한다
     var cf=document.getElementById('wo-c-form'); if(cf)cf.style.display=only?'none':'grid';
     // 1번 카드의 제목도 바꾼다
@@ -2909,7 +2918,7 @@ var WOC={
       +(f.due?'\n  \uc81c\uc791\ub0a9\uae30 '+f.due+' (\ubd99\uc5ec\ub123\uae30\uc5d0 \ub0a9\uae30\uac00 \uc5c6\ub294 \ud589\uc5d0\ub9cc)':'')
       +(f.rel?'\n  \ubd88\ucd9c\uc77c '+f.rel:'')
       +(r.bad.length?'\n\n\u203b \ubabb \uc77d\uc740 \uc904 '+r.bad.length+'\uac1c\ub294 \uac74\ub108\ub701\ub2c8\ub2e4.':'')
-      +'\n\n\ub4f1\ub85d\ud560\uae4c\uc694?';
+      +(WOC.deferOn()?'\n\n※ 지금은 읽어만 둡니다. [만들기] 로 출력하는 건만 등록됩니다.\n\n읽을까요?':'\n\n\ub4f1\ub85d\ud560\uae4c\uc694?');
     if(WOC.grpMode==='proj' && !f.proj && !rowProj){
       toast('프로젝트로 묶으려면 프로젝트 이름을 넣으세요','warn'); return;
     }
@@ -2926,13 +2935,15 @@ var WOC={
     });
     // PO \uac00 \uc788\uc73c\uba74 \ub3c4\ubc88+PO+\ub77c\uc778\uc73c\ub85c, \uc5c6\uc73c\uba74 \ub3c4\ubc88+\ud504\ub85c\uc81d\ud2b8+\ud638\uae30\ub85c \uac19\uc740 \uac74\uc744 \ubcf8\ub2e4
     // 줄마다: PO 있으면 도번+PO+라인, 없으면 도번+프로젝트+호기 (예전에는 PO 없는 줄이 하나라도 있으면 전부 PO 를 무시했다)
-    var res=hsRegisterOrders(list,{matchBy:'auto', via:'붙여넣기'});
+    var _dry=WOC.deferOn();
+    var res=hsRegisterOrders(list,{matchBy:'auto', via:'붙여넣기', dry:_dry});
     // 출도 대상은 새로 등록된 것만. 이미 있던 건은 아래 목록으로 보여 준다.
     WOC.loaded=res.newOrders||[];
     WOC.dupList=res.dupOrders||[];
     if(typeof renderStatus==='function')renderStatus();
     if(typeof renderOrderStampList==='function')renderOrderStampList();
-    toast('\uc2e0\uaddc '+res.added+'\uac74 \ub4f1\ub85d \u00b7 \uae30\uc874 '+res.skipped+'\uac74 \uc720\uc9c0','ok');
+    if(res.dry)toast('새 건 '+res.added+'건을 읽었습니다 (출력할 때 등록) · 이미 등록된 건 '+res.skipped+'건','ok');
+    else toast('\uc2e0\uaddc '+res.added+'\uac74 \ub4f1\ub85d \u00b7 \uae30\uc874 '+res.skipped+'\uac74 \uc720\uc9c0','ok');
     WOC.paintPO(); WOC.paintDup(); if(WOC.ocrIndex)WOC.buildTargets(); else WOC.paintFolder();
     WOC.preview();
     WOC.offerDup();
@@ -2944,6 +2955,7 @@ var WOC={
     var f=WOC.form();
     var pj=document.getElementById('dq-xl-proj');
     if(pj)pj.value=f.proj;
+    DQ._defer=WOC.deferOn();
     DQ.readExcel(input);
   }
 };
@@ -2982,6 +2994,48 @@ Object.keys(WOC.RECIPE_DEFAULT).forEach(function(k){
   }catch(e){}
   WOC.RECIPE[k]=r;
 });
+// 「출력하는 건만 등록」 — PO 를 읽어도 바로 등록하지 않고, 실제로 뽑는 건만 등록한다.
+//   OCR·도면이 없어 못 뽑은 건이 등록돼 버리면, 다음에 다시 올릴 때 「이미 등록된 건」 으로 빠지기 때문.
+WOC.deferOn=function(){
+  if(WOC.cust==='dwgonly')return false;
+  try{ var v=localStorage.getItem('hs_wo_defer_'+WOC.cust); return v===null?true:v==='1'; }catch(e){ return true; }
+};
+WOC.setDefer=function(on){
+  try{ localStorage.setItem('hs_wo_defer_'+WOC.cust, on?'1':'0'); }catch(e){}
+  WOC.paintDefer();
+  if(WOC.loaded&&WOC.loaded.some(function(o){return o._pending;})&&!on)
+    toast('이미 읽어 둔 목록은 출력할 때 등록됩니다. 바로 등록하려면 다시 읽어 주세요','warn');
+};
+WOC.paintDefer=function(){
+  var cb=document.getElementById('wo-defer'); if(cb)cb.checked=WOC.deferOn();
+  var rb=document.getElementById('wo-read-btn'); if(rb)rb.textContent=WOC.deferOn()?'📋 읽기 (출력할 때 등록)':'📋 읽어서 등록';
+  var n=document.getElementById('wo-defer-note');
+  if(n)n.innerHTML=WOC.deferOn()
+    ? 'PO 를 읽어도 <b>바로 등록하지 않습니다</b>. [만들기] 로 실제 출력한 건만 공정현황에 등록되고, OCR·도면이 없어 못 뽑은 건은 다음에 다시 올리면 됩니다.'
+    : '[읽어서 등록] 을 누르면 <b>바로 공정현황에 등록</b>됩니다 (예전 방식).';
+};
+// 출력 직전 — 뽑을 건 중 「등록 전」 인 것만 실제로 등록한다
+WOC.commitPending=async function(targets){
+  var put=[], swap=0;
+  (targets||[]).forEach(function(t){
+    var o=t.order; if(!o||!o._pending)return;
+    // 그사이 다른 사람이 같은 건을 등록했으면 그 건을 쓴다 (QR 도 그 건으로)
+    var ex=findExistingOrder(o, o.dwg_no, 'auto', o);
+    if(ex&&ex!==o){ t.order=ex; swap++;
+      if(WOC.loaded){ var i=WOC.loaded.indexOf(o); if(i>=0)WOC.loaded[i]=ex; }
+      return; }
+    delete o._pending;
+    o.created_at=new Date().toISOString();
+    HS.orders.push(o); put.push(o);
+  });
+  if(put.length){ await hsSaveOrders(put); }
+  if(put.length||swap){
+    if(typeof renderStatus==='function')renderStatus();
+    toast('출력하는 '+put.length+'건을 등록했습니다'+(swap?' · 이미 등록돼 있던 '+swap+'건은 그 건으로':''),'ok');
+  }
+  WOC.paintPO();
+};
+
 // 부수 바꾸기
 WOC.setCopies=function(kind,val){
   var r=WOC.RECIPE[WOC.cust]; if(!r)return;
@@ -3614,7 +3668,10 @@ WOC.paintPO=function(){
     +c('\ucd1d \uc218\ub7c9',qty.toLocaleString(),'','')
     +(multi?c('\uc5ec\ub7ec PO',multi,'\uac19\uc740 \ub3c4\uba74\uc774 2\uac74 \uc774\uc0c1','amber'):'')
   +'</div>'
-  +(multi?'<div style="margin-top:9px;background:var(--blue-lt);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:9px 12px;font-size:12px;color:var(--tx2);line-height:1.7">\ud83d\udccc \uac19\uc740 \ub3c4\uba74\ubc88\ud638\uac00 <b>\uc5ec\ub7ec PO</b>\ub85c \ub098\ub220\uc9c4 \uac83\uc774 '+multi+'\uc885 \uc788\uc2b5\ub2c8\ub2e4. <b>PO \uac74\ub9c8\ub2e4 \ud55c \uc7a5\uc529</b> \ub530\ub85c \ub9cc\ub4e4\uc5b4 \ucd9c\ub825\ud569\ub2c8\ub2e4.</div>':'');
+  +(multi?'<div style="margin-top:9px;background:var(--blue-lt);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:9px 12px;font-size:12px;color:var(--tx2);line-height:1.7">\ud83d\udccc \uac19\uc740 \ub3c4\uba74\ubc88\ud638\uac00 <b>\uc5ec\ub7ec PO</b>\ub85c \ub098\ub220\uc9c4 \uac83\uc774 '+multi+'\uc885 \uc788\uc2b5\ub2c8\ub2e4. <b>PO \uac74\ub9c8\ub2e4 \ud55c \uc7a5\uc529</b> \ub530\ub85c \ub9cc\ub4e4\uc5b4 \ucd9c\ub825\ud569\ub2c8\ub2e4.</div>':'')
+  +(function(){ var pn=rows.filter(function(o){return o._pending;}).length;
+      return pn?'<div style="margin-top:9px;background:var(--purple-lt);border-left:3px solid var(--purple);border-radius:0 6px 6px 0;padding:9px 12px;font-size:12px;color:var(--tx2);line-height:1.7">'
+        +'📝 새 건 <b>'+pn+'건은 아직 등록 전</b>입니다. [만들기] 로 <b>출력하는 건만</b> 공정현황에 등록되고, OCR·도면이 없어 못 뽑은 건은 등록되지 않습니다.</div>':''; })();
 };
 
 // 머릿말·꼬리말에 쪽번호가 들어가는지
@@ -6991,8 +7048,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.19';
+var APP_VER='v7.20';
 var VER_LOG=[
+  {v:'v7.20',d:'2026-10', t:'[도면 출도 · 출력하는 건만 등록] 「출력하는 건만 등록」(기본 켬) — PO 를 붙여넣거나 엑셀로 올려도 바로 공정현황에 등록하지 않고 읽어만 둡니다. [만들기] 로 실제 출력하는 건만 그 순간 등록되고 QR 이 들어갑니다. OCR·도면이 없어 못 뽑은 건은 등록되지 않으므로, 다음에 같은 PO 를 다시 올리면 「새 건」 으로 나와 그때 뽑으면 됩니다. 이미 등록된 건은 지금처럼 따로 보여 주고 빼 둡니다. 체크를 끄면 예전처럼 읽는 즉시 등록합니다 (고객사 탭마다 따로 기억)'},
   {v:'v7.19',d:'2026-10', t:'[도면 출도 · 출력 순서 고르기] 「한 건마다」 부수 칸 옆에 [순서] 를 넣었습니다 — 「작업지시서 → 도면」(기본) 또는 「도면 → 작업지시서」. 고객사 탭마다 따로 기억합니다 (AXCELIS·EDWARDS·SEMES용 하네스 각각). 병합 PDF·개별 PDF 모두 적용되고, 쪽번호 {페이지}/{전체} 도 바뀐 순서대로 이어집니다'},
   {v:'v7.18',d:'2026-09', t:'[SEMES용 하네스 · 현장관리 요청] ① 도면 출도에 「SEMES용 하네스」 탭 추가 — PO 등록 양식을 엑셀로 올리거나 머리글째 붙여넣으면 줄마다 고객사·프로젝트·호기·불출일·납기를 읽습니다. 머릿말 기본값: 위 {납기} · {업체} {프로젝트} {수량} · {페이지}/{전체}, 아래 {불출일} (고쳐서 저장 가능). 새 항목 {업체}·{불출일} 추가. 기본 위치 \\\\jinsuntech-nas\\…\\4. 하네스_QR. ② [PO 엑셀 올리기]·OCR 폴더·도면 폴더 칸에 탐색기에서 파일/폴더를 끌어다 놓을 수 있습니다. ③ [고침] PO 가 없는 하네스는 같은 도면이 다른 프로젝트에 있으면 「이미 있는 건」 으로 빠지던 문제 — 이제 PO 가 없으면 도면번호+프로젝트+호기로 가립니다 (DSI 26→24, 85→84 로 줄던 원인). ④ [고침] 엑셀 날짜 서식(mm-dd-yy)이면 납기·불출일이 비어 저장되던 문제. ⑤ [고침] 「D200-91447A (KMEL-370155)」 처럼 도번 뒤에 번호가 붙은 줄이 말없이 빠지던 문제 — 앞 도번으로 등록하고 뒤 번호는 품명에 남기며, 못 읽은 줄은 확인창에 알려 줍니다. ⑥ 붙여넣기에 PO 없는 줄이 섞여도 PO 있는 줄은 PO 로 가립니다. ⑦ 도면·OCR 파일 이름 D202-30380A_003 · NXR206404_5 도 인식, REV 003 과 3 을 같게 봅니다'},
   {v:'v7.17',d:'2026-09', t:'[📦 납품 반영] 공정현황 위 [📦 납품 반영] 으로 AXCELIS PO 관리 엑셀(Axcelis_PO_management.xlsm)을 고르면 Received 시트를 읽어, 현장에서 출하를 찍지 않은 건도 한꺼번에 완료 처리합니다. 도번 + PO + 오더라인 + 델라인으로 맞추고(라인 없이 등록된 옛 건은 도번 + PO), 현황이 「납품 완료」·「발송 완료」 이고 받은 수량이 주문 이상이면 완료 후보로 보여 줍니다. 받은 수량이 적은 건과 「발주 취소」 라인은 따로 보여 주고 기본으로 빼 두며, 체크하면 함께 정리합니다. 엑셀에 필터가 걸려 있어도 숨은 줄까지 모두 읽습니다. 완료 처리 뒤 [되돌리기] 로 바로 원래대로 돌릴 수 있습니다'},
@@ -7890,6 +7948,7 @@ var WO={
     var self=this;
     var targets=self.sortedTargets();
     if(!targets.length){toast('매칭된 파일이 없습니다','warn');return;}
+    if(self.mode==='wo'&&typeof WOC!=='undefined')await WOC.commitPending(targets);
     WOP.open(targets.length,'개별 PDF 만드는 중');
     try{
       var useZip=(typeof JSZip!=='undefined');
@@ -7925,6 +7984,7 @@ var WO={
     var self=this;
     var targets=self.sortedTargets();
     if(targets.length===0){toast('매칭된 파일이 없습니다','warn');return;}
+    if(self.mode==='wo'&&typeof WOC!=='undefined')await WOC.commitPending(targets);
     WOP.open(targets.length, self.mode==='dwg'?'도면 QR 만드는 중':'작업지시서 만드는 중');
     try{
       var{PDFDocument}=PDFLib;
@@ -8653,16 +8713,18 @@ DQ.readExcel=function(input){
           +'고객사 '+custName+' · 공정타입 '+typeSel+'형'
           +(proj.trim()?' · 프로젝트 '+proj.trim():'')
           +(skipped.length?'\n\n※ 도면번호로 읽을 수 없어 뺀 줄 '+skipped.length+'개:\n  '+skipped.slice(0,5).join('\n  ')+(skipped.length>5?'\n  …':''):'')
-          +'\n\n등록할까요?';
-        if(!confirm(msg))return;
+          +(DQ._defer?'\n\n※ 지금은 읽어만 둡니다. [만들기] 로 출력하는 건만 등록됩니다.\n\n읽을까요?':'\n\n등록할까요?');
+        if(!confirm(msg)){ DQ._defer=false; return; }
 
-        var res=hsRegisterOrders(list,{matchBy:'auto', via:'엑셀'});
+        var _dry=!!DQ._defer; DQ._defer=false;
+        var res=hsRegisterOrders(list,{matchBy:'auto', via:'엑셀', dry:_dry});
         self.xlRows=list.map(function(n,i){
           return {dwg_no:n.dwg_no, rev:n.rev, brev:metas[i].brev, desc:metas[i].desc, order:res.orders[i]};
         }).filter(function(x){ return x.order; });
         if(typeof renderStatus==='function')renderStatus();
         if(typeof renderOrderStampList==='function')renderOrderStampList();
-        toast('신규 '+res.added+'건 등록 · 기존 '+res.skipped+'건 유지'
+        if(res.dry)toast('새 건 '+res.added+'건을 읽었습니다 (출력할 때 등록) · 이미 등록된 건 '+res.skipped+'건','ok');
+        else toast('신규 '+res.added+'건 등록 · 기존 '+res.skipped+'건 유지'
               +(res.filled?' · 빈 값 '+res.filled+'건 채움':''),'ok');
         if(typeof WOC!=='undefined'){
           WOC.loaded=res.newOrders||[]; WOC.dupList=res.dupOrders||[];
@@ -10222,6 +10284,7 @@ var QRH={
     var f=(self.files||[])[idx];
     if(!f||!f.order){ toast('그 건의 수주 정보가 없습니다','warn'); return; }
     var o=f.order;
+    if(o._pending){ toast('아직 등록 전입니다 — [만들기] 로 출력하면 등록되고 그때부터 QR 을 볼 수 있습니다','warn'); return; }
     var m=HS.orders.find(function(x){return x.id===o.id;})||o;
     QRH.draw(m, !m.id);
   },
@@ -10533,6 +10596,10 @@ function hsRegisterOrders(list, opt){
     var ref={dwg_no:dwg, po:n.po||'', ord_ln:n.ord_ln||'', del_ln:n.del_ln||'',
              project:n.project||'', unit:n.unit||''};
     var ex=findExistingOrder(n, dwg, opt.matchBy, ref);
+    if(ex&&opt.dry){
+      // 읽어만 두는 중 — 기존 건은 손대지 않는다
+      skipped++; out.push(ex); dupList.push({o:ex, row:n}); return;
+    }
     if(ex){
       // 이미 있는 건은 덮어쓰지 않는다. 비어 있던 값만 채운다.
       var chg=false;
@@ -10580,6 +10647,13 @@ function hsRegisterOrders(list, opt){
       HS.orders.push(o); touched.push(o); added++; out.push(o); newList.push(o);
     }
   });
+  if(opt.dry){
+    // 새 건은 같은 묶음 안 중복을 가리려고 잠깐 넣었던 것 — 빼고, 「등록 전」 표시만 남긴다.
+    //   출력할 때 WOC.commitPending 이 실제로 등록한다. 출력하지 않은 건은 등록되지 않는다.
+    var nid={}; newList.forEach(function(o){ nid[o.id]=1; o._pending=true; });
+    HS.orders=HS.orders.filter(function(o){ return !nid[o.id]; });
+    return {added:added, skipped:skipped, filled:0, orders:out, newOrders:newList, dupOrders:dupList, dry:true};
+  }
   if(touched.length)hsSaveOrders(touched);
   return {added:added, skipped:skipped, filled:filled, orders:out,
           newOrders:newList, dupOrders:dupList};
