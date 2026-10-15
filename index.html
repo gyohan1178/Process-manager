@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.20</title>
+<title>하네스 공정관리 v7.21</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -596,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.20</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.21</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -716,7 +716,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.20 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.21 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -756,6 +756,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
         </div>
         <button class="sp-show-btn on admin-only" id="sp-group-btn" onclick="toggleSpGroup()" title="같은 프로젝트끼리 묶어 대표 1건만 표시 (▶ 클릭 시 세부 펼침)" style="margin-left:6px">🗂 프로젝트 묶기</button>
         <button class="sp-show-btn admin-only" id="sp-cust-btn" onclick="toggleSpView()" title="고객사별 소제목으로 구분해 보기" style="margin-left:4px">🏢 고객사별</button>
+        <button class="sp-show-btn admin-only" id="sp-printed-btn" onclick="toggleSpPrinted()" title="오늘 출도(작업지시서 QR 출력)한 건만 보기 — 다시 누르면 전체" style="margin-left:4px">🖨 오늘 출도</button>
         <button class="sp-show-btn admin-only" onclick="RCV.pick()" title="AXCELIS PO 관리 엑셀의 Received 시트로 납품된 건을 한꺼번에 완료 처리" style="margin-left:4px">📦 납품 반영</button>
         <input type="file" id="rcv-file" accept=".xlsx,.xlsm,.xls" style="display:none" onchange="RCV.read(this)">
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
@@ -5479,12 +5480,20 @@ function populateFilters(orders){
 }
 // 화면에 걸린 조건 그대로 걸러 준다.
 //   CSV 추출도 이 함수를 써야 화면과 같은 것이 나온다.
+// 오늘 출도한 건만 보기 (작업지시서 QR 을 오늘 뽑은 건)
+var _spPrinted=false;
+function toggleSpPrinted(){
+  _spPrinted=!_spPrinted;
+  var b=document.getElementById('sp-printed-btn'); if(b)b.classList.toggle('on',_spPrinted);
+  renderStatus();
+}
 function getFilteredOrders(){
   var q=((document.getElementById('sp-search')||{}).value||'').toLowerCase();
   var fCust=(document.getElementById('flt-cust')||{}).value||'';
   var fProj=(document.getElementById('flt-proj')||{}).value||'';
   var orders=[...HS.orders];
   if(fCust) orders=orders.filter(function(o){return (o.customer||'')===fCust;});
+  if(_spPrinted){ var _td=almToday(); orders=orders.filter(function(o){ return o.qr_printed_at && isoToLocalYMD(o.qr_printed_at)===_td; }); }
   if(fProj) orders=orders.filter(function(o){return (o.project||'')===fProj;});
   if(q) orders=orders.filter(function(o){
     return (o.dwg_no||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)
@@ -7048,8 +7057,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.20';
+var APP_VER='v7.21';
 var VER_LOG=[
+  {v:'v7.21',d:'2026-10', t:'[공정현황 · 🖨 오늘 출도] 툴바의 [🖨 오늘 출도] 를 누르면 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다 (다시 누르면 전체). 고객사·검색·묶기와 같이 쓸 수 있고, 진행중/완료/전체 보기도 그대로 적용됩니다. QR 이력의 날짜 필터도 한국 시간 기준으로 바꿔, 아침 9시 전에 뽑은 것이 어제로 잡히지 않습니다'},
   {v:'v7.20',d:'2026-10', t:'[도면 출도 · 출력하는 건만 등록] 「출력하는 건만 등록」(기본 켬) — PO 를 붙여넣거나 엑셀로 올려도 바로 공정현황에 등록하지 않고 읽어만 둡니다. [만들기] 로 실제 출력하는 건만 그 순간 등록되고 QR 이 들어갑니다. OCR·도면이 없어 못 뽑은 건은 등록되지 않으므로, 다음에 같은 PO 를 다시 올리면 「새 건」 으로 나와 그때 뽑으면 됩니다. 이미 등록된 건은 지금처럼 따로 보여 주고 빼 둡니다. 체크를 끄면 예전처럼 읽는 즉시 등록합니다 (고객사 탭마다 따로 기억)'},
   {v:'v7.19',d:'2026-10', t:'[도면 출도 · 출력 순서 고르기] 「한 건마다」 부수 칸 옆에 [순서] 를 넣었습니다 — 「작업지시서 → 도면」(기본) 또는 「도면 → 작업지시서」. 고객사 탭마다 따로 기억합니다 (AXCELIS·EDWARDS·SEMES용 하네스 각각). 병합 PDF·개별 PDF 모두 적용되고, 쪽번호 {페이지}/{전체} 도 바뀐 순서대로 이어집니다'},
   {v:'v7.18',d:'2026-09', t:'[SEMES용 하네스 · 현장관리 요청] ① 도면 출도에 「SEMES용 하네스」 탭 추가 — PO 등록 양식을 엑셀로 올리거나 머리글째 붙여넣으면 줄마다 고객사·프로젝트·호기·불출일·납기를 읽습니다. 머릿말 기본값: 위 {납기} · {업체} {프로젝트} {수량} · {페이지}/{전체}, 아래 {불출일} (고쳐서 저장 가능). 새 항목 {업체}·{불출일} 추가. 기본 위치 \\\\jinsuntech-nas\\…\\4. 하네스_QR. ② [PO 엑셀 올리기]·OCR 폴더·도면 폴더 칸에 탐색기에서 파일/폴더를 끌어다 놓을 수 있습니다. ③ [고침] PO 가 없는 하네스는 같은 도면이 다른 프로젝트에 있으면 「이미 있는 건」 으로 빠지던 문제 — 이제 PO 가 없으면 도면번호+프로젝트+호기로 가립니다 (DSI 26→24, 85→84 로 줄던 원인). ④ [고침] 엑셀 날짜 서식(mm-dd-yy)이면 납기·불출일이 비어 저장되던 문제. ⑤ [고침] 「D200-91447A (KMEL-370155)」 처럼 도번 뒤에 번호가 붙은 줄이 말없이 빠지던 문제 — 앞 도번으로 등록하고 뒤 번호는 품명에 남기며, 못 읽은 줄은 확인창에 알려 줍니다. ⑥ 붙여넣기에 PO 없는 줄이 섞여도 PO 있는 줄은 PO 로 가립니다. ⑦ 도면·OCR 파일 이름 D202-30380A_003 · NXR206404_5 도 인식, REV 003 과 3 을 같게 봅니다'},
@@ -10346,7 +10356,7 @@ function _renderQRHistRows(){
       .some(function(v){ return String(v||'').toLowerCase().indexOf(q)>=0; });
   });
   if(df||dt)hist=hist.filter(function(r){
-    var d=String(r.ts||'').slice(0,10);
+    var d=r.ts?isoToLocalYMD(r.ts):'';     // 서버 시각은 UTC — 아침 9시 전 출력이 어제로 잡히지 않게
     if(df&&d<df)return false;
     if(dt&&d>dt)return false;
     return true;
