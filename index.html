@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.23</title>
+<title>하네스 공정관리 v7.25</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -152,7 +152,49 @@ body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px
   .sp-show-btn{padding:7px 11px}
   .sp-tog{padding:6px 9px}
 }
+#ask-ovl{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.ask-box{background:#fff;border-radius:14px;width:100%;max-width:440px;max-height:88vh;overflow:auto;padding:20px 22px;box-shadow:0 20px 60px rgba(15,23,42,.3);font-family:var(--sans)}
+.ask-box.danger{border-top:4px solid var(--red)}
+.ask-t{font-size:16px;font-weight:800;color:var(--tx);margin-bottom:8px}
+.ask-box.danger .ask-t{color:var(--red)}
+.ask-m{font-size:13px;color:var(--tx2);line-height:1.7}
+.ask-items{margin-top:10px;background:var(--bg2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--tx2);line-height:1.8;font-family:var(--mono)}
+.ask-warn{margin-top:8px;font-size:12.5px;font-weight:700;color:var(--amber)}
+.ask-choices{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.ask-choice{display:flex;align-items:baseline;gap:8px;text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:9px;padding:10px 12px;cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--tx)}
+.ask-choice span{font-size:11.5px;color:var(--tx3)}
+.ask-choice:hover,.ask-choice.on{border-color:var(--purple);background:var(--purple-lt)}
+.ask-presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.ask-presets button{border:1.5px solid var(--border);background:#fff;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--tx2);cursor:pointer;font-family:var(--sans)}
+.ask-presets button:hover{border-color:var(--purple);color:var(--purple)}
+.ask-lbl{font-size:12px;font-weight:700;color:var(--tx2);margin-top:12px}
+.ask-in{width:100%;margin-top:6px;height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;font-family:var(--sans);outline:none}
+.ask-in:focus{border-color:var(--purple)}
+.ask-err{min-height:16px;margin-top:6px;font-size:12px;font-weight:700;color:var(--red)}
+.ask-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.ask-acts button{border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.ask-cancel{border:1.5px solid var(--border);background:#fff;color:var(--tx2)}
+.ask-ok{border:1.5px solid var(--purple);background:var(--purple);color:#fff}
+.ask-box.danger .ask-ok{background:var(--red);border-color:var(--red)}
+.btn-spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;margin-right:6px;vertical-align:-2px}
+@media (max-width:768px){.ask-presets button{padding:11px 16px;font-size:15px}.ask-acts button{padding:12px 20px;font-size:15px}.ask-in{height:46px;font-size:16px}}
 #sp-active{display:none;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 20px 0;padding:8px 12px;background:var(--purple-lt);border:1px solid #ddd6fe;border-radius:var(--r)}
+.skel-wrap{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:6px 14px}
+.skel-row{display:flex;gap:14px;align-items:center;height:42px;border-bottom:1px solid var(--border)}
+.skel-row span{height:12px;border-radius:6px;background:linear-gradient(90deg,#eef1f6 25%,#f7f8fb 50%,#eef1f6 75%);background-size:200% 100%;animation:skel 1.2s ease-in-out infinite}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+#coach-ovl{position:fixed;inset:0;z-index:8500;display:none}
+.coach-hole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,23,42,.55);outline:3px solid #a78bfa;pointer-events:none;transition:all .2s}
+.coach-card{position:fixed;background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 14px 40px rgba(15,23,42,.35);font-family:var(--sans)}
+.coach-n{font-size:11px;font-weight:700;color:var(--purple)}
+.coach-t{font-size:16px;font-weight:800;color:var(--tx);margin:3px 0 6px}
+.coach-d{font-size:13.5px;color:var(--tx2);line-height:1.7}
+.coach-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.coach-acts button{border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.coach-skip{border:1.5px solid var(--border);background:#fff;color:var(--tx3)}
+.coach-next{border:1.5px solid var(--purple);background:var(--purple);color:#fff}
+.kpi-tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;font-size:10px;color:var(--tx3);border:1px solid var(--border);cursor:help;background:#fff;flex-shrink:0}
+.kpi-tip:hover{color:var(--purple);border-color:#c4b5fd}
 .sp-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 6px 3px 10px;background:#fff;border:1px solid #ddd6fe;border-radius:20px;font-size:11.5px;font-weight:700;color:var(--purple)}
 .sp-chip button{border:none;background:var(--purple-lt);color:var(--purple);width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;padding:0}
 .grp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
@@ -652,7 +694,7 @@ body:not(.role-worker) .worker-only{display:none!important}
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.23</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.25</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -772,7 +814,7 @@ body:not(.role-worker) .worker-only{display:none!important}
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.23 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.25 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -827,7 +869,7 @@ body:not(.role-worker) .worker-only{display:none!important}
       <div class="sp-content" id="sp-board">
         <div class="sp-empty">
           <div class="sp-empty-ic">📋</div>
-          <div class="sp-empty-t">공정 현황이 없습니다</div>
+          <div class="sp-empty-t">불러오는 중…</div>
           <div class="sp-empty-d">QR 스캔 탭에서 <b>출도</b> 공정을 스캔하면<br>도면이 자동으로 등록됩니다</div>
         </div>
       </div>
@@ -1403,7 +1445,7 @@ body:not(.role-worker) .worker-only{display:none!important}
             <button class="cam-btn" id="cam-toggle-btn" onclick="toggleCamera()">
               📷 카메라로 스캔
             </button>
-            <div class="sc-hint">공정을 고르고 작업지시서 QR을 찍으세요</div>
+            <div class="sc-hint">공정을 고르고 작업지시서 QR을 찍으세요 · <a href="javascript:void(0)" onclick="COACH.start(COACH.SCAN)" style="color:var(--purple);font-weight:700;text-decoration:none">💡 안내</a></div>
           </div>
           <div id="cam-reader" style="display:none;width:100%;margin-top:4px"></div>
           <div id="sc-job-area"></div>
@@ -1830,7 +1872,7 @@ body:not(.role-worker) .worker-only{display:none!important}
     <div style="display:flex;gap:8px;padding:13px 20px;border-top:1px solid var(--border);background:var(--bg2)">
       <span id="dueb-cnt" style="font-size:12px;color:var(--tx3);align-self:center"></span>
       <button onclick="DUEB.close()" style="margin-left:auto;border:1px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">취소</button>
-      <button id="dueb-save" onclick="DUEB.save()" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">바꾸기</button>
+      <button id="dueb-save" onclick="withBusy('dueb',this,DUEB.save)" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">바꾸기</button>
     </div>
   </div>
 </div>
@@ -1852,7 +1894,7 @@ body:not(.role-worker) .worker-only{display:none!important}
     <div style="display:flex;gap:8px;padding:13px 20px;border-top:1px solid var(--border);background:var(--bg2)">
       <span id="rcv-cnt" style="font-size:12px;color:var(--tx3);align-self:center"></span>
       <button onclick="RCV.close()" style="margin-left:auto;border:1px solid var(--border);background:#fff;color:var(--tx2);padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">취소</button>
-      <button id="rcv-save" onclick="RCV.apply()" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">완료 처리</button>
+      <button id="rcv-save" onclick="withBusy('rcv',this,RCV.apply)" style="border:none;background:var(--purple);color:#fff;padding:8px 20px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)">완료 처리</button>
     </div>
   </div>
 </div>
@@ -2187,8 +2229,8 @@ function addStepType(){
   renderTypeList();
   toast(code+'형 추가됨','ok');
 }
-function removeStepType(ti){
-  if(!confirm('['+H_STEP_TYPES[ti].name+'] 구분을 삭제할까요?'))return;
+async function removeStepType(ti){
+  if(!await askYes('공정 구분 삭제','['+H_STEP_TYPES[ti].name+'] 구분을 삭제할까요?\n[저장] 을 눌러야 서버에 반영됩니다.',{danger:true,okText:'삭제'}))return;
   H_STEP_TYPES.splice(ti,1);
   renderTypeList();
   toast('삭제됨','ok');
@@ -2312,10 +2354,10 @@ function moveStep(i,dir){
   var tmp=_editSteps[i];_editSteps[i]=_editSteps[j];_editSteps[j]=tmp;
   renderStepList();
 }
-function removeStep(i){
+async function removeStep(i){
   setTimeout(function(){if(typeof renderTypeList==='function')renderTypeList();},0);
   if(i===0){toast('첫 번째 공정(출도)은 삭제할 수 없습니다','err');return;}
-  if(!confirm('['+_editSteps[i].id+'] 공정을 삭제할까요?'))return;
+  if(!await askYes('공정 삭제','['+_editSteps[i].id+'] 공정을 삭제할까요?',{danger:true,okText:'삭제',warn:['이미 기록이 쌓인 공정이면 옛 기록과 이어지지 않습니다']}))return;
   _editSteps.splice(i,1);
   renderStepList();
 }
@@ -2461,8 +2503,9 @@ function startAutoRefresh(){
       if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))return;
       if(document.querySelector('.po-ovl:not(.hidden)'))return;   // 모달이 열려 있으면
       var sb=getSB();if(!sb)return;
-      var r1=await sb.from('harness_orders').select('id',{count:'exact',head:true});
-      var r2=await sb.from('harness_logs').select('id',{count:'exact',head:true});
+      var _rr=await Promise.all([sb.from('harness_orders').select('id',{count:'exact',head:true}),
+                                 sb.from('harness_logs').select('id',{count:'exact',head:true})]);
+      var r1=_rr[0], r2=_rr[1];
       if(r1.error||r2.error)return;
       var sig=r1.count+':'+r2.count;
       if(_autoPoll.sig&&sig!==_autoPoll.sig){
@@ -2964,7 +3007,7 @@ var WOC={
     return (withPO===r.rows.length)?'poline':'projunit';
   },
 
-  readPaste:function(){
+  readPaste:async function(){
     var f=WOC.form();
     var r=WOC.parse((document.getElementById('wo-paste')||{}).value);
     if(!r.rows.length){ toast('\uc77d\uc744 \uc218 \uc788\ub294 \ud589\uc774 \uc5c6\uc2b5\ub2c8\ub2e4','err'); return; }
@@ -2993,9 +3036,9 @@ var WOC={
       toast('프로젝트로 묶으려면 프로젝트 이름을 넣으세요','warn'); return;
     }
     if(WOC.cust==='axcelis' && !withPO){
-      if(!confirm('PO \uac00 \ud558\ub098\ub3c4 \uc5c6\uc2b5\ub2c8\ub2e4.\n\nAXCELIS \ub294 PO \ub85c \uac19\uc740 \uac74\uc744 \uac00\ub824\ub0b4\ubbc0\ub85c,\nPO \uc5c6\uc774 \ub4f1\ub85d\ud558\uba74 \ub098\uc911\uc5d0 \ub9de\ucd94\uae30 \uc5b4\ub835\uc2b5\ub2c8\ub2e4.\n\n\uadf8\ub798\ub3c4 \ub4f1\ub85d\ud560\uae4c\uc694?'))return;
+      if(!await askYes('PO 없음','PO \uac00 \ud558\ub098\ub3c4 \uc5c6\uc2b5\ub2c8\ub2e4.\n\nAXCELIS \ub294 PO \ub85c \uac19\uc740 \uac74\uc744 \uac00\ub824\ub0b4\ubbc0\ub85c,\nPO \uc5c6\uc774 \ub4f1\ub85d\ud558\uba74 \ub098\uc911\uc5d0 \ub9de\ucd94\uae30 \uc5b4\ub835\uc2b5\ub2c8\ub2e4.\n\n\uadf8\ub798\ub3c4 \ub4f1\ub85d\ud560\uae4c\uc694?'))return;
     }
-    if(!confirm(msg))return;
+    if(!await askYes(WOC.deferOn()?'PO 읽기':'PO 등록',msg,{okText:WOC.deferOn()?'읽기':'등록'}))return;
     var list=r.rows.map(function(x){
       return {dwg_no:x.dwg_no, rev:x.rev||'', customer:(x.cust?canonCustomer(x.cust):cust),
               project:x.project||f.proj, unit:x.unit||f.unit,
@@ -3510,7 +3553,7 @@ WOC._copyFallback=function(p,done){
   document.body.appendChild(ta); ta.select();
   var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
   document.body.removeChild(ta);
-  if(ok)done(); else prompt('아래 경로를 복사하세요', p);
+  if(ok)done(); else ASK.open({title:'경로 복사',msg:'자동 복사가 막혀 있습니다. 아래 칸을 눌러 Ctrl+C 로 복사하세요.',input:{value:p,readonly:true},cancelText:null,okText:'닫기'});
 };
 // 붙여넣기 예시·안내는 고객사마다 다르다.
 //   AXCELIS 는 CCN·PO·라인이 있고, EDWARDS 는 도면번호·품명·수량뿐이다.
@@ -3722,10 +3765,10 @@ WOC.offerDup=function(){
   if((WOC.loaded&&WOC.loaded.length)||!d.length)return;
   var can=d.filter(function(x){ return !isOrderDone(x.o); }).length;
   if(!can)return;
-  setTimeout(function(){
-    if(confirm('올린 '+d.length+'건이 모두 이미 등록되어 있습니다.\n\n'
+  setTimeout(async function(){
+    if(await askYes('이미 등록된 건','올린 '+d.length+'건이 모두 이미 등록되어 있습니다.\n\n'
       +'이 건들로 다시 출도할까요? ('+can+'건)\n'
-      +'새로 만들지 않고, 등록된 그 건으로 OCR 폴더에서 찾아 QR 을 넣습니다.'))
+      +'새로 만들지 않고, 등록된 그 건으로 OCR 폴더에서 찾아 QR 을 넣습니다.',{okText:'다시 출도'}))
       WOC.dupPickAll(true);
   },60);
 };
@@ -3991,7 +4034,7 @@ MAN.PAGES.status=function(){
         '<b>🗂 묶기</b> — 프로젝트·단품 납기월로 묶어 봅니다. 끄면 한 줄씩 나옵니다.',
         '<b>🏢 고객사별</b> — 고객사 머리 아래에 묶음이 납기순(8월 → 9월 → …)으로 나옵니다. 고객사 머리를 누르면 그 고객사만 봅니다.',
         '<b>🖨 오늘 출력</b> — 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다. 방금 뽑은 것이 제대로 들어갔는지 볼 때 씁니다. (출도와는 별개)',
-        '위 <b>지표 카드</b>(진행중·오늘 납기·지연·재작업…)를 누르면 그 종류만 걸러 봅니다.',
+        '위 <b>지표 카드</b>(진행중·오늘 납기·지연·작업중단·현장 등록)를 누르면 그 종류만 걸러 봅니다. ⓘ 를 누르면 세는 기준이 나옵니다.',
         '조건이 걸리면 표 위에 <b>「걸린 조건」 칩</b>과 건수가 나옵니다. 칩의 ✕ 로 하나씩 뺍니다.'
       ])+MAN.tip('오른쪽 위 <b>📥 CSV</b> 는 화면에 걸린 조건·정렬 그대로 내보냅니다. 전체가 필요하면 조건을 다 풀고 뽑으세요.')})
   + MAN.card({ic:'📥',t:'수주 등록은 어디서 하나',d:'작업지시서 QR · 도면 출도 화면에서 합니다.',
@@ -4025,7 +4068,7 @@ MAN.PAGES.status=function(){
       body:MAN.bul([
         'PO 옆 <b>Order / Del Line</b> 으로 같은 도면이 라인별로 여러 건일 때 어느 건의 기록인지 구분합니다.',
         '검색창에 <b>818052 1/2</b> 처럼 PO 와 라인을 같이 넣어도 찾습니다.',
-        '열 제목을 누르면 정렬, <b>CSV</b> 는 검색 결과만 내보냅니다.'
+        '열 제목을 누르면 정렬. <b>CSV</b> 는 체크한 기록이 있으면 <b>그것만</b>, 없으면 검색 결과를 내보냅니다.'
       ])+MAN.tip('기록 삭제는 되돌릴 수 없습니다. 잘못 찍은 것은 현장에서 1분 안에 [↩ 방금 기록 취소] 하는 것이 가장 안전합니다.','warn')});
 };
 
@@ -4037,7 +4080,7 @@ MAN.PAGES.scan=function(){
         '<b>[📷 카메라로 스캔]</b> 을 누르고 작업지시서의 QR 을 찍습니다. PC 는 USB 스캐너로 찍어도 됩니다.',
         '<b>초록 화면</b>이 뜨면 기록된 것입니다. 소리·진동도 같이 옵니다.',
         '같은 공정이면 공정을 다시 고르지 않고 <b>다음 QR 만 계속</b> 찍으면 됩니다.'
-      ])+MAN.tip('QR 을 먼저 찍고 공정을 나중에 누르면 <b>기록되지 않습니다</b>. 공정을 누른 뒤 QR 을 한 번 더 찍으세요.','warn')})
+      ])+MAN.tip('스캔 화면의 <b>💡 안내</b> 를 누르면 이 순서를 화면 위에서 다시 짚어 줍니다.','info')+MAN.tip('QR 을 먼저 찍고 공정을 나중에 누르면 <b>기록되지 않습니다</b>. 공정을 누른 뒤 QR 을 한 번 더 찍으세요.','warn')})
   + MAN.card({ic:'📋',t:'출도는 언제 찍나',tone:'purple',
       body:MAN.bul([
         '작업지시서와 <b>자재까지 챙겨 현장에 넘길 때</b> [출도] 를 찍습니다.',
@@ -4063,7 +4106,7 @@ MAN.PAGES.scan=function(){
   + MAN.card({ic:'⛔',t:'작업을 못 할 때',tone:'red',d:'자재가 없거나 도면이 이상하면 알립니다.',
       body:MAN.steps([
         '공정을 고릅니다.',
-        '아래 <b>[⛔ 작업중단 / 불가]</b> 를 누르고 사유를 적습니다. 예) 자재 부족, 도면 오류',
+        '아래 <b>[⛔ 작업중단 / 불가]</b> 를 누르고 사유 단추(자재 부족 · 도면 오류 · 설비 고장 …)를 고릅니다. 직접 적어도 됩니다.',
         'QR 을 찍습니다.',
         '사무실 화면에 빨간 표시가 뜹니다. 문제가 풀려 그 공정을 완료로 찍으면 <b>자동으로 풀립니다</b>.'
       ])})
@@ -4769,8 +4812,13 @@ async function hsLoad(){
   HS.orders=JSON.parse(localStorage.getItem('hs_orders')||'[]');
   HS.logs=JSON.parse(localStorage.getItem('hs_logs')||'[]');
   _csvData={};_csvCols={};
+  HS._loading=true;          // 서버 자료를 받기 전 — 빈 화면 대신 「불러오는 중」 모양을 보여 준다
   renderStatus();
   setBadge('sync');
+  try{ return await _hsLoadInner(); }
+  finally{ HS._loading=false; if(!HS.orders.length)renderStatus(); }
+}
+async function _hsLoadInner(){
   const sdkLoaded=await new Promise(function(resolve){
     var done=false;
     var timer=setTimeout(function(){if(!done){done=true;resolve(false);}},5000);
@@ -4782,15 +4830,23 @@ async function hsLoad(){
   try{
     const timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},20000);});
     // Supabase 기본 1000행 제한 돌파: range 페이지네이션으로 전량 로드
+    // 1000줄씩 하나 받고 다음을 묻던 것을, 건수를 먼저 보고 모든 쪽을 한꺼번에 받는다.
+    //   이력 4,500건이면 5번 차례로 오가던 것이 2번(건수 + 한꺼번에)으로 준다. 서버가 뭄바이라 왕복 수가 체감 속도를 정한다.
     async function fetchAll(table, orderCol){
-      var all=[],page=0,SZ=1000;
-      while(true){
-        var r=await sb.from(table).select('*').order(orderCol,{ascending:false}).range(page*SZ,(page+1)*SZ-1);
-        if(r.error)throw r.error;
-        all=all.concat(r.data||[]);
-        if(!r.data||r.data.length<SZ)break;
-        page++; if(page>50)break; // 안전장치(5만행)
+      var SZ=1000;
+      var c=await sb.from(table).select('id',{count:'exact',head:true});
+      if(c.error)throw c.error;
+      var pages=Math.min(50,Math.max(1,Math.ceil((c.count||0)/SZ)+1));   // 받는 사이 늘어난 줄을 위해 한 쪽 더
+      var reqs=[];
+      for(var pg=0;pg<pages;pg++){
+        reqs.push(sb.from(table).select('*').order(orderCol,{ascending:false}).order('id',{ascending:true}).range(pg*SZ,(pg+1)*SZ-1));
       }
+      var res=await Promise.all(reqs);
+      var all=[],seen={};
+      res.forEach(function(r){
+        if(r.error)throw r.error;
+        (r.data||[]).forEach(function(x){ if(!seen[x.id]){ seen[x.id]=1; all.push(x); } });
+      });
       return all;
     }
     const dataP=Promise.all([
@@ -4977,6 +5033,7 @@ function setPage(p){
   }
   if(p==='scan'){
     renderScanSteps();renderScanLog();renderScanJobArea();renderScanActions();renderScanStepIndicator();
+    if(typeof COACH!=='undefined')COACH.maybeScan();
     const w=document.getElementById('sc-worker');
     if(w){ w.value=HS.worker; }
     setTimeout(function(){ const el=document.getElementById('sc-qr-in');if(el)el.focus(); },80);
@@ -5253,10 +5310,10 @@ function toggleAllOrders(on){
 var _spVisibleIds=[];
 async function bulkChangeType(){
   if(_selOrders.size===0){toast('변경할 건을 선택하세요','warn');return;}
-  var codes=H_STEP_TYPES.map(function(t){return t.code;}).join(' / ');
-  var code=prompt('변경할 공정구분 코드를 입력하세요 ('+codes+')');
-  if(!code)return;
-  code=code.trim().toUpperCase();
+  var r=await ASK.open({title:'공정구분 변경',msg:_selOrders.size+'건을 어느 구분으로 바꿀까요?',
+    choices:H_STEP_TYPES.map(function(t){ return {v:t.code,t:t.code+'형 · '+(t.name||''),d:(t.steps||[]).map(function(x){return x.id||x.name;}).join(' → ')}; })});
+  if(!r||!r.choice)return;
+  var code=String(r.choice).trim().toUpperCase();
   if(!H_STEP_TYPES.some(function(t){return t.code===code;})){toast('없는 공정구분: '+code,'err');return;}
   var _chg=HS.orders.filter(function(o){return _selOrders.has(o.id);});
   _chg.forEach(function(o){o.step_type=code;});
@@ -5272,7 +5329,7 @@ async function bulkDoneSelected(val){
   hsDataChanged();
   safeCache('hs_orders',HS.orders);
   var sb=getSB(), fail=0;
-  if(sb){for(var i=0;i<ids.length;i++){try{var _r=await sb.from('harness_orders').update({manually_done:val}).eq('id',ids[i]);if(_r&&_r.error)fail++;}catch(e){fail++;}}}
+  if(sb){for(var i=0;i<ids.length;i+=200){var ch=ids.slice(i,i+200);try{var _r=await sb.from('harness_orders').update({manually_done:val}).in('id',ch);if(_r&&_r.error)fail+=ch.length;}catch(e){fail+=ch.length;}}}   // 줄마다 묻던 것을 200건씩 한 번에
   _selOrders.clear();renderStatus();
   if(fail)toast((ids.length-fail)+'건 저장 · '+fail+'건 서버 저장 실패 (새로고침하면 원래대로 보입니다)','err');
   else toast(val?ids.length+'건 완료 처리':ids.length+'건 완료 취소','ok');
@@ -5367,7 +5424,7 @@ var DUEB={
   save:async function(){
     var chg=DUEB.plan().filter(function(x){ return x.to&&!x.same; });
     if(!chg.length)return;
-    if(!confirm(chg.length+'건의 납기를 바꿉니다.\n\n바로 뒤에 [되돌리기] 로 원래대로 돌릴 수 있습니다.'))return;
+    if(!await askYes('납기 일괄 변경',chg.length+'건의 납기를 바꿉니다.\n바로 뒤에 [되돌리기] 로 원래대로 돌릴 수 있습니다.',{okText:'변경'}))return;
     DUEB.last={at:new Date(), items:chg.map(function(x){ return {id:x.o.id, due:x.o.due||''}; })};
     var touched=chg.map(function(x){ x.o.due=x.to; return x.o; });
     await hsSaveOrders(touched);
@@ -5571,7 +5628,7 @@ var RCV={
   },
   apply:async function(){
     var list=RCV.targets(); if(!list.length)return;
-    if(!confirm(list.length+'건을 완료 처리합니다.\n\n바로 뒤에 [되돌리기] 로 원래대로 돌릴 수 있습니다.'))return;
+    if(!await askYes('납품 반영',list.length+'건을 완료 처리합니다.\n바로 뒤에 [되돌리기] 로 원래대로 돌릴 수 있습니다.',{okText:'완료 처리'}))return;
     var fail=await RCV.setDone(list,true);
     RCV.last={items:list.map(function(o){return o.id;})};
     RCV.close(); renderStatus();
@@ -5597,30 +5654,23 @@ async function deleteOrdersWithLog(targets, via){
     try{ return logsFor(o.dwg_no).some(function(l){return logMatch(l,o);}); }catch(e){ return false; }
   });
   var printed=targets.filter(function(o){return o.qr_printed;});
-  var msg=targets.length+'건을 지웁니다.\n\n'
-    +targets.slice(0,6).map(function(o){
-        return '  · '+(o.dwg_no||'')+(o.po?' / '+o.po:'')+(o.ord_ln?' '+o.ord_ln+'/'+(o.del_ln||'-'):'');
-      }).join('\n')
-    +(targets.length>6?'\n  … 외 '+(targets.length-6)+'건':'')
-    +(withScan.length?'\n\n\u26a0 스캔 기록이 있는 건 '+withScan.length+'건이 들어 있습니다.':'')
-    +(printed.length?'\n\u26a0 QR 을 이미 뽑은 건 '+printed.length+'건이 들어 있습니다.':'')
-    +'\n\n되돌릴 수 없습니다. 지우려면 아래에 삭제 라고 입력하세요.';
-  var typed=prompt(msg,'');
-  if(typed===null)return;
-  if(String(typed).trim()!=='삭제'){ toast('삭제 라고 입력해야 지웁니다','warn'); return; }
+  var _r=await ASK.open({title:'수주 '+targets.length+'건 삭제',danger:true,okText:'삭제',
+    msg:'화면에서 되돌릴 수 없습니다. 지우려면 아래에 삭제 라고 입력하세요.',
+    items:targets.map(function(o){ return (o.dwg_no||'')+(o.po?' / '+o.po:'')+(o.ord_ln?' '+o.ord_ln+'/'+(o.del_ln||'-'):''); }),
+    warn:[withScan.length?'스캔 기록이 있는 건 '+withScan.length+'건이 들어 있습니다':'', printed.length?'QR 을 이미 뽑은 건 '+printed.length+'건이 들어 있습니다':''],
+    input:{placeholder:'삭제',match:'삭제'}});
+  if(!_r)return;
 
   // 먼저 이력을 남긴다
   var arch=await archiveDeletedOrders(targets, via, null);
   if(!arch.ok){
-    if(!confirm('삭제 이력을 남기지 못했습니다.\n\n'
-      +'(' + (arch.reason||'') + ')\n\n'
-      +'이력 없이 그냥 지울까요? 되돌릴 수 없습니다.'))return;
+    if(!await askYes('삭제 이력을 남기지 못했습니다','('+(arch.reason||'')+')\n\n이력 없이 그냥 지울까요? 되돌릴 수 없습니다.',{danger:true,okText:'그냥 삭제'}))return;
   }
   var ids=targets.map(function(o){return o.id;});
   HS.orders=HS.orders.filter(function(o){return ids.indexOf(o.id)<0;});
   hsDataChanged(); safeCache('hs_orders',HS.orders);
   var sb=getSB(), fail=0;
-  if(sb){for(var i=0;i<ids.length;i++){try{var _r=await sb.from('harness_orders').delete().eq('id',ids[i]);if(_r&&_r.error)fail++;}catch(e){fail++;}}}
+  if(sb){for(var i=0;i<ids.length;i+=200){var ch=ids.slice(i,i+200);try{var _dr=await sb.from('harness_orders').delete().in('id',ch);if(_dr&&_dr.error)fail+=ch.length;}catch(e){fail+=ch.length;}}}
   _selOrders.clear(); renderStatus();
   if(fail)toast((ids.length-fail)+'건 삭제 · '+fail+'건은 서버에서 지우지 못했습니다 (권한 확인)','err');
   else toast(ids.length+'건 삭제됨'+(arch.ok?' · 이력 남김':' · 이력 없음'), arch.ok?'ok':'warn');
@@ -5684,7 +5734,7 @@ function paintSpActive(n){
   if(v('flt-proj'))chips.push(['프로젝트 '+v('flt-proj'),"document.getElementById('flt-proj').value='';refreshSpTab()"]);
   if(v('sp-search'))chips.push(['검색 「'+v('sp-search')+'」',"document.getElementById('sp-search').value='';refreshSpTab()"]);
   if(typeof _spKpi!=='undefined'&&_spKpi){
-    var KN={today:'오늘 납기',late:'지연',act:'진행중',rw:'재작업',hold:'재검 대기'};
+    var KN={today:'오늘 납기',late:'지연',act:'진행중',rw:'재작업',hold:'재검 대기',stop:'작업중단',field:'현장 등록'};
     chips.push(['지표 '+(KN[_spKpi]||_spKpi),"setSpKpi('"+_spKpi+"')"]);
   }
   if(!chips.length){ el.style.display='none'; el.innerHTML=''; return; }
@@ -5724,6 +5774,8 @@ function getFilteredOrders(){
       if(_spKpi==='late')return /^\d{4}-\d{2}-\d{2}$/.test(iso)&&iso<_t;
       if(_spKpi==='rw')return !!o.rework;
       if(_spKpi==='hold'){ var s=getStepSt(o,INSPECT_STEP); return s.s==='done'&&s.result==='보류'; }
+      if(_spKpi==='stop')return !!o.alarm;
+      if(_spKpi==='field')return !!o.field_reg;
       return true;
     });
   }
@@ -5742,7 +5794,7 @@ function currentFilterLabel(){
   if(q)p.push('검색 '+q);
   if(typeof _spPrinted!=='undefined'&&_spPrinted)p.push('오늘출도');
   if(_showMode==='active')p.push('진행중'); else if(_showMode==='done')p.push('완료');
-  var K={act:'진행중',today:'오늘납기',late:'지연',rw:'재작업',hold:'재검대기'};
+  var K={act:'진행중',today:'오늘납기',late:'지연',rw:'재작업',hold:'재검대기',stop:'작업중단',field:'현장등록'};
   if(_spKpi&&K[_spKpi])p.push(K[_spKpi]);
   return p.join(' · ');
 }
@@ -5765,7 +5817,7 @@ function _renderStatusInner(){
   if(cnt){
     // 상단 요약: 진행 · 오늘납기 · 지연 · 재작업 · 재검대기
     var todayISO=almToday();
-    var sAct=0,sToday=0,sLate=0,sRw=0,sHold=0;
+    var sAct=0,sToday=0,sLate=0,sRw=0,sHold=0,sStop=0,sField=0;
     HS.orders.forEach(function(o){
       var dn=isOrderDone(o);
       if(!dn){
@@ -5777,13 +5829,15 @@ function _renderStatusInner(){
         if(o.rework)sRw++;
         var ist=getStepSt(o,INSPECT_STEP);
         if(ist.s==='done'&&ist.result==='보류')sHold++;
+        if(o.alarm)sStop++;
+        if(o.field_reg)sField++;
       }
     });
     cnt.textContent=orders.length+'건';
     // 지표 카드 — 공정 이슈 화면과 같은 모양. 누르면 그것만 걸러 본다.
     var kpi=document.getElementById('sp-kpi');
     if(kpi){
-      var card=function(key,lbl,val,note,tone){
+      var card=function(key,lbl,val,note,tone,tip){
         var c={red   :['#fef2f2','#fecaca','var(--red)'],
                amber :['var(--amber-lt)','#fde68a','var(--amber)'],
                blue  :['var(--blue-lt)','#bfdbfe','var(--blue)'],
@@ -5792,23 +5846,28 @@ function _renderStatusInner(){
         var live=val>0;
         return '<div onclick="setSpKpi(\''+key+'\')" style="cursor:pointer;background:'+(live?c[0]:'var(--bg2)')+';'
           +'border:'+(on?'2.5px':'1.5px')+' solid '+(live?c[1]:'var(--border)')+';border-radius:var(--r);padding:10px 12px">'
-          +'<div style="font-size:12px;color:var(--tx3);font-weight:600">'+lbl+'</div>'
+          +'<div style="font-size:12px;color:var(--tx3);font-weight:600;display:flex;align-items:center;gap:4px">'+lbl
+            +(tip?'<span class="kpi-tip" title="'+hEsc(tip)+'" onclick="event.stopPropagation();askInfo(\''+hEsc(lbl)+' — 세는 기준\',this.title)">ⓘ</span>':'')+'</div>'
           +'<div class="kpi-val" style="font-size:21px;font-weight:800;line-height:1.2;font-family:var(--mono);color:'+(live?c[2]:'var(--tx3)')+'">'+val+'</div>'
           +'<div class="kpi-note" style="font-size:11px;color:var(--tx3);margin-top:1px">'+(on?'이것만 보는 중':note)+'</div></div>';
       };
-      kpi.innerHTML=card('','전체',HS.orders.length,'등록된 모든 건','')
-        +card('act','진행중',sAct,'아직 출하 전','blue')
-        +card('today','오늘 납기',sToday,'오늘까지 나가야 함','amber')
-        +card('late','지연',sLate,'납기가 지남','red')
-        +card('rw','재작업',sRw,'다시 만드는 중','rose')
-        +card('hold','재검 대기',sHold,'검사 보류','amber');
+      // 재작업 · 재검 대기 카드는 검사 합격/불합격 판정이 쓰이지 않아 늘 0 이었다 → 작업중단 · 현장 등록으로 바꿈
+      kpi.innerHTML=card('','전체',HS.orders.length,'등록된 모든 건','','완료된 건까지 포함한 등록 수주 전부입니다.')
+        +card('act','진행중',sAct,'아직 출하 전','blue','마지막 공정(출하)을 찍지 않았고 [완료 처리] 도 하지 않은 건입니다.')
+        +card('today','오늘 납기',sToday,'오늘까지 나가야 함','amber','진행중인 건 중 납기가 오늘(한국 시간)인 건입니다.')
+        +card('late','지연',sLate,'납기가 지남','red','진행중인 건 중 납기가 오늘보다 이전인 건입니다. 납기가 빈 건은 세지 않습니다.')
+        +card('stop','작업중단',sStop,'현장에서 중단 건 건','rose','현장에서 [⛔ 작업중단 / 불가] 를 걸고 아직 풀리지 않은 진행중 건입니다. 그 공정을 완료로 찍으면 자동으로 풀립니다.')
+        +card('field','현장 등록',sField,'현장에서 찍다 등록됨','amber','사무실에서 등록하지 않은 도면을 현장에서 스캔해 그 자리에서 등록된 진행중 건입니다. PO·납기를 확인하세요.');
     }
   }
   if(!orders.length){
+    if(HS._loading&&!HS.orders.length){ board.innerHTML=skelRows(8); return; }
     var msg=_showMode==='done'?'완료된 도면이 없습니다':_showMode==='active'?'진행중인 도면이 없습니다':'등록된 도면이 없습니다';
+    var filtered=HS.orders.length>0;
     board.innerHTML='<div class="sp-empty"><div class="sp-empty-ic">'+(_showMode==='done'?'✅':'📋')+'</div>'
-      +'<div class="sp-empty-t">'+msg+'</div>'
-      +(_showMode==='active'?'<div class="sp-empty-d">QR 스캔 탭에서 <b>출도</b> 공정을 스캔하면<br>도면이 자동으로 등록됩니다</div>':'')
+      +'<div class="sp-empty-t">'+(filtered?'조건에 맞는 도면이 없습니다':msg)+'</div>'
+      +(filtered?'<div class="sp-empty-d">위 「걸린 조건」 을 풀거나 진행중/완료/전체를 바꿔 보세요</div>'
+        :'<div class="sp-empty-d">수주는 <b>작업지시서 QR · 도면 출도</b> 화면에서 PO 를 읽고 출력하면 등록됩니다</div>')
       +'</div>';
     return;
   }
@@ -6227,13 +6286,13 @@ function alarmDot(o){
   }
   return '<span title="정상 진행" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#0dab6a;opacity:.75"></span>';
 }
-function showAlarmInfo(oid,e){
+async function showAlarmInfo(oid,e){
   if(e)e.stopPropagation();
   var o=HS.orders.find(function(x){return x.id===oid;});if(!o||!o.alarm)return;
-  var msg='⛔ 작업중단\n\n도면: '+(o.dwg_no||'')+'\n공정: '+(o.alarm_step||'-')+'\n사유: '+(o.alarm_reason||'-')+'\n등록: '+(o.alarm_by||'-')+' · '+(o.alarm_at?fmtQRDate(o.alarm_at):'-');
+  var msg='도면: '+(o.dwg_no||'')+'\n공정: '+(o.alarm_step||'-')+'\n사유: '+(o.alarm_reason||'-')+'\n등록: '+(o.alarm_by||'-')+' · '+(o.alarm_at?fmtQRDate(o.alarm_at):'-');
   if(typeof AUTH!=='undefined'&&AUTH.isAdmin()){
-    if(confirm(msg+'\n\n중단을 해제할까요?')){ clearAlarm(o,'관리자 해제'); }
-  } else { alert(msg); }
+    if(await askYes('⛔ 작업중단',msg+'\n\n중단을 해제할까요? (그 공정을 완료로 찍어도 자동으로 풀립니다)',{okText:'중단 해제',cancelText:'닫기'})){ clearAlarm(o,'관리자 해제'); }
+  } else { askInfo('⛔ 작업중단',msg); }
 }
 function setAlarm(o,reason,step,worker){
   if(!o)return;
@@ -6253,14 +6312,14 @@ function bulkBarHTML(canEdit){
   if(canEdit&&!selCnt&&typeof DUEB!=='undefined'&&DUEB.last){
     return '<div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--amber-lt);border:1px solid #fde68a;border-radius:var(--r2);margin-bottom:10px">'
       +'<span style="font-size:12.5px;color:var(--tx2)">방금 <b>납기 '+DUEB.last.items.length+'건</b>을 바꿨습니다</span>'
-      +'<button onclick="DUEB.undo()" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--amber);background:#fff;color:var(--amber);font-family:var(--sans)">되돌리기</button>'
+      +'<button onclick="withBusy(\'duebu\',this,DUEB.undo)" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--amber);background:#fff;color:var(--amber);font-family:var(--sans)">되돌리기</button>'
       +'<button onclick="DUEB.dismiss()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:var(--sans)">닫기</button>'
     +'</div>';
   }
   if(canEdit&&!selCnt&&typeof RCV!=='undefined'&&RCV.last){
     return '<div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--green-lt);border:1px solid #a7f3d0;border-radius:var(--r2);margin-bottom:10px">'
       +'<span style="font-size:12.5px;color:var(--tx2)">방금 <b>납품 반영으로 '+RCV.last.items.length+'건</b>을 완료 처리했습니다</span>'
-      +'<button onclick="RCV.undo()" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--green);background:#fff;color:var(--green);font-family:var(--sans)">되돌리기</button>'
+      +'<button onclick="withBusy(\'rcvu\',this,RCV.undo)" style="margin-left:auto;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;border:1.5px solid var(--green);background:#fff;color:var(--green);font-family:var(--sans)">되돌리기</button>'
       +'<button onclick="RCV.dismiss()" style="font-size:11.5px;padding:6px 10px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:var(--sans)">닫기</button>'
     +'</div>';
   }
@@ -6273,12 +6332,12 @@ function bulkBarHTML(canEdit){
     +'<span style="font-size:12.5px;font-weight:800;color:var(--purple)">'+selCnt+'건 선택</span>'
     +(qs?'<span style="font-size:11.5px;color:var(--tx3)">수량 '+qs.toLocaleString()+'</span>':'')
     +'<span style="width:1px;height:18px;background:#ddd6fe"></span>'
-    +'<button onclick="bulkDoneSelected(true)"  style="'+B+';border:1px solid #a7f3d0;background:var(--green-lt);color:var(--green)">완료 처리</button>'
-    +'<button onclick="bulkDoneSelected(false)" style="'+B+';border:1px solid var(--border);background:#fff;color:var(--tx2)">완료 취소</button>'
+    +'<button onclick="withBusy(\'bulkdone\',this,function(){return bulkDoneSelected(true);})"  style="'+B+';border:1px solid #a7f3d0;background:var(--green-lt);color:var(--green)">완료 처리</button>'
+    +'<button onclick="withBusy(\'bulkdone\',this,function(){return bulkDoneSelected(false);})" style="'+B+';border:1px solid var(--border);background:#fff;color:var(--tx2)">완료 취소</button>'
     +'<button onclick="DUEB.open()"             style="'+B+';border:1px solid #ddd6fe;background:#fff;color:var(--purple)">📅 납기 변경</button>'
-    +'<button onclick="bulkChangeType()"        style="'+B+';border:1px solid var(--border);background:#fff;color:var(--tx2)">공정구분 변경</button>'
+    +'<button onclick="withBusy(\'bulktype\',this,bulkChangeType)"        style="'+B+';border:1px solid var(--border);background:#fff;color:var(--tx2)">공정구분 변경</button>'
     +'<button onclick="_selOrders.clear();renderStatus()" style="'+B+';border:1px solid var(--border);background:transparent;color:var(--tx3);margin-left:auto">선택 해제</button>'
-    +'<button onclick="bulkDeleteSelected()"    style="'+B+';border:1px solid #fecaca;background:#fef2f2;color:var(--red)" title="삭제 라고 입력해야 지워집니다">🗑 삭제</button>'
+    +'<button onclick="withBusy(\'bulkdel\',this,bulkDeleteSelected)"    style="'+B+';border:1px solid #fecaca;background:#fef2f2;color:var(--red)" title="삭제 라고 입력해야 지워집니다">🗑 삭제</button>'
   +'</div>';
 }
 function renderBulkBar(){
@@ -6440,11 +6499,6 @@ async function toggleManualDone(cb){
   else{toast(val?'완료 처리 (로컬)':'완료 취소 (로컬)','ok');}
   renderStatus();
 }
-function deleteDwg(id){
-  if(!confirm('이 도면을 삭제할까요?')) return;
-  HS.orders=HS.orders.filter(function(o){return o.id!==id;});
-  hsSaveOrders(); hsDeleteOrder(id); renderStatus(); toast('삭제됐습니다');
-}
 
 // ── QR 스캔 ──
 function parseDrawingQR(text){
@@ -6516,7 +6570,7 @@ function resolveScanJob(job){
   }
   return job;
 }
-function handleQRInput(text){
+async function handleQRInput(text){
   if(!text) return;
   if(text.startsWith(QR_PREFIX)){
     const stepId=text.slice(QR_PREFIX.length);
@@ -6545,12 +6599,11 @@ function handleQRInput(text){
     //   그렇다고 출도부터 하라고 막으면, 앞 공정을 건너뛰는 현장이 막힌다.
     //   그래서 어느 공정에서든 등록할 수 있게 하고, 확인만 받는다.
     if(!job.oid&&HS.selStep&&HS.selStep!=='출도'){
-      var _ok=confirm('등록되지 않은 도면입니다.\n\n'
-        +'  도번  '+(job.dwg_no||'')+(job.rev?' (Rev '+job.rev+')':'')+'\n'
-        +(job.po?'  PO   '+job.po+((job.ord_ln||job.del_ln)?'  (라인 '+(job.ord_ln||'-')+'-'+(job.del_ln||'-')+')':'')+'\n':'')
-        +'  수량  '+(job.qty||1)+'\n\n'
-        +'이 QR 내용으로 등록하고 ['+HS.selStep+'] 을 기록할까요?\n'
-        +'(앞 공정을 건너뛰어도 됩니다)');
+      var _ok=await askYes('등록되지 않은 도면',
+        '이 QR 내용으로 등록하고 ['+HS.selStep+'] 을 기록할까요?\n(앞 공정을 건너뛰어도 됩니다)',
+        {items:['도번 '+(job.dwg_no||'')+(job.rev?' (Rev '+job.rev+')':''),
+                job.po?'PO '+job.po+((job.ord_ln||job.del_ln)?' (라인 '+(job.ord_ln||'-')+'-'+(job.del_ln||'-')+')':''):'PO 없음',
+                '수량 '+(job.qty||1)], okText:'등록하고 기록'});
       if(!_ok){
         scanFlash('warn','기록하지 않음',(job.dwg_no||'')+' — 등록을 취소했습니다');
         HS.job=null;
@@ -6612,7 +6665,7 @@ function ensureOrderForJob(warnIfExists){
   toast('✅ PO 등록: '+HS.job.dwg_no+' (현장 등록으로 남김)','ok');
   return o;
 }
-function autoAction(){
+async function autoAction(){
   if(!HS.job||!HS.selStep) return;
   const worker=(HS.worker||'').trim();
   if(!worker){ toast('작업자 이름을 입력하세요','err'); return; }
@@ -6621,7 +6674,7 @@ function autoAction(){
   if(!HS.timeMode){
     var doneLog=HS.logs.find(function(l){return l.ended_at&&logMatch(l,HS.job)&&l.process===HS.selStep;});
     if(doneLog){
-      if(!confirm('['+HS.selStep+'] 이미 완료된 공정입니다.\n다시 처리(재작업)할까요?')) return;
+      if(!await askYes('이미 완료된 공정','['+HS.selStep+'] 은 이미 완료로 찍혀 있습니다.\n다시 처리(재작업)할까요?',{okText:'다시 처리'})) return;
       var rt=new Date().toISOString();
       doneLog.started_at=rt;doneLog.ended_at=rt;doneLog.duration_min=0;doneLog.worker=worker;
       hsSaveLogs([doneLog]);
@@ -6927,10 +6980,12 @@ function renderAlarmBtn(){
     el.innerHTML='<button onclick="alarmFromScan()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid rgba(216,68,60,.4);background:rgba(216,68,60,.08);color:#d8443c;font-size:15px;font-weight:800;cursor:pointer">⛔ 작업중단 / 불가</button>';
   }
 }
-function alarmFromScan(){
-  var reason=prompt('작업중단 사유를 입력하세요\n(예: 자재 부족, 도면 오류, 설비 고장)');
-  if(!reason||!reason.trim())return;
-  reason=reason.trim();
+async function alarmFromScan(){
+  var _a=await ASK.open({title:'⛔ 작업중단 / 불가',msg:'사유를 고르거나 적으세요. 사무실 화면에 빨간 표시가 뜹니다.',
+    presets:['자재 부족','도면 오류','설비 고장','자재 불량','작업 보류'],
+    input:{placeholder:'사유 (직접 입력 가능)',required:'사유를 고르거나 입력하세요'},okText:'중단 등록'});
+  if(!_a||!_a.value)return;
+  var reason=_a.value;
   if(!HS.job){
     // 공정 선택 → 중단 → 스캔 순서 지원: 사유를 담아두고 다음 스캔 때 등록
     HS.alarmPending=reason;
@@ -7282,8 +7337,10 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.23';
+var APP_VER='v7.25';
 var VER_LOG=[
+  {v:'v7.25',d:'2026-11', t:'[PM 포털 공통 부품 적용] ① 브라우저 기본 확인·입력 창을 앱 안의 창으로 바꿨습니다 — 지우기는 빨간 창에 지워질 줄(5개까지)을 보여 주고, 수주 삭제는 「삭제」 입력 칸, Esc·바깥 누르면 취소. 작업중단 사유는 자주 쓰는 사유 단추(자재 부족·도면 오류·설비 고장·자재 불량·작업 보류)로 고르고 직접 적을 수도 있습니다. 공정구분 변경은 코드를 치지 않고 A형·B형 단추로 고릅니다. ② 공정 이력 지우기 — 서버에서 지우지 못해도 「삭제 완료」 가 뜨고 새로고침하면 되살아나던 문제를 고쳐, 서버에서 지워진 것만 화면에서 빼고 실패는 알립니다. ③ 지표 카드: 늘 0 이던 재작업·재검 대기(검사 합불 판정을 쓰지 않음) 대신 작업중단·현장 등록. 카드마다 ⓘ 로 세는 기준을 봅니다. ④ 서버 자료를 받기 전에는 「불러오는 중」 모양을 보여 줍니다(예전에는 「공정 현황이 없습니다」 와 옛 안내가 떴음). 걸러서 0건일 때는 조건을 풀라는 안내. ⑤ 납품 반영·납기 일괄 변경·완료 처리·공정구분 변경·삭제는 저장하는 동안 단추를 잠가 두 번 처리되지 않게 했습니다. ⑥ 스캔 화면을 처음 열면 ① 공정 → ② QR → 작업중단 → ③ 초록 화면 순서로 한 번 안내합니다(「💡 안내」 로 다시 보기). ⑦ 속도 — 처음 불러올 때 1000줄씩 차례로 받던 것을 한꺼번에(이력 4,557건 기준 왕복 5번 → 2번), 1분 자동 확인의 두 건수도 동시에, 완료 처리·수주 삭제는 줄마다 묻던 것을 200건씩 한 번에. 쓰지 않던 옛 삭제 함수(전체 덮어쓰기 저장) 제거'},
+  {v:'v7.24',d:'2026-11', t:'[공정 이력관리 · 체크 렉 · 선택 CSV] ① 체크박스를 누를 때마다 이력 전체를 다시 정렬하고 표를 새로 그리던 것을 고쳐, 누른 칸만 바뀌게 했습니다 (렉 원인). 표도 처음 300줄만 그리고 아래로 내리면 300줄씩 이어 붙여 처음 열 때도 빨라졌습니다. ② 체크한 기록이 있으면 [📥 CSV] 가 그것만 내보냅니다 (파일명에 「선택N건」). 없으면 예전처럼 검색 결과 전체. ③ 맨 위 전체 선택 칸이 지금 상태(전부/일부/없음)를 보여 주고, 선택하면 [선택 해제] 단추가 생깁니다'},
   {v:'v7.23',d:'2026-10', t:'[노트북 추가 정리] ① 공정현황 줄 높이를 줄였습니다 — 납기를 한 줄(올해면 10-07 +8일 / D-2)로 쓰고, 전체 날짜는 마우스를 올리면 보입니다. 1366 노트북에서 한 화면에 보이는 줄이 5줄 → 8줄 남짓. 묶음 줄의 고객사·납기도 한 줄로. ② 도면 출도의 「2. 머릿말·꼬리말」 은 기본으로 접어 두고, 접힌 줄에 지금 쓰는 문구를 요약해 보여 줍니다([펼치기] 로 고침). [만들기] 까지 스크롤이 짧아졌습니다. ③ 공정현황에 [↔ 열 너비 초기화] — 손으로 바꾼 열 너비가 저장된 PC 에서만 보이고, 누르면 화면에 맞춥니다. ④ 공정 이슈·재고 현황의 고객사·프로젝트, 공정 이슈의 내용 칸을 한 줄로 줄였습니다(마우스를 올리면 전체). ⑤ 세로가 낮은 노트북에서 사이드바 메뉴 간격을 줄여 공정 설정·사용 설명서까지 한 화면에 들어갑니다. [출력 ≠ 출도] 작업지시서 출력과 출도를 따로 봅니다 — 출도는 자재까지 챙겨 현장에 넘긴 것이라, 출력해도 출도가 자동으로 찍히지 않습니다. 그래서 공정현황의 [🖨 오늘 출도] 를 [🖨 오늘 출력] 으로 이름을 바꿨고(오늘 뽑은 건 보기), 출력 끝 안내에 「자재까지 챙겨 넘길 때 [출도] 를 찍으세요」 를 넣었습니다. 출도 공정의 기본 설명도 「자재까지 챙겨 현장 전달」 로 바꿨습니다. [노트북 화면 · 흐름 정리] ① 노트북(1366·1536 화면)에서 공정현황 표가 가로로 밀리던 것을 고쳤습니다 — 현황판 배지가 한 줄에 들어가고 상태·QR 열이 잘리지 않습니다. 열 너비는 창 크기에 맞춰 다시 잡습니다(손으로 바꾼 너비가 있으면 그대로). ② 세로가 낮은 화면에서는 맨 위 작은 제목줄과 지표 카드 설명을 줄여 표가 더 보입니다. ③ 툴바를 한 줄로 — [📦 납품 반영]·[📥 CSV] 를 오른쪽 위 [↻ 새로고침] 옆으로 옮기고, 화면만 다시 그리던 툴바 ↻ 는 없앴습니다. ④ 공정 이력관리 탭에서는 눌러도 아무 일이 없던 고객사·프로젝트·진행중/완료·묶기·고객사별·오늘 출도 단추를 감췄습니다(검색만 적용). ⑤ 사이드바에서 공정 이력관리·도면만 출력 같은 하위 메뉴가 다른 화면으로 가도 진하게 남아 두 곳이 켜져 보이던 문제 수정. ⑥ 도면 출도에서 출력이 끝나면 [📊 공정현황에서 확인 (오늘 출도)] 단추가 떠 바로 확인하러 갈 수 있습니다. 「출력하는 건만 등록」 일 때는 안내 문구도 「PO 를 먼저 읽으세요」 로 맞췄습니다. ⑦ 스캔 화면에 ① 공정 선택 → ② QR 순서 번호. ⑧ QR 이력의 [최근 1주][1달][전체] 단추가 PC 에서 모양 없이 나오던 것 수정'},
   {v:'v7.22',d:'2026-10', t:'[사용 설명서 · 작업자도 보기] 작업자 계정도 사용 설명서를 볼 수 있습니다. 작업자에게는 QR 스캔 · 공정현황 · 문제가 생기면 탭만 나오고, 처음 열면 QR 스캔 설명부터 보입니다. 폰 아래 탭에 [📖 설명서] 가 생겼습니다(작업자만). 내용도 지금 기능에 맞게 고쳤습니다 — QR 스캔: 공정을 먼저 고르고 찍기, 1분 안 [↩ 방금 기록 취소], 이미 끝난 공정 다시 찍으면 재작업 확인, 검사도 찍으면 바로 완료(합격/불합격 단추는 지금 쓰지 않음), 시간기록 모드, 작업지시서를 잃어버렸을 때 공정현황 [QR]. 공정현황: 단품 납기월 묶음, 보기 단추(묶기·고객사별·오늘 출도), 걸린 조건 칩, 납기 일괄 변경, 납품 반영, 이력관리 라인. 작업지시서 QR: 출력하는 건만 등록, 이미 등록된 PO 다시 뽑기, REV 대조, 탭별 기본 구성(SEMES용 하네스·도면만 출력 포함, 도면 1부)과 순서, 끌어다 놓기. 문제가 생기면: 「이 도면에 없는 공정」·「등록되지 않은 도면」·「REV 다름」·뽑은 건이 공정현황에 없을 때'},
   {v:'v7.21',d:'2026-10', t:'[공정현황 툴바 정리] 보기 단추(묶기·고객사별·오늘 출도)에 테두리를 넣고 켜지면 보라색으로 채워 ✓ 표시가 나오게 했습니다. 진행중/완료/전체도 고른 쪽이 보라로 채워집니다. [📦 납품 반영] 은 동작 단추라 초록으로 구분했습니다. 고객사·프로젝트·검색·오늘 출도·지표 카드 같은 조건이 걸리면 표 위에 「걸린 조건」 칩과 건수가 나오고 ✕ 로 하나씩 뺄 수 있습니다. 검색하거나 오늘 출도로 좁혀 볼 때는 묶음을 펼친 채 보여 줍니다. CSV 는 화면에 걸린 조건·정렬 그대로 내보내고(오늘 출도 포함), 공정 이력관리 CSV 도 검색 결과만 내보냅니다. [🖨 오늘 출도] 툴바의 [🖨 오늘 출도] 를 누르면 오늘 작업지시서 QR 을 뽑은 건만 모아 봅니다 (다시 누르면 전체). 고객사·검색·묶기와 같이 쓸 수 있고, 진행중/완료/전체 보기도 그대로 적용됩니다. QR 이력의 날짜 필터도 한국 시간 기준으로 바꿔, 아침 9시 전에 뽑은 것이 어제로 잡히지 않습니다. 공정 이력관리에서 바로 찍은 공정(소요 0분)이 「진행중」 으로 보이던 것도 고쳤습니다'},
@@ -7506,17 +7563,26 @@ function exportLogCSV(){
   var _byId={}; HS.logs.forEach(function(l){ _byId[l.id]=l; });
   var _src=(typeof _currentLogIds!=='undefined'&&Array.isArray(_currentLogIds))
     ? _currentLogIds.map(function(id){ return _byId[id]; }).filter(Boolean) : HS.logs;
+  // 체크한 기록이 있으면 그것만 — 화면 순서대로, 검색에 가려진 체크도 뒤에 붙인다
+  var _picked=false;
+  if(typeof _selLogs!=='undefined'&&_selLogs.size){
+    var _seen={}, sel=[];
+    _src.forEach(function(l){ if(_selLogs.has(l.id)){ sel.push(l); _seen[l.id]=1; } });
+    _selLogs.forEach(function(id){ if(!_seen[id]&&_byId[id])sel.push(_byId[id]); });
+    _src=sel; _picked=true;
+  }
   if(!_src.length){ toast('내보낼 이력이 없습니다','warn'); return; }
+  var _ordBy={}; HS.orders.forEach(function(o){ if(!_ordBy[o.dwg_no])_ordBy[o.dwg_no]=o; });   // 줄마다 찾던 것을 한 번에
   var rows=_src.map(function(l){
-    var order=HS.orders.find(function(o){return o.dwg_no===l.dwg_no;})||{};
+    var order=_ordBy[l.dwg_no]||{};
     return [l.customer||order.customer||'',l.po||order.po||'',l.ord_ln||'',l.del_ln||'',l.project||order.project||'',l.dwg_no||'',
       l.unit||order.unit||'',l.qty||order.qty||'',l.process||'',l.result||'',l.worker||'',
       l.started_at?new Date(l.started_at).toLocaleString('ko-KR'):'',
       l.ended_at?new Date(l.ended_at).toLocaleString('ko-KR'):'',
       l.duration_min!=null?l.duration_min:''];
   });
-  downloadCSV(headers,rows,'하네스이력_'+fmtDate(new Date()));
-  toast('이력 CSV 내보내기 완료 ('+rows.length+'건)','ok');
+  downloadCSV(headers,rows,'하네스이력_'+(_picked?'선택'+rows.length+'건_':'')+fmtDate(new Date()));
+  toast('이력 CSV 내보내기 완료 ('+(_picked?'선택한 ':'')+rows.length+'건)','ok');
 }
 function downloadCSV(headers,rows,filename){
   var csv=[headers].concat(rows).map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
@@ -7555,9 +7621,9 @@ function renderLogMgmt(){
   });
   const cnt=document.getElementById('sp-cnt');if(cnt)cnt.textContent=logs.length+'건';
   _currentLogIds=logs.map(function(l){return l.id;});
-  if(!logs.length){board.innerHTML='<div class="sp-empty"><div class="sp-empty-ic">📋</div><div class="sp-empty-t">이력이 없습니다</div></div>';return;}
+  if(!logs.length){board.innerHTML=(HS._loading&&!HS.logs.length)?skelRows(8):'<div class="sp-empty"><div class="sp-empty-ic">📋</div><div class="sp-empty-t">'+(q?'검색에 맞는 기록이 없습니다':'이력이 없습니다')+'</div></div>';return;}
   const fmt=function(dt){if(!dt)return '—';const d=new Date(dt);const p=function(n){return String(n).padStart(2,'0');};return p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());};
-  const rows=logs.map(function(l){
+  const rowOf=function(l){
     const step=H_STEPS.find(function(s){return s.id===l.process;})||{color:'#888',icon:'?'};
     // 완료 시각이 있으면 끝난 것 — 바로 찍은 공정은 소요가 0 이라 예전에는 빈 값으로 저장돼 「진행중」 으로 보였다
     const dur=l.ended_at?((l.duration_min!=null?l.duration_min:Math.max(0,Math.round((new Date(l.ended_at)-new Date(l.started_at))/60000)))+'분')
@@ -7579,17 +7645,22 @@ function renderLogMgmt(){
       +'<td style="font-family:var(--mono);font-size:12px">'+dur+'</td>'
       +'<td><div style="display:flex;gap:5px">'
       +'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px" data-lid="'+l.id+'" onclick="openLogEdit(this.dataset.lid)">수정</button>'
-      +'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(211,59,59,.3)" data-lid="'+l.id+'" onclick="deleteLog(this.dataset.lid)">삭제</button>'
+      +'<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 8px;color:var(--red);border-color:rgba(211,59,59,.3)" data-lid="'+l.id+'" onclick="deleteLog(this.dataset.lid,this)">삭제</button>'
       +'</div></td></tr>';
-  }).join('');
-  const selCnt=_selLogs.size;
+  };
+  // 수천 줄을 한 번에 그리면 느리다. 처음 300줄만 붙이고, 아래로 내리면 300줄씩 이어 붙인다.
+  _lgRows=logs; _lgShown=Math.min(LG_CHUNK,logs.length); _lgRowOf=rowOf;
+  const rows=logs.slice(0,_lgShown).map(rowOf).join('');
   board.innerHTML='<div class="log-toolbar" style="flex-shrink:0">'
-    +'<input type="checkbox" class="log-chk" onchange="toggleAllLogs(this.checked)">'
-    +'<span style="font-size:12px;color:var(--tx3)">'+(selCnt>0?selCnt+'건 선택됨':'전체 선택')+'</span>'
-    +(selCnt>0?'<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:rgba(211,59,59,.3)" onclick="deleteSelectedLogs()">🗑 선택 삭제 ('+selCnt+'건)</button>':'')
+    +'<input type="checkbox" class="log-chk" id="lg-all" onchange="toggleAllLogs(this.checked)" title="지금 목록 전체 선택 / 해제">'
+    +'<span id="lg-selinfo" style="font-size:12px;color:var(--tx3)"></span>'
+    +'<span id="lg-selacts" style="display:none;gap:6px;align-items:center">'
+      +'<button class="btn btn-outline btn-sm" onclick="toggleAllLogs(false)">선택 해제</button>'
+      +'<button class="btn btn-outline btn-sm" style="color:var(--red);border-color:rgba(211,59,59,.3)" onclick="deleteSelectedLogs(this)">🗑 선택 삭제</button>'
+    +'</span>'
     +'<span style="margin-left:auto;font-size:12px;color:var(--tx3)">총 '+logs.length+'건</span>'
     +'</div>'
-    +'<div style="flex:1;min-height:0;overflow:auto;border:1px solid var(--border);border-radius:var(--r2);background:var(--white)"><table class="log-table" style="width:100%">'
+    +'<div id="lg-scroll" onscroll="lgMore()" style="flex:1;min-height:0;overflow:auto;border:1px solid var(--border);border-radius:var(--r2);background:var(--white)"><table class="log-table" style="width:100%">'
     +(function(){
       var hs=[['dwg_no','도면번호'],['po','PO No'],['ord_ln','Order / Del Line'],['process','공정'],['worker','작업자'],['started_at','시작'],['ended_at','완료'],['duration_min','소요']];
       var cells=hs.map(function(hh){
@@ -7598,24 +7669,69 @@ function renderLogMgmt(){
       }).join('');
       return '<thead><tr><th style="width:28px"></th>'+cells+'<th>관리</th></tr></thead>';
     })()
-    +'<tbody>'+rows+'</tbody></table></div>';
+    +'<tbody id="lg-tbody">'+rows+'</tbody></table></div>';
+  paintLogSel();
 }
-function toggleLogSel(id,checked){if(checked)_selLogs.add(id);else _selLogs.delete(id);renderLogMgmt();}
-function toggleAllLogs(checked){if(checked)_currentLogIds.forEach(function(id){_selLogs.add(id);});else _selLogs.clear();renderLogMgmt();}
-function deleteSelectedLogs(){
-  if(!_selLogs.size)return;
-  if(!confirm(_selLogs.size+'건을 삭제할까요?'))return;
-  var ids=[..._selLogs];
-  HS.logs=HS.logs.filter(function(l){return !_selLogs.has(l.id);});
-  _selLogs.clear();hsDataChanged();safeCache('hs_logs',HS.logs);
-  var sb=getSB();if(sb)ids.forEach(function(id){sb.from('harness_logs').delete().eq('id',id).then(function(){});});
-  renderLogMgmt();renderStatus();toast('삭제 완료','ok');
+var LG_CHUNK=300, _lgRows=[], _lgShown=0, _lgRowOf=null;
+function lgMore(){
+  var sc=document.getElementById('lg-scroll'), tb=document.getElementById('lg-tbody');
+  if(!sc||!tb||!_lgRowOf||_lgShown>=_lgRows.length)return;
+  if(sc.scrollTop+sc.clientHeight<sc.scrollHeight-300)return;
+  var next=_lgRows.slice(_lgShown,_lgShown+LG_CHUNK);
+  _lgShown+=next.length;
+  tb.insertAdjacentHTML('beforeend',next.map(_lgRowOf).join(''));
 }
-function deleteLog(id){
-  if(!confirm('이 이력을 삭제할까요?'))return;
-  HS.logs=HS.logs.filter(function(l){return l.id!==id;});
-  _selLogs.delete(id);hsDataChanged();hsDeleteLog(id);renderLogMgmt();renderStatus();toast('삭제 완료','ok');
+// 체크할 때 표 전체를 다시 그리지 않는다 — 예전에는 한 칸 누를 때마다 이력 전부를 다시 정렬·작성해 렉이 걸렸다.
+function paintLogSel(){
+  var n=_selLogs.size;
+  var info=document.getElementById('lg-selinfo'), acts=document.getElementById('lg-selacts'), all=document.getElementById('lg-all');
+  if(info)info.innerHTML=n?'<b style="color:var(--purple)">'+n+'건 선택됨</b> <span style="color:var(--tx3)">· 📥 CSV 는 선택한 것만 내보냅니다</span>':'전체 선택';
+  if(acts)acts.style.display=n?'inline-flex':'none';
+  if(all){
+    var inList=0; _currentLogIds.forEach(function(id){ if(_selLogs.has(id))inList++; });
+    all.checked=_currentLogIds.length>0&&inList===_currentLogIds.length;
+    all.indeterminate=inList>0&&inList<_currentLogIds.length;
+  }
 }
+function toggleLogSel(id,checked){if(checked)_selLogs.add(id);else _selLogs.delete(id);paintLogSel();}
+function toggleAllLogs(checked){
+  if(checked)_currentLogIds.forEach(function(id){_selLogs.add(id);});else _selLogs.clear();
+  document.querySelectorAll('#lg-tbody .log-chk').forEach(function(c){ c.checked=checked; });
+  paintLogSel();
+}
+// 이력 지우기 — 확인 창에 지울 줄을 보여 주고, 서버에서 지워진 것만 화면에서 뺀다.
+//   예전에는 서버 삭제 결과를 보지 않아, 실패해도 「삭제 완료」 가 뜨고 새로고침하면 되살아났다.
+function _logLabel(l){
+  var f=function(dt){ if(!dt)return ''; var d=new Date(dt); return (d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); };
+  return (l.dwg_no||'')+' · '+(l.process||'')+' · '+(l.worker||'')+' · '+f(l.started_at);
+}
+async function _deleteLogs(ids){
+  var byId={}; HS.logs.forEach(function(l){ byId[l.id]=l; });
+  var list=ids.map(function(id){ return byId[id]; }).filter(Boolean);
+  if(!list.length)return;
+  var ok=await askYes('공정 기록 '+list.length+'건 삭제','화면에서 되돌릴 수 없습니다. 잘못 찍은 기록만 지우세요.',
+    {danger:true,okText:'삭제',items:list.map(_logLabel)});
+  if(!ok)return;
+  var sb=getSB(), failed={};
+  if(sb){
+    for(var i=0;i<ids.length;i+=200){
+      var ch=ids.slice(i,i+200);
+      try{ var r=await sb.from('harness_logs').delete().in('id',ch); if(r&&r.error)ch.forEach(function(x){failed[x]=1;}); }
+      catch(e){ ch.forEach(function(x){failed[x]=1;}); }
+    }
+  }
+  var done=ids.filter(function(x){ return !failed[x]; });
+  HS.logs=HS.logs.filter(function(l){ return done.indexOf(l.id)<0; });
+  outboxDrop('logs',list.filter(function(l){ return done.indexOf(l.id)>=0; }));   // 못 보낸 대기열에 있던 것도 같이 뺀다
+  done.forEach(function(x){ _selLogs.delete(x); });
+  hsDataChanged(); safeCache('hs_logs',HS.logs);
+  renderLogMgmt(); renderStatus();
+  var nf=ids.length-done.length;
+  if(nf)toast(done.length+'건 삭제 · '+nf+'건은 서버에서 지우지 못해 그대로 둡니다 (인터넷·권한 확인)','err');
+  else toast(done.length+'건 삭제됨','ok');
+}
+function deleteSelectedLogs(btn){ if(!_selLogs.size)return; return withBusy('dellogs',btn,function(){ return _deleteLogs([..._selLogs]); }); }
+function deleteLog(id,btn){ return withBusy('dellog',btn,function(){ return _deleteLogs([id]); }); }
 var _editId=null;
 function openLogEdit(id){
   const log=HS.logs.find(function(l){return l.id===id;});if(!log)return;
@@ -9575,6 +9691,173 @@ function showOvl(msg,sub){if(sub===undefined)sub='';D.ovlT.textContent=msg;D.ovl
 function hideOvl(){D.ovl.classList.add('hidden');setProgress(0,'');}
 function setProgress(pct,lbl){D.progBar.style.width=pct+'%';D.progLbl.textContent=lbl;}
 var _tt;
+// ════════════════════════════════════════
+// 확인 창 (v7.25) — 브라우저 기본 confirm · prompt · alert 대신 쓴다.
+//   PM 포털 ConfirmDialog 와 같은 약속: 확인=true(입력·선택이 있으면 {value}/{choice}) · [취소]=false · Esc/바깥=null
+//   지우기 · 되돌릴 수 없는 일은 danger + 바뀌는 줄 items(5개까지 보여 줌).
+//   cancelText:null 이면 알림 창(확인 단추만).
+// ════════════════════════════════════════
+var ASK={
+  _res:null,
+  open:function(o){
+    o=o||{};
+    if(ASK._res){ try{ ASK._res(null); }catch(e){} }
+    return new Promise(function(resolve){
+      ASK._res=resolve;
+      var el=document.getElementById('ask-ovl');
+      if(!el){
+        el=document.createElement('div'); el.id='ask-ovl';
+        el.addEventListener('mousedown',function(e){ if(e.target===el)ASK._done(null); });
+        document.body.appendChild(el);
+      }
+      var E=function(s){ return hEsc(String(s==null?'':s)); };
+      var danger=!!o.danger;
+      var items=o.items||[];
+      var itemsHtml=items.length
+        ?'<div class="ask-items">'+items.slice(0,5).map(function(x){ return '<div>· '+E(x)+'</div>'; }).join('')
+          +(items.length>5?'<div style="color:var(--tx3)">… 외 '+(items.length-5)+'건</div>':'')+'</div>':'';
+      var warnHtml=(o.warn||[]).filter(Boolean).map(function(w){ return '<div class="ask-warn">⚠ '+E(w)+'</div>'; }).join('');
+      var choicesHtml=(o.choices||[]).length
+        ?'<div class="ask-choices">'+o.choices.map(function(c,i){
+            return '<button type="button" class="ask-choice'+(c.v===o.value?' on':'')+'" data-v="'+E(c.v)+'" onclick="ASK._pick(this)">'
+              +'<b>'+E(c.t||c.v)+'</b>'+(c.d?'<span>'+E(c.d)+'</span>':'')+'</button>';
+          }).join('')+'</div>':'';
+      var presetHtml=(o.presets||[]).length
+        ?'<div class="ask-presets">'+o.presets.map(function(p){ return '<button type="button" onclick="ASK._preset(this)">'+E(p)+'</button>'; }).join('')+'</div>':'';
+      var inputHtml=o.input
+        ?(o.input.label?'<div class="ask-lbl">'+E(o.input.label)+'</div>':'')
+          +'<input id="ask-in" class="ask-in" autocomplete="off" placeholder="'+E(o.input.placeholder||'')+'" value="'+E(o.input.value||'')+'"'+(o.input.readonly?' readonly':'')+'>':'';
+      el.innerHTML='<div class="ask-box'+(danger?' danger':'')+'" role="dialog" aria-modal="true">'
+        +'<div class="ask-t">'+(danger?'🗑 ':'')+E(o.title||'확인')+'</div>'
+        +(o.msg?'<div class="ask-m">'+E(o.msg).replace(/\n/g,'<br>')+'</div>':'')
+        +itemsHtml+warnHtml+choicesHtml+presetHtml+inputHtml
+        +'<div class="ask-err" id="ask-err"></div>'
+        +'<div class="ask-acts">'
+          +(o.cancelText===null?'':'<button type="button" class="ask-cancel" onclick="ASK._done(false)">'+E(o.cancelText||'취소')+'</button>')
+          +((o.choices||[]).length&&!o.okText?'':'<button type="button" class="ask-ok" id="ask-ok" onclick="ASK._ok()">'+E(o.okText||'확인')+'</button>')
+        +'</div></div>';
+      ASK._o=o; ASK._choice=o.value;
+      el.style.display='flex';
+      setTimeout(function(){
+        // 폰에서 고르는 단추가 있으면 입력칸에 커서를 두지 않는다 (자판이 올라와 단추를 가림)
+        if(o.presets&&typeof isMobile!=='undefined'&&isMobile)return;
+        var f=document.getElementById('ask-in')||document.getElementById('ask-ok')||el.querySelector('button');
+        if(f){ f.focus(); if(f.select&&!(o.input&&o.input.readonly))try{f.select();}catch(e){} }
+      },30);
+    });
+  },
+  _pick:function(b){
+    var o=ASK._o||{};
+    ASK._choice=b.getAttribute('data-v');
+    if(!o.okText){ ASK._done({choice:ASK._choice}); return; }   // 확인 단추가 없으면 고르는 즉시 끝
+    [].forEach.call(document.querySelectorAll('#ask-ovl .ask-choice'),function(x){ x.classList.toggle('on',x===b); });
+  },
+  _preset:function(b){
+    var i=document.getElementById('ask-in'); if(!i)return;
+    i.value=b.textContent; i.focus();
+  },
+  _ok:function(){
+    var o=ASK._o||{};
+    var err=document.getElementById('ask-err');
+    if(o.input){
+      var v=(document.getElementById('ask-in')||{}).value||'';
+      if(o.input.required&&!v.trim()){ if(err)err.textContent=o.input.required===true?'내용을 입력하세요':o.input.required; return; }
+      if(o.input.match&&v.trim()!==o.input.match){ if(err)err.textContent='「'+o.input.match+'」 라고 입력해야 진행됩니다'; return; }
+      ASK._done({value:v.trim(), choice:ASK._choice}); return;
+    }
+    if((o.choices||[]).length){
+      if(ASK._choice==null){ if(err)err.textContent='하나를 고르세요'; return; }
+      ASK._done({choice:ASK._choice}); return;
+    }
+    ASK._done(true);
+  },
+  _done:function(v){
+    var el=document.getElementById('ask-ovl'); if(el){ el.style.display='none'; el.innerHTML=''; }
+    var r=ASK._res; ASK._res=null; ASK._o=null;
+    if(r)r(v);
+  }
+};
+document.addEventListener('keydown',function(e){
+  var el=document.getElementById('ask-ovl');
+  if(!el||el.style.display!=='flex')return;
+  if(e.key==='Escape'){ e.preventDefault(); ASK._done(null); }
+  else if(e.key==='Enter'&&!(ASK._o&&(ASK._o.choices||[]).length&&!ASK._o.okText)){
+    if(document.activeElement&&document.activeElement.classList.contains('ask-cancel'))return;
+    e.preventDefault(); ASK._ok();
+  }
+},true);
+// 줄여 쓰기
+function askYes(title,msg,extra){ return ASK.open(Object.assign({title:title,msg:msg},extra||{})).then(function(r){ return r===true; }); }
+function askInfo(title,msg){ return ASK.open({title:title,msg:msg,cancelText:null,okText:'닫기'}); }
+
+// ── 저장 중 단추 잠그기 (PM 포털 Spin) ──
+//   서버에 저장하는 동안 단추를 잠그고 돌아가는 표시를 붙인다. 두 번 눌러 두 번 처리되는 것을 막는다.
+
+// ── 처음 쓰는 사람 안내 (PM 포털 CoachMarks) ──
+//   스캔 화면을 처음 열면 한 번만 순서를 짚어 준다. 「💡 안내」 로 다시 볼 수 있다. 브라우저마다 따로 기억.
+var COACH={
+  KEY:'hs_coach_scan_v1', i:0, steps:null,
+  SCAN:[
+    {sel:'#sc-steps', t:'① 공정 고르기', d:'지금 <b>끝낸 공정</b>을 먼저 누릅니다. (재단 · 제작 · 검사 …)<br>같은 공정이면 다음 QR 부터는 다시 누르지 않아도 됩니다.'},
+    {sel:'#cam-toggle-btn', t:'② 작업지시서 QR 찍기', d:'<b>[📷 카메라로 스캔]</b> 을 누르고 종이의 QR 을 찍습니다.<br>QR 을 먼저 찍고 공정을 나중에 누르면 기록되지 않습니다.'},
+    {sel:'#sc-alarm-wrap', t:'작업을 못 할 때', d:'자재가 없거나 도면이 이상하면 <b>[⛔ 작업중단 / 불가]</b> 로 사유를 남깁니다. 사무실에 빨간 표시가 뜹니다.'},
+    {sel:null, t:'③ 초록 화면이면 끝', d:'초록 화면 + 소리·진동이 오면 기록된 것입니다.<br>잘못 찍었으면 <b>1분 안</b>에 위에 뜨는 <b>[↩ 방금 기록 취소]</b> 를 누르세요.<br><br>자세한 건 메뉴의 <b>📖 사용 설명서</b> 에 있습니다.'}
+  ],
+  maybeScan:function(){ try{ if(localStorage.getItem(COACH.KEY))return; }catch(e){ return; } setTimeout(function(){ COACH.start(COACH.SCAN); },400); },
+  start:function(steps){ COACH.steps=steps; COACH.i=0; COACH.show(); },
+  show:function(){
+    var st=COACH.steps[COACH.i]; if(!st){ COACH.end(); return; }
+    var ov=document.getElementById('coach-ovl');
+    if(!ov){ ov=document.createElement('div'); ov.id='coach-ovl'; document.body.appendChild(ov); }
+    var tg=st.sel?document.querySelector(st.sel):null;
+    if(tg&&!tg.offsetParent)tg=null;   // 안 보이는 칸이면 가운데 카드로
+    if(tg)tg.scrollIntoView({block:'center'});
+    var last=COACH.i===COACH.steps.length-1;
+    var card='<div class="coach-card" id="coach-card"><div class="coach-n">'+(COACH.i+1)+' / '+COACH.steps.length+'</div>'
+      +'<div class="coach-t">'+st.t+'</div><div class="coach-d">'+st.d+'</div>'
+      +'<div class="coach-acts"><button onclick="COACH.end()" class="coach-skip">그만 보기</button>'
+      +(COACH.i>0?'<button onclick="COACH.i--;COACH.show()" class="coach-skip">이전</button>':'')
+      +'<button onclick="COACH.i++;COACH.show()" class="coach-next">'+(last?'시작하기':'다음 →')+'</button></div></div>';
+    ov.innerHTML='<div class="coach-hole" id="coach-hole"></div>'+card;
+    ov.style.display='block';
+    setTimeout(function(){
+      var hole=document.getElementById('coach-hole'), c=document.getElementById('coach-card');
+      if(!hole||!c)return;
+      if(tg){
+        var r=tg.getBoundingClientRect(), pad=6;
+        hole.style.cssText='display:block;left:'+(r.left-pad)+'px;top:'+(r.top-pad)+'px;width:'+(r.width+pad*2)+'px;height:'+(r.height+pad*2)+'px';
+        var below=r.bottom+12, cw=Math.min(340,window.innerWidth-24);
+        var left=Math.max(12,Math.min(window.innerWidth-cw-12,r.left));
+        var top=(below+190<window.innerHeight)?below:Math.max(12,r.top-12-c.offsetHeight);
+        c.style.cssText='left:'+left+'px;top:'+top+'px;width:'+cw+'px';
+      } else {
+        hole.style.cssText='display:block;left:50%;top:50%;width:0;height:0';
+        var cw2=Math.min(360,window.innerWidth-24);
+        c.style.cssText='left:'+((window.innerWidth-cw2)/2)+'px;top:'+Math.max(12,(window.innerHeight-c.offsetHeight)/2)+'px;width:'+cw2+'px';
+      }
+    },60);
+  },
+  end:function(){ var ov=document.getElementById('coach-ovl'); if(ov){ ov.style.display='none'; ov.innerHTML=''; } try{ localStorage.setItem(COACH.KEY,'1'); }catch(e){} }
+};
+// ── 불러오는 중 모양 (PM 포털 Skeleton) ──
+function skelRows(n){
+  var h='<div class="skel-wrap" aria-label="불러오는 중">';
+  for(var i=0;i<(n||6);i++)h+='<div class="skel-row"><span style="width:5%"></span><span style="width:12%"></span><span style="width:16%"></span><span style="width:14%"></span><span style="width:9%"></span><span style="width:30%"></span></div>';
+  return h+'<div style="text-align:center;font-size:12px;color:var(--tx3);padding:10px">서버에서 불러오는 중…</div></div>';
+}
+var _busyKeys={};
+async function withBusy(key,btn,fn){
+  if(_busyKeys[key]){ toast('처리 중입니다. 잠시만 기다려 주세요','warn'); return; }
+  _busyKeys[key]=true;
+  var old=null;
+  if(btn&&btn.tagName==='BUTTON'){ old=btn.innerHTML; btn.disabled=true; btn.style.opacity='.7'; btn.innerHTML='<span class="btn-spin"></span>'+old; }
+  try{ return await fn(); }
+  finally{
+    _busyKeys[key]=false;
+    if(btn&&old!==null&&document.body.contains(btn)){ btn.disabled=false; btn.style.opacity=''; btn.innerHTML=old; }
+  }
+}
+
 function toast(msg,type){
   if(type===undefined)type='ok';
   D.tTx.textContent=msg;D.tIc.textContent=type==='ok'?'✓':type==='err'?'✕':'⚠';
@@ -9923,7 +10206,7 @@ var STK={
     try{ s=JSON.parse(localStorage.getItem(STK.snapKey)||'null'); }catch(e){}
     if(!s){ toast('되돌릴 기록이 없습니다','warn'); return; }
     var when=String(s.at||'').slice(0,16).replace('T',' ');
-    if(!confirm('기초재고를 '+when+' 시점으로 되돌립니다.\n'+(s.note?'('+s.note+')\n':'')+'\n지금 값은 사라집니다. 계속할까요?'))return;
+    if(!await askYes('기초재고 되돌리기','기초재고를 '+when+' 시점으로 되돌립니다.'+(s.note?'\n('+s.note+')':'')+'\n\n지금 값은 사라집니다.',{danger:true,okText:'되돌리기'}))return;
     var sb=getSB();
     if(!sb){ toast('서버 연결 없음','err'); return; }
     var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||HS.worker||'';
@@ -10021,9 +10304,9 @@ var STK={
           }
           var list=Object.keys(map).map(function(k){return map[k];});
           if(!list.length){ toast('읽을 수 있는 행이 없습니다 (도면번호 열 확인)','err'); return; }
-          if(!confirm(list.length+'개 도번의 기초재고를 덮어씁니다.\n기존 값은 업로드 값으로 바뀝니다.\n\n바로 전 상태는 저장되므로 [되돌리기] 로 돌아갈 수 있습니다.\n\n계속할까요?')) return;
+          if(!await askYes('기초재고 일괄 업로드',list.length+'개 도번의 기초재고를 덮어씁니다.\n기존 값은 업로드 값으로 바뀝니다.\n\n바로 전 상태는 저장되므로 [되돌리기] 로 돌아갈 수 있습니다.\n\n계속할까요?')) return;
           if(!STK.saveSnap('엑셀 일괄 업로드 '+list.length+'건 직전')){
-            if(!confirm('⚠ 되돌리기용 저장에 실패했습니다.\n이대로 진행하면 되돌릴 수 없습니다. 계속할까요?'))return;
+            if(!await askYes('되돌리기용 저장 실패','이대로 진행하면 되돌릴 수 없습니다. 계속할까요?',{danger:true,okText:'그래도 진행'}))return;
           }
           var sb=getSB();
           if(!sb){ toast('서버 연결 없음','err'); return; }
@@ -10692,13 +10975,13 @@ function _renderQRHistRows(){
 
 // 이력은 지우지 않고 '삭제됨' 으로만 표시한다.
 //   누가 언제 무엇을 뽑았는지는 남아 있어야 한다.
-function deleteQRHistEntry(id){
+async function deleteQRHistEntry(id){
   var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
   var now=new Date().toISOString();
   var hist=loadQRHistory();
   var r0=hist.find(function(r){return r.id===id;});
   if(r0&&r0.deleted){ toast('이미 삭제 표시된 이력입니다','warn'); return; }
-  if(!confirm('이 이력을 삭제 표시할까요?\n\n자료는 남고 목록에 「삭제됨」 으로 보입니다.'))return;
+  if(!await askYes('QR 이력 삭제 표시','자료는 남고 목록에 「삭제됨」 으로 보입니다. 다시 되돌릴 수 있습니다.',{okText:'삭제 표시',items:r0?[(r0.drawingNo||r0.dwg_no||'')+' · '+(r0.po||'')]:[]}))return;
   hist.forEach(function(r){ if(r.id===id){ r.deleted=true; r.deleted_at=now; r.deleted_by=who; } });
   saveQRHistory(hist); _renderQRHistRows();
   var sb=getSB();
@@ -10715,8 +10998,8 @@ function restoreQRHistEntry(id){
         .eq('id',id).then(function(){}).catch(function(){});
   toast('되돌렸습니다','ok');
 }
-function clearQRHistory(){
-  if(!confirm('보이는 이력을 모두 삭제 표시할까요?\n\n자료는 남고 목록에 「삭제됨」 으로 보입니다.'))return;
+async function clearQRHistory(){
+  if(!await askYes('QR 이력 전체 삭제 표시','보이는 이력을 모두 삭제 표시합니다. 자료는 남고 목록에 「삭제됨」 으로 보입니다.',{danger:true,okText:'모두 삭제 표시'}))return;
   var who=(typeof AUTH!=='undefined'&&AUTH.profile&&AUTH.profile.username)||'';
   var now=new Date().toISOString();
   var hist=loadQRHistory(); var ids=[];
@@ -11319,7 +11602,7 @@ var Users={
   },
   setRole:async function(id,role){
     var sb=getSB();if(!sb)return;
-    if(role==='pending'&&!confirm('이 사용자를 정지(승인취소)할까요? 다시 승인 전까지 앱을 쓸 수 없습니다.')){this.render();return;}
+    if(role==='pending'&&!await askYes('사용자 정지','이 사용자를 정지(승인취소)할까요? 다시 승인 전까지 앱을 쓸 수 없습니다.',{danger:true,okText:'정지'})){this.render();return;}
     try{
       var r=await sb.from('profiles').update({role:role}).eq('id',id);
       if(r.error){toast('변경 실패: '+r.error.message,'err');this.render();return;}
