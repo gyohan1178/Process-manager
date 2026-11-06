@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>하네스 공정관리 v7.25</title>
+<title>하네스 공정관리 v7.26</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
@@ -694,7 +694,7 @@ body:not(.role-worker) .worker-only{display:none!important}
 <div id="manual-ovl" class="po-ovl hidden" onclick="if(event.target===this)document.getElementById('manual-ovl').classList.add('hidden')">
   <div class="po-box" style="max-width:640px;max-height:90vh;overflow-y:auto">
     <div class="po-hd" style="position:sticky;top:0;z-index:1">
-      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.25</span></div>
+      <div class="po-hd-title">📖 사용자 매뉴얼 <span style="font-size:11px;opacity:.6">v7.26</span></div>
       <button class="po-hd-x" onclick="document.getElementById('manual-ovl').classList.add('hidden')">×</button>
     </div>
     <div id="manual-body" style="padding:0 18px 18px"></div>
@@ -814,7 +814,7 @@ body:not(.role-worker) .worker-only{display:none!important}
     </div>
       <div class="sb-ver">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.25 <span style="opacity:.5;font-size:9px">이력</span></div>
+        <div class="sb-ver-num" onclick="showVersionModal()" title="버전 이력">v7.26 <span style="opacity:.5;font-size:9px">이력</span></div>
         <div id="sb-conn-badge" title="DB 연결상태" style="font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:rgba(37,99,235,.08);color:rgba(37,99,235,.6)">⟳ 연결중</div>
       </div>
       <div id="au-userbox" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--tx3);display:none;align-items:center;justify-content:space-between;gap:6px">
@@ -951,7 +951,7 @@ body:not(.role-worker) .worker-only{display:none!important}
           <!-- 엑셀로 올리기 (하네스 공통 · AXCELIS) -->
           <div id="wo-xls-box" style="margin-top:14px;display:none">
             <button class="btn btn-pr" onclick="document.getElementById('wo-c-file').click()">📋 PO 엑셀 올리기</button>
-            <input type="file" id="wo-c-file" accept=".xlsx,.xls" style="display:none" onchange="WOC.readExcel(this)">
+            <input type="file" id="wo-c-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="WOC.readExcel(this)">
             <button class="btn btn-outline" onclick="downloadOrderTemplate()" style="margin-left:8px">⬇ 양식 내려받기</button>
             <div style="font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.6">
               열 이름을 보고 <b>양식을 알아서 판별</b>합니다. 같은 파일을 다시 올려도 중복이 생기지 않습니다. 파일을 이 칸에 <b>끌어다 놓아도</b> 됩니다.
@@ -1194,7 +1194,7 @@ body:not(.role-worker) .worker-only{display:none!important}
 
           <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
             <button class="btn btn-pr" onclick="document.getElementById('dq-xl-file').click()">📋 PO 엑셀 올리기</button>
-            <input type="file" id="dq-xl-file" accept=".xlsx,.xls" style="display:none" onchange="DQ.readExcel(this)">
+            <input type="file" id="dq-xl-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="DQ.readExcel(this)">
             <button class="btn btn-outline" onclick="document.getElementById('dq-folder').click()">📁 도면 폴더 선택</button>
             <input type="file" id="dq-folder" webkitdirectory directory multiple style="display:none" onchange="DQ.pickFolder(this)">
             <button class="btn btn-outline" style="margin-left:auto" onclick="DQ.clearAuto()">엑셀·폴더 비우기</button>
@@ -5504,7 +5504,7 @@ var RCV={
       var rd=new FileReader();
       rd.onload=function(ev){
         try{
-          var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+          var wb=xlsxReadBytes(new Uint8Array(ev.target.result));
           // Received 시트를 이름으로 찾는다. 없으면 「현황」·Item 열이 있는 시트
           var name=wb.SheetNames.filter(function(s){ return /^received$/i.test(String(s).trim()); })[0];
           var grid=null, hdr=null;
@@ -6592,7 +6592,19 @@ async function handleQRInput(text){
   } else {
     const job=parseDrawingQR(text);
     if(!job){ toast('도면 QR을 인식할 수 없습니다','err'); return; }
+    // 출력한 지 얼마 안 된 건은 이 폰에 아직 안 내려왔을 수 있다 → 서버에서 다시 받아 본 뒤 찾는다.
+    //   예전에는 못 찾으면 QR 글자 그대로 새 건을 만들어, 같은 도면이 둘(하나는 깨진 글자)로 나뉘었다.
+    if(job.oid&&!HS.orders.some(function(x){return x.id===job.oid;})&&typeof hsLoad==='function'){
+      toast('서버에서 이 도면을 찾는 중…');
+      try{ await hsLoad(); }catch(e){}
+    }
+    var _rawOid=job.oid;
     resolveScanJob(job);   // 스캐너가 한글(프로젝트·호기)을 깨뜨려도 등록된 주문 원본으로 교체
+    var _found=HS.orders.some(function(x){return x.id===job.oid;});
+    if(!_found)job.oid='';   // 이 기기·서버 어디에도 없는 고유번호 — 새 건으로 다뤄 확인을 받는다
+    // QR 안 한글이 깨져 있으면(옛 QR) 깨진 칸은 비운다 — 깨진 값으로 등록되면 이후 기록까지 묶인다
+    var _brokenKeys=[];
+    if(!_found)['customer','project','unit','po'].forEach(function(k){ if(String(job[k]||'').indexOf('\uFFFD')>=0){ _brokenKeys.push(k); job[k]=''; } });
     // 등록되지 않은 도면이면 물어보고 등록한다. 막지는 않는다.
     //   예전에는 그냥 통과시켜 초록불이 뜨고 기록만 남았다.
     //   그 기록은 주문이 없어 현황판·재고 어디에도 안 나타나 아무도 몰랐다.
@@ -6603,7 +6615,9 @@ async function handleQRInput(text){
         '이 QR 내용으로 등록하고 ['+HS.selStep+'] 을 기록할까요?\n(앞 공정을 건너뛰어도 됩니다)',
         {items:['도번 '+(job.dwg_no||'')+(job.rev?' (Rev '+job.rev+')':''),
                 job.po?'PO '+job.po+((job.ord_ln||job.del_ln)?' (라인 '+(job.ord_ln||'-')+'-'+(job.del_ln||'-')+')':''):'PO 없음',
-                '수량 '+(job.qty||1)], okText:'등록하고 기록'});
+                '수량 '+(job.qty||1)], okText:'등록하고 기록',
+         warn:[_rawOid?'사무실에서 출력한 QR 인데 등록된 건을 찾지 못했습니다. 사무실에 알려 주세요':'',
+               _brokenKeys.length?'QR 안 한글이 깨져 고객사·프로젝트·호기·PO 는 비워 둡니다. 사무실에서 채워 주세요':'']});
       if(!_ok){
         scanFlash('warn','기록하지 않음',(job.dwg_no||'')+' — 등록을 취소했습니다');
         HS.job=null;
@@ -7337,8 +7351,9 @@ var Analytics={
 // ════════════════════════════════════════
 // 버전 관리
 // ════════════════════════════════════════
-var APP_VER='v7.25';
+var APP_VER='v7.26';
 var VER_LOG=[
+  {v:'v7.26',d:'2026-11', t:'[한글 깨짐] ① 진짜 원인 — 작업지시서 QR 을 만들 때 한글을 글자마다 1바이트만 넣고 있었습니다(QR 라이브러리 기본값). 그래서 QR 안의 「코엠에스,다다」 가 찍으면 「T�Ф,��」 이 됐습니다. 평소엔 주문 고유번호로 찾아 티가 안 났지만, 스캔한 폰에 그 주문이 아직 안 내려와 있으면(출력 직후) 깨진 글자 그대로 「현장 등록」 새 건이 생기고 재단·제작 기록이 그 건에 붙었습니다. 이제 QR 을 UTF-8 로 만듭니다(새로 뽑는 QR 부터). ② 스캔한 QR 의 주문이 이 기기에 없으면 서버에서 다시 받아 본 뒤 찾고, 그래도 없을 때만 확인 창을 띄웁니다(예전엔 묻지 않고 새로 만들었음). 옛 QR 의 깨진 한글은 비우고 등록해 사무실이 채우게 했습니다. ③ 엑셀에서 CSV 로 저장한 PO 파일을 올리면 한글(고객사·프로젝트·호기·PO)이 「�」 로 깨져 등록되던 문제. CSV 는 한글이 CP949 로 저장되는데 UTF-8 로 읽고 있었습니다. 이제 엑셀 파일이 아니면 글자 인코딩을 먼저 판별해 읽습니다(UTF-8 · CP949 둘 다). 그래도 깨진 글자(�)가 섞인 줄은 등록하지 않고 알려 줍니다 — 한 번 들어가면 QR 과 공정 기록까지 깨진 값으로 묶이기 때문. 작업지시서 QR · 도면 출도의 엑셀 칸도 CSV 를 받습니다'},
   {v:'v7.25',d:'2026-11', t:'[PM 포털 공통 부품 적용] ① 브라우저 기본 확인·입력 창을 앱 안의 창으로 바꿨습니다 — 지우기는 빨간 창에 지워질 줄(5개까지)을 보여 주고, 수주 삭제는 「삭제」 입력 칸, Esc·바깥 누르면 취소. 작업중단 사유는 자주 쓰는 사유 단추(자재 부족·도면 오류·설비 고장·자재 불량·작업 보류)로 고르고 직접 적을 수도 있습니다. 공정구분 변경은 코드를 치지 않고 A형·B형 단추로 고릅니다. ② 공정 이력 지우기 — 서버에서 지우지 못해도 「삭제 완료」 가 뜨고 새로고침하면 되살아나던 문제를 고쳐, 서버에서 지워진 것만 화면에서 빼고 실패는 알립니다. ③ 지표 카드: 늘 0 이던 재작업·재검 대기(검사 합불 판정을 쓰지 않음) 대신 작업중단·현장 등록. 카드마다 ⓘ 로 세는 기준을 봅니다. ④ 서버 자료를 받기 전에는 「불러오는 중」 모양을 보여 줍니다(예전에는 「공정 현황이 없습니다」 와 옛 안내가 떴음). 걸러서 0건일 때는 조건을 풀라는 안내. ⑤ 납품 반영·납기 일괄 변경·완료 처리·공정구분 변경·삭제는 저장하는 동안 단추를 잠가 두 번 처리되지 않게 했습니다. ⑥ 스캔 화면을 처음 열면 ① 공정 → ② QR → 작업중단 → ③ 초록 화면 순서로 한 번 안내합니다(「💡 안내」 로 다시 보기). ⑦ 속도 — 처음 불러올 때 1000줄씩 차례로 받던 것을 한꺼번에(이력 4,557건 기준 왕복 5번 → 2번), 1분 자동 확인의 두 건수도 동시에, 완료 처리·수주 삭제는 줄마다 묻던 것을 200건씩 한 번에. 쓰지 않던 옛 삭제 함수(전체 덮어쓰기 저장) 제거'},
   {v:'v7.24',d:'2026-11', t:'[공정 이력관리 · 체크 렉 · 선택 CSV] ① 체크박스를 누를 때마다 이력 전체를 다시 정렬하고 표를 새로 그리던 것을 고쳐, 누른 칸만 바뀌게 했습니다 (렉 원인). 표도 처음 300줄만 그리고 아래로 내리면 300줄씩 이어 붙여 처음 열 때도 빨라졌습니다. ② 체크한 기록이 있으면 [📥 CSV] 가 그것만 내보냅니다 (파일명에 「선택N건」). 없으면 예전처럼 검색 결과 전체. ③ 맨 위 전체 선택 칸이 지금 상태(전부/일부/없음)를 보여 주고, 선택하면 [선택 해제] 단추가 생깁니다'},
   {v:'v7.23',d:'2026-10', t:'[노트북 추가 정리] ① 공정현황 줄 높이를 줄였습니다 — 납기를 한 줄(올해면 10-07 +8일 / D-2)로 쓰고, 전체 날짜는 마우스를 올리면 보입니다. 1366 노트북에서 한 화면에 보이는 줄이 5줄 → 8줄 남짓. 묶음 줄의 고객사·납기도 한 줄로. ② 도면 출도의 「2. 머릿말·꼬리말」 은 기본으로 접어 두고, 접힌 줄에 지금 쓰는 문구를 요약해 보여 줍니다([펼치기] 로 고침). [만들기] 까지 스크롤이 짧아졌습니다. ③ 공정현황에 [↔ 열 너비 초기화] — 손으로 바꾼 열 너비가 저장된 PC 에서만 보이고, 누르면 화면에 맞춥니다. ④ 공정 이슈·재고 현황의 고객사·프로젝트, 공정 이슈의 내용 칸을 한 줄로 줄였습니다(마우스를 올리면 전체). ⑤ 세로가 낮은 노트북에서 사이드바 메뉴 간격을 줄여 공정 설정·사용 설명서까지 한 화면에 들어갑니다. [출력 ≠ 출도] 작업지시서 출력과 출도를 따로 봅니다 — 출도는 자재까지 챙겨 현장에 넘긴 것이라, 출력해도 출도가 자동으로 찍히지 않습니다. 그래서 공정현황의 [🖨 오늘 출도] 를 [🖨 오늘 출력] 으로 이름을 바꿨고(오늘 뽑은 건 보기), 출력 끝 안내에 「자재까지 챙겨 넘길 때 [출도] 를 찍으세요」 를 넣었습니다. 출도 공정의 기본 설명도 「자재까지 챙겨 현장 전달」 로 바꿨습니다. [노트북 화면 · 흐름 정리] ① 노트북(1366·1536 화면)에서 공정현황 표가 가로로 밀리던 것을 고쳤습니다 — 현황판 배지가 한 줄에 들어가고 상태·QR 열이 잘리지 않습니다. 열 너비는 창 크기에 맞춰 다시 잡습니다(손으로 바꾼 너비가 있으면 그대로). ② 세로가 낮은 화면에서는 맨 위 작은 제목줄과 지표 카드 설명을 줄여 표가 더 보입니다. ③ 툴바를 한 줄로 — [📦 납품 반영]·[📥 CSV] 를 오른쪽 위 [↻ 새로고침] 옆으로 옮기고, 화면만 다시 그리던 툴바 ↻ 는 없앴습니다. ④ 공정 이력관리 탭에서는 눌러도 아무 일이 없던 고객사·프로젝트·진행중/완료·묶기·고객사별·오늘 출도 단추를 감췄습니다(검색만 적용). ⑤ 사이드바에서 공정 이력관리·도면만 출력 같은 하위 메뉴가 다른 화면으로 가도 진하게 남아 두 곳이 켜져 보이던 문제 수정. ⑥ 도면 출도에서 출력이 끝나면 [📊 공정현황에서 확인 (오늘 출도)] 단추가 떠 바로 확인하러 갈 수 있습니다. 「출력하는 건만 등록」 일 때는 안내 문구도 「PO 를 먼저 읽으세요」 로 맞췄습니다. ⑦ 스캔 화면에 ① 공정 선택 → ② QR 순서 번호. ⑧ QR 이력의 [최근 1주][1달][전체] 단추가 PC 에서 모양 없이 나오던 것 수정'},
@@ -9027,7 +9042,7 @@ DQ.readExcel=function(input){
     var reader=new FileReader();
     reader.onload=function(ev){
       try{
-        var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+        var wb=xlsxReadBytes(new Uint8Array(ev.target.result));
         var ws=wb.Sheets[wb.SheetNames[0]];
         // AXCELIS 파일은 피벗 잔재로 열이 1만6천개까지 늘어나 있다.
         // 통째로 읽으면 쓸데없이 수십만 칸을 만든다. 앞 40열만 읽는다.
@@ -9208,6 +9223,11 @@ function makeTextPng(text,opt){
   _txtCache[key]=r;
   return r;
 }
+// QR 안 한글을 UTF-8 로 넣는다 (v7.26).
+//   qrcode-generator 기본값은 글자마다 아래 1바이트만 넣어(charCode & 0xff) 한글이 잘려 들어갔다.
+//   예) 「코엠에스,다다」 → 찍으면 「T�Ф,��」. 주문 고유번호(OID)로 찾을 때는 티가 안 났지만,
+//   스캔한 폰에 그 주문이 아직 없으면 깨진 글자 그대로 현장 등록이 되었다.
+if(window.qrcode&&qrcode.stringToBytesFuncs&&qrcode.stringToBytesFuncs['UTF-8'])qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8'];
 function makeQRPng(text,px){
   px=px||400;
   const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();
@@ -10278,7 +10298,7 @@ var STK={
       var reader=new FileReader();
       reader.onload=async function(ev){
         try{
-          var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+          var wb=xlsxReadBytes(new Uint8Array(ev.target.result));
           var ws=wb.Sheets[wb.SheetNames[0]];
           var grid=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
           if(!grid.length){ toast('데이터가 없습니다','err'); return; }
@@ -11092,6 +11112,26 @@ function hidePendingOrder(orderId,dwgNorm,isCsv){
 // Excel PO 일괄 업로드
 // ════════════════════════════════════════
 function triggerOrderExcel(){document.getElementById('orderExcelInput').click();}
+// ── 엑셀·CSV 읽기 (v7.26) ──
+//   엑셀에서 「CSV」 로 저장하면 한글이 CP949(EUC-KR) 로 저장된다. 이걸 그대로 읽으면 UTF-8 로 잘못 풀려
+//   「코엠에스」 같은 글자가 「�ڿ�」 처럼 깨진 채 등록됐다. 엑셀 파일(xlsx·xls)이 아니면 글자 인코딩을 먼저 판별한다.
+function xlsxReadBytes(u8){
+  var isZip=u8.length>3&&u8[0]===0x50&&u8[1]===0x4B;                       // xlsx · xlsm
+  var isOle=u8.length>7&&u8[0]===0xD0&&u8[1]===0xCF&&u8[2]===0x11&&u8[3]===0xE0;   // 옛 xls
+  if(isZip||isOle)return XLSX.read(u8,{type:'array',cellDates:false});
+  var txt=null;
+  try{ txt=new TextDecoder('utf-8',{fatal:true}).decode(u8); }catch(e){ txt=null; }
+  if(txt===null){ try{ txt=new TextDecoder('euc-kr').decode(u8); }catch(e){ txt=null; } }
+  if(txt===null)return XLSX.read(u8,{type:'array'});
+  if(txt.charCodeAt(0)===0xFEFF)txt=txt.slice(1);
+  return XLSX.read(txt,{type:'string',raw:true});
+}
+// 글자가 깨진 값(�)이 들어 있는지 — 등록 전에 막는다
+function hasBrokenText(o){
+  return ['customer','project','unit','po','dwg_no','rev','ord_ln','del_ln','created_by','name'].some(function(k){
+    return typeof o[k]==='string'&&o[k].indexOf('\uFFFD')>=0;
+  });
+}
 function loadXLSX(cb){if(window.XLSX){cb();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=function(){cb();};s.onerror=function(){toast('Excel 라이브러리 로드 실패','err');};document.head.appendChild(s);}
 function downloadOrderTemplate(){
   loadXLSX(function(){
@@ -11157,6 +11197,17 @@ function hsRegisterOrders(list, opt){
   //   도번+프로젝트+호기 로 같은 건인지 본다.
   var byPU=(opt.matchBy==='projunit');
   var added=0, skipped=0, touched=[], out=[], filled=0, newList=[], dupList=[];
+  // 글자가 깨진 줄은 등록하지 않는다 (CP949 CSV 등). 한 번 들어가면 QR·공정 기록까지 깨진 값으로 묶인다.
+  var _broken=(list||[]).filter(hasBrokenText);
+  if(_broken.length){
+    list=list.filter(function(o){ return !hasBrokenText(o); });
+    if(!opt.dry)setTimeout(function(){
+      askInfo('글자가 깨진 '+_broken.length+'건은 등록하지 않았습니다',
+        '고객사·프로젝트·호기·PO 에 깨진 글자(�)가 있습니다.\n엑셀에서 「CSV」 로 저장한 파일이면 「Excel 통합 문서(.xlsx)」 로 저장해서 다시 올리세요.\n\n'
+        +_broken.slice(0,5).map(function(o){ return '· '+(o.dwg_no||'')+' '+(o.project||''); }).join('\n')
+        +(_broken.length>5?'\n… 외 '+(_broken.length-5)+'건':''));
+    },50);
+  }
   // 한꺼번에 만들 때 id 가 겹치지 않게 (hsGenId 는 같은 ms 안에서 겹칠 수 있다)
   var used={};
   HS.orders.forEach(function(o){ used[o.id]=1; });
@@ -11240,7 +11291,7 @@ async function handleOrderExcel(input){
       var reader=new FileReader();
       reader.onload=async function(ev){
         try{
-          var data=new Uint8Array(ev.target.result);var wb=XLSX.read(data,{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];
+          var data=new Uint8Array(ev.target.result);var wb=xlsxReadBytes(data);var ws=wb.Sheets[wb.SheetNames[0]];
           var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
           if(rows.length<2){toast('데이터가 없습니다','err');return;}
           var hdr=rows[0].map(function(h){return String(h).trim().toLowerCase();});
